@@ -31,3 +31,25 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Maven build
+target/
+*.war
+*.jar
+
+# Logs
+*.log
+
+# IDE
+.settings/
+.project
+.classpath
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (très important pour ton cas)
+uploads/
