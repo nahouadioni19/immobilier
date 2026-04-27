@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+	<!-- Fragment spécifique à cette page -->
+	 <section layout:fragment="content">
+			<div class="container my-2">
+				<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+				    <!-- Titre -->
+				    <h2 class="mb-2 mb-md-0">Gestion des recouvrements</h2>
+				    <!-- Bouton Nouveau -->
+				    <a th:href="@{/recouvrements/create}" class="btn btn-primary ms-2">Nouveau</a>
+
+				</div>
+				
+				<hr style="border: 1px solid rgb(192, 192, 192);">
+										
+				<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+					    <h5>Liste des recouvrements</h5> <br /> 
+
+						<form method="get" th:action="@{/recouvrements}" class="row g-2 mb-3">
+							<div class="col-md-3" th:if="${#sets.contains(userRoles, 'DIREC') or #sets.contains(userRoles, 'CONTRO')}">
+								<select name="agentId" class="form-select">
+						            <option value="">Tous les agents</option>
+						            <option th:each="u : ${utilisateurs}"
+						                    th:value="${u.id}"
+						                    th:text="|${u.prenoms} ${u.nom}|"
+						                    th:selected="${u.id == selectedAgent}">
+						            </option>
+						        </select>
+							</div>
+							<!-- Recherche locataire -->
+							    <div class="col-md-3">
+							        <input type="text"
+							               name="keyword"
+							               class="form-control"
+							               placeholder="Nom ou prénom locataire"
+							               th:value="${keyword}">
+							    </div>
+
+							    <div class="col-md-2">
+							        <button type="submit" class="btn btn-success w-100">
+							            Rechercher
+							        </button>
+							    </div>
+						</form>
+					<br/>
+				    <table class="table">
+				        <thead class="table-success">
+				        <tr>
+				            <th>locataire</th>
+				            <th>Date</th>
+				            <th style="text-align: center;">Montant recouvré</th>
+							<th>Agent</th>
+							<th>Action</th>
+				        </tr>
+				        </thead>
+				        <tbody>				        
+						<tr th:each="encaisse : ${encaissesPage.content}">
+				            <td th:text="${encaisse.locataireNom +' '+ encaisse.locatairePrenom}">jule</td>
+							<td th:text="${#temporals.format(encaisse.encDate, 'dd/MM/yyyy')}"></td>
+							<td class="format-fr" th:text="${encaisse.encMontant}" style="text-align: center;">0</td>
+							<td th:text="${encaisse.utilisateurNom +' '+ encaisse.utilisateurPrenoms}">herve</td>
+							<td>
+							    <div class="d-flex justify-content-center">
+							        <div class="dropdown">
+							            <button class="btn" type="button" id="dropdownMenuButton"
+							                    data-bs-toggle="dropdown" aria-expanded="false">
+							                <i class="bi bi-three-dots-vertical"></i>
+							            </button>
+
+										<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+										    <!-- Modifier -->
+										    <li>
+										        <a class="dropdown-item" th:href="@{'/recouvrements/edit/' + ${encaisse.id}}">
+										            <i class="bi bi-pencil me-2"></i>Modifier
+										        </a>
+										    </li>
+
+										    <!-- Supprimer -->
+										    <li th:if="${#sets.contains(userRoles, 'NSI')}">
+										        <a class="dropdown-item del-btn" th:href="@{'/recouvrements/delete/' + ${encaisse.id}}">
+										            <i class="bi bi-trash me-2"></i>Supprimer
+										        </a>
+										    </li>
+
+										    <!-- Transmettre -->
+										    <li>
+										        <form th:action="@{/recouvrements/transmettre/{id}(id=${encaisse.id})}" 
+														method="post" style="margin:0; padding:0;">
+														
+										            <button type="submit" 
+															class="dropdown-item"
+															th:if="${#sets.contains(userRoles, 'RECOUV') or #sets.contains(userRoles, 'SECRET') or #sets.contains(userRoles, 'AGENT')}"
+										                    style="width:100%; text-align:left; border:none; background:none;margin-left: 10%; padding:0;">
+										                <i class="bi bi-send me-2"></i>Transmettre
+										            </button>
+										        </form>
+										    </li>
+											
+											<!-- Transmettre -->
+											<li>
+											    <form th:action="@{/recouvrements/valider/{id}(id=${encaisse.id})}" 
+											          method="post" style="margin:0; padding:0;">
+											          
+											        <button type="submit" 
+											                class="dropdown-item" 
+											                th:if="${#sets.contains(userRoles, 'DIREC')}"
+											                style="width:100%; text-align:left; border:none; background:none; margin-left: 10%; padding:0;">
+											            <i class="bi bi-check me-2"></i>Valider
+											        </button>
+											    </form>
+											</li>
+										</ul>												
+							        </div>
+							    </div>
+							</td>
+				        </tr>
+						<tr th:if="${#lists.isEmpty(encaissesPage.content)}">
+					        <td colspan="4" class="text-center">Aucun recouvrement trouvé.</td>
+					    </tr>
+				    </tbody>
+				 </table>
+				 <!-- Pagination -->
+				<nav aria-label="Pagination" th:if="${encaissesPage.totalElements > 0}">
+				    <ul class="pagination justify-content-end">
+
+				        <!-- Précédent -->
+				        <li class="page-item"
+				            th:classappend="${encaissesPage.first} ? 'disabled'">
+				            <a class="page-link"				               
+							   th:href="@{/recouvrements(page=${encaissesPage.number - 1},agentId=${selectedAgent},keyword=${keyword})}">
+				                &laquo;
+				            </a>
+				        </li>
+
+				        <!-- Première page -->
+				        <li class="page-item"
+				            th:if="${encaissesPage.number > 2}">
+				            <a class="page-link"
+				               th:href="@{/recouvrements(page=0)}">1</a>
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${encaissesPage.number > 3}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Pages autour -->
+				        <li class="page-item"
+				            th:each="i : ${#numbers.sequence(
+				                T(java.lang.Math).max(0, encaissesPage.number - 2),
+				                T(java.lang.Math).min(encaissesPage.totalPages - 1, encaissesPage.number + 2)
+				            )}"
+				            th:classappend="${i == encaissesPage.number} ? 'active'">
+
+				            <a class="page-link"
+				               th:text="${i + 1}"
+							   th:href="@{/recouvrements(page=${i}, agentId=${selectedAgent}, keyword=${keyword})}">
+				            </a>
+
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${encaissesPage.number < encaissesPage.totalPages - 4}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Dernière page -->
+				        <li class="page-item"
+				            th:if="${encaissesPage.number < encaissesPage.totalPages - 3}">
+				            <a class="page-link"
+				               th:href="@{/recouvrements(page=${encaissesPage.totalPages - 1})}"
+				               th:text="${encaissesPage.totalPages}">
+				            </a>
+				        </li>
+
+				        <!-- Suivant -->
+				        <li class="page-item"
+				            th:classappend="${encaissesPage.last} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/recouvrements(page=${encaissesPage.number + 1})}">
+				                &raquo;
+				            </a>
+				        </li>
+
+				    </ul>
+				</nav>
+
+				
+				</fieldset> 
+			</div>
+			
+			<script>
+				document.querySelectorAll('.format-fr').forEach(td => {
+			    const value = parseFloat(td.textContent.replace(/\s/g,'')); // supprime espaces éventuels
+			    if (!isNaN(value)) {
+			        td.textContent = value.toLocaleString('fr-FR');
+			    }
+			});
+			</script>
+			
+			<!-- SweetAlert2 -->
+		    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+			
+			<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+					
+			<script>
+			document.addEventListener('DOMContentLoaded', function() {
+			    // Sélectionner tous les boutons réinitialiser
+			    document.querySelectorAll('.del-btn').forEach(btn => {
+			        btn.addEventListener('click', function(e) {
+			            e.preventDefault(); // empêcher le href="#"
+
+			            const href = this.href;
+
+			            Swal.fire({
+			                title: 'Confirmation',
+			                text: "Voulez-vous supprimer ?",
+			                icon: 'warning',
+			                showCancelButton: true,
+			                confirmButtonText: 'Oui',
+			                cancelButtonText: 'Non'
+			            }).then((result) => {
+			                if (result.isConfirmed) {
+			                    // Redirection vers le controller
+			                    window.location.href = href;
+			                }
+			            });
+			        });
+				
+				// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+				    const successDiv = document.getElementById('successMessage');
+				    if (successDiv && successDiv.textContent.trim() !== '') {
+				        const msg = successDiv.textContent.trim();
+				        Swal.fire({
+				            icon: 'success',
+				            title: 'Succès !',
+				            text: msg,
+				            confirmButtonText: 'OK'
+				        });
+				    }
+				});
+			});
+			</script>
+	   
+	 </section>
+
+</body>
+</html>

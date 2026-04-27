@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <style>
+        .select2-container { width: 100% !important; }
+        .select2-selection--single { height: 38px !important; padding: 0.375rem 0.75rem !important; border-radius: 0.375rem; }
+        .select2-selection__rendered { line-height: 24px !important; padding-left: 0 !important; }
+        .select2-selection__arrow { height: 36px !important; top: 1px !important; }
+    </style>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container my-2">
+        <div class="container mt-4">
+            <h2>Ajouter un recouvrement</h2>
+            <form th:action="@{/recouvrements/save}" th:object="${encaisse}" method="post" 
+                  class="border p-4 rounded shadow-sm bg-white" id="encaisseForm">
+
+                <!-- Hidden fields -->
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" th:field="*{version}" />
+                <input type="hidden" th:field="*{utilisateur.id}" id="hiddenAgent" th:data-user-id="${#authentication.principal.id}">
+                <input type="hidden" th:field="*{bail.id}" id="hiddenBail">
+                <input type="hidden" th:field="*{identification.id}" id="hiddenIdentification">
+                <input type="hidden" th:field="*{encloyer}" id="conloyerInput">
+                <input type="hidden" th:field="*{encArriere}" id="arriereInput">
+                <input type="hidden" th:field="*{encPenalite}" id="penaliteInput">
+                <input type="hidden" th:field="*{enctotal}" id="totalInput">
+                <input type="hidden" th:field="*{encDeb}" id="arriereDebut">
+                <input type="hidden" th:field="*{encFin}" id="arriereFin">
+                <input type="hidden" th:field="*{encMontant}" id="montantInput">
+
+                <!-- Agent -->
+				<div class="row" th:if="! ${userRoles.contains('RECOUV')}">
+	                <div class="mb-1">
+	                    <label for="agentSelect" class="form-label">Agent de recouvrement <span class="text-danger">*</span></label>
+	                    <select id="agentSelect" class="form-select">
+							<option value="9999999">-- Choix --</option>
+	                        <option value="">-- Tous les agents --</option>
+	                        <option th:each="u : ${utilisateurs}" th:value="${u.id}" th:text="|${u.prenoms} ${u.nom}|"></option>
+	                    </select>
+	                </div>
+				</div>
+				
+                <!-- Date -->
+                <div class="mb-1">
+                    <label for="encDate" class="form-label">Date de recouvrement <span class="text-danger">*</span></label>
+                    <input type="date" id="encDate" th:field="*{encDate}" class="form-control" required
+                           th:attr="max=${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}"/>
+                </div>
+
+                <!-- Locataire / Bail -->
+                <div class="mb-1">
+                    <label class="form-label">Locataire <span class="text-danger">*</span></label>
+                    <select id="bailSelect" class="form-select" required></select>
+                </div>
+
+                <!-- Quittance -->
+                <div class="mb-1">
+                    <label class="form-label">Numéro de quittance <span class="text-danger">*</span></label>
+                    <select id="identificationSelect" class="form-select" required></select>
+                </div>
+
+                <!-- Arriérés / Loyer / Pénalités / Total -->
+                <div class="mb-1"><label>Arriéré(s) FCFA</label><input type="text" id="arriereDisplay" class="form-control" disabled></div>
+                <div class="mb-1"><label>Début arriérés</label><input type="text" id="arriereDebutDisplay" class="form-control" disabled></div>
+                <div class="mb-1"><label>Fin arriérés</label><input type="text" id="arriereFinDisplay" class="form-control" disabled></div>
+                <div class="mb-1"><label>Loyer FCFA</label><input type="text" id="conloyer" class="form-control" disabled></div>
+                <div class="mb-1"><label>Pénalité retard (FCFA)</label><input type="text" id="penaliteDisplay" class="form-control" disabled></div>
+                <div class="mb-1"><label>Total à payer (FCFA)</label><input type="text" id="totalDisplay" class="form-control" disabled></div>
+
+                <!-- Montant payé -->
+                <div class="mb-1"><label>Montant payé <span class="text-danger">*</span></label>
+                    <input type="text" id="montantDisplay" class="form-control" placeholder="0"></div>
+
+                <!-- Mode -->
+                <div class="mb-1">
+                    <label>Mode de paiement <span class="text-danger">*</span></label>
+                    <select th:field="*{encMode}" class="form-select" required>
+                        <option value="">-- Choisir le mode --</option>
+                        <option value="ESPÈCES">Espèces</option>
+                        <option value="CHÈQUE">Chèque</option>
+                        <option value="VIREMENT">Virement</option>
+                        <option value="MOBILE MONEY">Mobile Money</option>
+                    </select>
+                </div>
+
+                <!-- Boutons -->
+                <div class="mt-3 row g-2">
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Enregistrer</button>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <a th:href="@{/recouvrements}" class="btn btn-danger w-100">Retour à la liste</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+	<!-- jQuery -->
+		<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+		<!-- Select2 4.1 -->
+		<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+		<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+		<!-- Theme Bootstrap 5 -->
+		<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+			
+
+		<script th:inline="javascript">
+		$(document).ready(function(){
+
+		const bailSelect = $('#bailSelect');
+		const identificationSelect = $('#identificationSelect');
+		const encDateInput = $('#encDate');
+
+		const montantDisplay = $('#montantDisplay');
+		const montantInput = $('#montantInput');
+
+		const hiddenAgent = $('#hiddenAgent');
+		const hiddenBail = $('#hiddenBail');
+		const hiddenIdentification = $('#hiddenIdentification');
+
+		const connectedUserId = hiddenAgent.data('user-id');
+
+		var bailsApiUrl = /*[[@{/bails/api/bails}]]*/ '';
+		var identApiUrl = /*[[@{/carnets/api/identifications}]]*/ '';
+
+		/* ================= SELECT2 BAIL ================= */
+
+		bailSelect.select2({
+		    theme:'bootstrap-5',
+		    placeholder:"🔎 Rechercher locataire, téléphone ou bail...",
+		    allowClear:true,
+		    width:'100%',
+		    minimumInputLength:1,
+		    ajax:{
+		        url:bailsApiUrl,
+		        dataType:'json',
+		        delay:250,
+		        data:function(params){
+
+		            return{
+		                keyword:params.term,
+		                agentId:$('#agentSelect').val() || null
+		            };
+
+		        },
+		        processResults:function(data){
+
+		            return{
+		                results:data.map(function(b){
+
+		                    return{
+		                        id:b.id,
+		                        text:b.locnom+" "+b.locprenom+
+		                             " | Tel: "+(b.loctel||'-')+
+		                             " | Bail: "+b.numero+
+		                             " | Loyer: "+(b.montantloyer||0).toLocaleString('fr-FR')+" FCFA",
+		                        loyer:b.montantloyer,
+		                        lastpayment:b.derniereDatePaiement,
+		                        datedebut:b.dateDebut
+		                    };
+
+		                })
+		            };
+
+		        }
+		    }
+		});
+
+
+		/* ================= SELECT2 IDENTIFICATION ================= */
+
+		identificationSelect.select2({
+		    theme:'bootstrap-5',
+		    placeholder:"🔎 Rechercher numéro quittance...",
+		    allowClear:true,
+		    width:'100%',
+		    minimumInputLength:1,
+		    ajax:{
+		        url:identApiUrl,
+		        dataType:'json',
+		        delay:250,
+		        data:function(params){
+
+		            return{
+		                keyword:params.term,
+		                agentId:$('#agentSelect').val() || connectedUserId
+		            };
+
+		        },
+		        processResults:function(data){
+
+		            return{
+		                results:data.map(function(i){
+		                    return{
+		                        id:i.id,
+		                        text:i.numero
+		                    };
+		                })
+		            };
+
+		        }
+		    }
+		});
+
+
+		/* ================= SELECTION IDENTIFICATION ================= */
+
+		identificationSelect.on('select2:select',function(e){
+
+		    hiddenIdentification.val(e.params.data.id);
+
+		});
+
+
+		/* ================= CALCUL ARRIERES ================= */
+
+		function recalcArrieres(){
+
+		    const data = bailSelect.select2('data')[0];
+		    if(!data) return;
+
+		    let encDate = encDateInput.val() || new Date().toISOString().slice(0,10);
+
+		    let lastPayment = data.lastpayment || data.datedebut;
+		    if(lastPayment) lastPayment = lastPayment.split("T")[0];
+
+		    const result = calculateArrieres(parseFloat(data.loyer),lastPayment,encDate);
+
+		    $('#conloyer').val(data.loyer.toLocaleString('fr-FR')+" FCFA");
+		    $('#conloyerInput').val(data.loyer);
+
+		    $('#arriereDisplay').val(result.arrieres.toLocaleString('fr-FR')+" FCFA");
+		    $('#arriereInput').val(result.arrieres);
+
+		    $('#penaliteDisplay').val(result.penalite.toLocaleString('fr-FR')+" FCFA");
+		    $('#penaliteInput').val(result.penalite);
+
+		    $('#totalDisplay').val(result.total.toLocaleString('fr-FR'));
+		    $('#totalInput').val(result.total);
+
+		    $('#arriereDebutDisplay').val(result.debut);
+		    $('#arriereFinDisplay').val(result.fin);
+
+		    $('#arriereDebut').val(result.debut);
+		    $('#arriereFin').val(result.fin);
+
+		    if(!montantInput.val()){
+		        montantDisplay.val(result.total.toLocaleString('fr-FR'));
+		        montantInput.val(result.total);
+		    }
+
+		}
+
+
+		/* ================= EVENTS ================= */
+
+		bailSelect.on('select2:select',function(e){
+
+		    hiddenBail.val(e.params.data.id);
+		    recalcArrieres();
+
+		});
+
+		encDateInput.on('change',function(){
+
+		    recalcArrieres();
+
+		});
+
+
+		/* ================= FORMAT MONTANT ================= */
+
+		montantDisplay.on('input',function(){
+
+		    let val = $(this).val().replace(/\s/g,'').replace(',','.');
+		    val = parseFloat(val) || 0;
+
+		    $(this).val(val.toLocaleString('fr-FR'));
+		    montantInput.val(val);
+
+		});
+
+
+		/* ================= CHANGEMENT AGENT ================= */
+
+		$('#agentSelect').on('change',function(){
+
+		    let agentId = $(this).val();
+
+		    hiddenAgent.val(agentId || connectedUserId);
+
+		    bailSelect.val(null).trigger('change');
+		    identificationSelect.val(null).trigger('change');
+
+		});
+
+
+		/* ================= MODE EDIT ================= */
+
+		const existingBailId = hiddenBail.val();
+		const existingIdentificationId = hiddenIdentification.val();
+
+		if(existingBailId){
+
+		    $.get(bailsApiUrl,{id:existingBailId},function(data){
+
+		        if(!data || data.length === 0) return;
+
+		        const b = data[0];
+
+		        const option = new Option(
+		            b.locnom + " " + b.locprenom +
+		            " | Tel: " + (b.loctel || '-') +
+		            " | Bail: " + b.numero +
+		            " | Loyer: " + (b.montantloyer || 0).toLocaleString('fr-FR') + " FCFA",
+		            b.id,
+		            true,
+		            true
+		        );
+
+		        // IMPORTANT : injecter les données nécessaires
+		        $(option).data('data',{
+		            id:b.id,
+		            text:option.text,
+		            loyer:b.montantloyer,
+		            lastpayment:b.derniereDatePaiement,
+		            datedebut:b.dateDebut
+		        });
+
+		        bailSelect.append(option).trigger('change');
+
+		        // recalcul après chargement
+		        setTimeout(function(){
+		            recalcArrieres();
+		        },200);
+
+		        const existingMontant = montantInput.val();
+
+		        if(existingMontant){
+		            montantDisplay.val(parseFloat(existingMontant).toLocaleString('fr-FR'));
+		        }
+
+		    });
+
+		}
+
+		if(existingIdentificationId){
+
+		    $.get(identApiUrl,{id:existingIdentificationId},function(data){
+
+		        if(!data || data.length===0) return;
+
+		        const i = data[0];
+
+		        const option = new Option(i.numero,i.id,true,true);
+		        identificationSelect.append(option).trigger('change');
+
+		    });
+
+		}
+
+
+		/* ================= FONCTION CALCUL ================= */
+
+		function calculateArrieres(loyer,startDate,paymentDate){
+
+		    loyer = parseFloat(loyer)||0;
+
+		    if(!startDate || !paymentDate || loyer===0)
+		        return{arrieres:0,penalite:0,total:0,debut:'',fin:''};
+
+		    const debut = new Date(startDate+"T00:00:00");
+		    const paiement = new Date(paymentDate+"T00:00:00");
+
+		    if(paiement < debut)
+		        return{arrieres:0,penalite:0,total:0,debut:'',fin:''};
+
+		    let nbMois = (paiement.getFullYear()-debut.getFullYear())*12
+		                + paiement.getMonth()-debut.getMonth()+1;
+
+		    const arrieres = nbMois*loyer;
+		    const penalite = paiement.getDate()>10 ? arrieres*0.1 : 0;
+
+		    return{
+
+		        arrieres:arrieres,
+		        penalite:penalite,
+		        total:arrieres+penalite,
+
+		        debut:debut.toLocaleDateString('fr-FR',{month:'2-digit',year:'numeric'}),
+		        fin:paiement.toLocaleDateString('fr-FR',{month:'2-digit',year:'numeric'})
+
+		    };
+
+		}
+
+		});
+		</script>
+</section>
+</body>
+</html>

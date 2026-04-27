@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+<section layout:fragment="content">
+    <div class="container my-2">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Gestion des banques</h2>
+            <div class="d-flex align-items-center">				
+                <a th:href="@{/banques/create}" class="btn btn-primary">Nouveau</a>
+            </div>
+        </div>
+
+        <hr style="border: 1px solid rgb(192, 192, 192);">
+
+        <fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+            <form th:action="@{/banques}" method="get" class="d-flex align-items-center">
+				<div class="col-md-4">
+				 	<input type="text" id="searchInput" name="keyword"
+		               class="form-control me-2" placeholder="Rechercher..."
+		               th:value="${keyword}" autocomplete="off">
+				</div>
+			        <!--<button type="submit" class="btn btn-outline-secondary">🔍</button>-->
+			</form><br/>
+            <div id="banquesTable">
+                <table class="table">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Sigle</th>
+                            <th>Désignation</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="banqueTableBody">
+                        <tr th:each="banque : ${banquesPage.content}">
+                            <td th:text="${banque.bansigle}">BICICI</td>
+                            <td class="text-truncate" style="max-width: 300px;" th:text="${banque.banlibelle}">Banque Internationale</td>
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    <div class="dropdown">
+                                        <button class="btn" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                            <li>
+                                                <a class="dropdown-item" th:href="@{'/banques/edit/' + ${banque.bancode}}">
+                                                    <i class="bi bi-pencil me-2"></i>Modifier
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item del-btn" th:href="@{'/banques/delete/' + ${banque.bancode}}">
+                                                    <i class="bi bi-trash me-2"></i>Supprimer
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(banquesPage.content)}">
+                            <td colspan="4" class="text-center">Aucune banque trouvée.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-center mt-3" th:if="${banquesPage.totalElements > 0}">
+                <ul class="pagination">
+                    <li th:classappend="${banquesPage.first} ? 'disabled'" class="page-item">
+                        <a class="page-link" th:href="@{/banques(page=${banquesPage.number - 1})}">&laquo;</a>
+                    </li>
+                    <li class="page-item" th:each="i : ${#numbers.sequence(0, banquesPage.totalPages - 1)}"
+                        th:classappend="${i == banquesPage.number} ? 'active'">
+                        <a class="page-link" th:text="${i + 1}" th:href="@{/banques(page=${i})}"></a>
+                    </li>
+                    <li th:classappend="${banquesPage.last} ? 'disabled'" class="page-item">
+                        <a class="page-link" th:href="@{/banques(page=${banquesPage.number + 1})}">&raquo;</a>
+                    </li>
+                </ul>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- Recherche dynamique -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById("searchInput");
+            const tableBody = document.getElementById("banqueTableBody");
+
+            searchInput.addEventListener("input", function () {
+                const keyword = this.value;
+
+                fetch(`/banques/search?keyword=${encodeURIComponent(keyword)}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Erreur réseau');
+                        return response.json();
+                    })
+                    .then(data => {
+                        tableBody.innerHTML = '';
+                        data.forEach(banque => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${banque.bancode}</td>
+                                <td>${banque.bansigle}</td>
+                                <td>${banque.banlibelle}</td>
+                                <td>
+                                    <div class="d-flex justify-content-center">
+                                        <div class="dropdown">
+                                            <button class="btn" type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="/banques/edit/${banque.bancode}">
+                                                        <i class="bi bi-pencil me-2"></i>Modifier
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="/banques/delete/${banque.bancode}"
+                                                       onclick="return confirm('Voulez-vous vraiment supprimer ?')">
+                                                        <i class="bi bi-trash me-2"></i>Supprimer
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    })
+                    .catch(error => console.error('Erreur:', error));
+            });
+        });
+    </script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	
+	<!-- Flash message invisible pour Thymeleaf -->
+	<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+	
+	<script>
+	document.addEventListener('DOMContentLoaded', function() {
+	    // Sélectionner tous les boutons réinitialiser
+	    document.querySelectorAll('.del-btn').forEach(btn => {
+	        btn.addEventListener('click', function(e) {
+	            e.preventDefault(); // empêcher le href="#"
+
+	             const href = this.href; // récupère l'URL complète générée par Thymeleaf
+
+	            Swal.fire({
+	                title: 'Confirmation',
+	                text: "Voulez-vous supprimer ?",
+	                icon: 'warning',
+	                showCancelButton: true,
+	                confirmButtonText: 'Oui',
+	                cancelButtonText: 'Non'
+	            }).then((result) => {
+	                if (result.isConfirmed) {
+	                    // Redirection vers le controller
+	                    window.location.href = href;
+	                }
+	            });
+	        });
+		
+		// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+		    const successDiv = document.getElementById('successMessage');
+		    if (successDiv && successDiv.textContent.trim() !== '') {
+		        const msg = successDiv.textContent.trim();
+		        Swal.fire({
+		            icon: 'success',
+		            title: 'Succès !',
+		            text: msg,
+		            confirmButtonText: 'OK'
+		        });
+		    }
+		});
+	});
+	</script>
+	
+	<script>
+	document.addEventListener("DOMContentLoaded", function() {
+	    const searchInput = document.getElementById("searchInput");
+	    const tableBody = document.getElementById("banqueTableBody");
+	    const tableRows = tableBody.querySelectorAll("tr");
+
+	    if (searchInput) {
+	        searchInput.addEventListener("input", function() {
+	            const searchValue = this.value.toLowerCase();
+	            let visibleCount = 0;
+
+	            tableRows.forEach(row => {
+	                const text = row.textContent.toLowerCase();
+	                if (text.includes(searchValue)) {
+	                    row.style.display = "";
+	                    visibleCount++;
+	                } else {
+	                    row.style.display = "none";
+	                }
+	            });
+
+	            // Si aucun résultat trouvé, alerte SweetAlert
+	            if (visibleCount === 0 && searchValue.trim() !== "") {
+	                Swal.fire({
+	                    icon: 'info',
+	                    title: 'Aucun résultat',
+	                    text: 'Aucune banque ne correspond à votre recherche.',
+	                    timer: 2000,
+	                    showConfirmButton: false
+	                });
+	            }
+	        });
+	    }
+	});
+	</script>
+</section>
+</body>
+</html>

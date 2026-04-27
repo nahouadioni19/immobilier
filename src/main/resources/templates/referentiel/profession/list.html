@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+	<style>
+		.truncate-text {
+		    max-width: 50px;
+		    white-space: nowrap;
+		    overflow: hidden;
+		    text-overflow: ellipsis;
+		}
+
+		/* 📱 Mobile */
+		@media (max-width: 576px) {
+		    .truncate-text {
+		        max-width: 140px; /* plus petit sur mobile */
+		    }
+		}
+	</style>
+</head>
+
+<body>
+	<section layout:fragment="content">
+    <div class="container my-2">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Gestion des professions</h2>
+            <div class="d-flex align-items-center">
+                <a th:href="@{/professions/create}" class="btn btn-primary">Nouveau</a>
+            </div>
+        </div>
+
+        <hr>
+
+        <fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+            
+			<div class="row mb-3">
+			    <div class="col-md-4">
+			        <input type="text" id="searchInput"
+			               class="form-control"
+			               placeholder="Rechercher désignation"
+			               autocomplete="off">
+			    </div>
+			</div>
+							
+            <div id="professionsTable">
+				<div id="loader" class="text-center my-3 d-none">
+				    <div class="spinner-border text-primary"></div>
+				    <div>Recherche en cours...</div>
+				</div>
+				
+                <table class="table">
+                    <thead class="table-success">
+                        <tr>
+                            <th class="sortable" data-column="libelle">
+								Désignation <i class="bi bi-arrow-down-up ms-1"></i>
+							</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="professionTableBody">
+                        <tr th:each="profession : ${professionsPage.content}">
+							<td>
+			                    <div class="truncate-text"
+			                         th:title="${profession.libelle}"
+			                         th:text="${profession.libelle}">
+			                    </div>
+			                </td>
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    <div class="dropdown">
+                                        <button class="btn" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                            <li>
+                                                <a class="dropdown-item" th:href="@{'/professions/edit/' + ${profession.id}}">
+                                                    <i class="bi bi-pencil me-2"></i>Modifier
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item del-btn" th:href="@{'/professions/delete/' + ${profession.id}}">
+                                                    <i class="bi bi-trash me-2"></i>Supprimer
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(professionsPage.content)}">
+                            <td colspan="4" class="text-center">Aucune profession trouvée.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+			<!-- Pagination -->
+			<div class="d-flex justify-content-center mt-3" th:if="${professionsPage.totalElements > 0}">
+			    <ul class="pagination">
+
+			        <!-- Précédent -->
+			        <li class="page-item"
+			            th:classappend="${professionsPage.first} ? 'disabled'">
+			            <a class="page-link"
+			               th:href="@{/professions(page=${professionsPage.number - 1})}">
+			                &laquo;
+			            </a>
+			        </li>
+
+			        <!-- Première page -->
+			        <li class="page-item"
+			            th:if="${professionsPage.number > 2}">
+			            <a class="page-link"
+			               th:href="@{/professions(page=0)}">1</a>
+			        </li>
+
+			        <!-- ... -->
+			        <li class="page-item disabled"
+			            th:if="${professionsPage.number > 3}">
+			            <span class="page-link">...</span>
+			        </li>
+
+			        <!-- Pages autour -->
+			        <li class="page-item"
+			            th:each="i : ${#numbers.sequence(
+			                T(java.lang.Math).max(0, professionsPage.number - 2),
+			                T(java.lang.Math).min(professionsPage.totalPages - 1, professionsPage.number + 2)
+			            )}"
+			            th:classappend="${i == professionsPage.number} ? 'active'">
+
+			            <a class="page-link"
+			               th:text="${i + 1}"
+			               th:href="@{/professions(page=${i}, keyword=${keyword})}">
+			            </a>
+
+			        </li>
+
+			        <!-- ... -->
+			        <li class="page-item disabled"
+			            th:if="${professionsPage.number < professionsPage.totalPages - 4}">
+			            <span class="page-link">...</span>
+			        </li>
+
+			        <!-- Dernière page -->
+			        <li class="page-item"
+			            th:if="${professionsPage.number < professionsPage.totalPages - 3}">
+			            <a class="page-link"
+			               th:href="@{/professions(page=${professionsPage.totalPages - 1})}"
+			               th:text="${professionsPage.totalPages}">
+			            </a>
+			        </li>
+
+			        <!-- Suivant -->
+			        <li class="page-item"
+			            th:classappend="${professionsPage.last} ? 'disabled'">
+			            <a class="page-link"
+			               th:href="@{/professions(page=${professionsPage.number + 1})}">
+			                &raquo;
+			            </a>
+			        </li>
+
+			    </ul>
+			</div>
+        </fieldset>
+    </div>
+
+    <!-- Recherche dynamique -->
+        <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	
+	<!-- Flash message invisible pour Thymeleaf -->
+	<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+	
+	<script>
+	document.addEventListener('DOMContentLoaded', function() {
+	    // Sélectionner tous les boutons réinitialiser
+	    document.querySelectorAll('.del-btn').forEach(btn => {
+	        btn.addEventListener('click', function(e) {
+	            e.preventDefault(); // empêcher le href="#"
+
+	             const href = this.href; // récupère l'URL complète générée par Thymeleaf
+
+	            Swal.fire({
+	                title: 'Confirmation',
+	                text: "Voulez-vous supprimer ?",
+	                icon: 'warning',
+	                showCancelButton: true,
+	                confirmButtonText: 'Oui',
+	                cancelButtonText: 'Non'
+	            }).then((result) => {
+	                if (result.isConfirmed) {
+	                    // Redirection vers le controller
+	                    window.location.href = href;
+	                }
+	            });
+	        });
+		
+		// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+		    const successDiv = document.getElementById('successMessage');
+		    if (successDiv && successDiv.textContent.trim() !== '') {
+		        const msg = successDiv.textContent.trim();
+		        Swal.fire({
+		            icon: 'success',
+		            title: 'Succès !',
+		            text: msg,
+		            confirmButtonText: 'OK'
+		        });
+		    }
+		});
+	});
+	</script>
+	
+	
+	
+	<script th:inline="javascript">
+				document.addEventListener("DOMContentLoaded", function () {
+
+			    const input = document.getElementById("searchInput");
+			    const tableBody = document.getElementById("professionTableBody");
+			    const loader = document.getElementById("loader");
+			    const paginationContainer = document.querySelector(".pagination");
+				const contextPath = /*[[@{/}]]*/ ""; // résout vers /immobilier
+				
+			    let timeout = null;
+			    let currentPage = 0;
+			    let currentKeyword = "";
+				
+				let sortColumn = null;
+				let sortDirection = 'asc';
+								
+			    // Charger les données depuis l'API
+			    function loadData(keyword, page = 0) {
+			        loader.style.display = "block";
+			        currentKeyword = keyword;
+
+			        const url = /*[[@{/professions/api/search}]]*/ 
+			                    + "?keyword=" + encodeURIComponent(keyword) 
+			                    + "&page=" + page;
+								
+					if(sortColumn) {
+					    url += "&sort=" + sortColumn + "," + sortDirection;
+					}
+
+			        fetch(url)
+			            .then(res => res.json())
+			            .then(data => {
+			                loader.style.display = "none";
+			                tableBody.innerHTML = "";
+
+			                if (!data.content || data.content.length === 0) {
+			                    tableBody.innerHTML = `
+			                        <tr>
+			                            <td colspan="4" class="text-center">
+			                                Aucune profession trouvé.
+			                            </td>
+			                        </tr>`;
+			                    if (paginationContainer) paginationContainer.innerHTML = "";
+			                    return;
+			                }
+
+			                // Table avec dropdown
+							data.content.forEach(p => {
+							    tableBody.innerHTML += `
+							        <tr>
+							            <td>${p.libelle ?? ''}</td>
+							            <td>
+							                <div class="d-flex justify-content-center">
+							                    <div class="dropdown">
+							                        <button class="btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+							                            <i class="bi bi-three-dots-vertical"></i>
+							                        </button>
+							                        <ul class="dropdown-menu">
+							                            <li>
+							                                <a class="dropdown-item" href="${contextPath}professions/edit/${p.id}">
+							                                    <i class="bi bi-pencil me-2"></i>Modifier
+							                                </a>
+							                            </li>
+							                            <li>
+							                                <a class="dropdown-item del-btn" href="${contextPath}professions/delete/${p.id}">
+							                                    <i class="bi bi-trash me-2"></i>Supprimer
+							                                </a>
+							                            </li>
+							                        </ul>
+							                    </div>
+							                </div>
+							            </td>
+							        </tr>`;
+							});
+
+							attachDeleteEvents();
+							attachSortEvents();
+							buildPagination(data);
+							updateSortIcons(); //
+			            })
+			            .catch(err => {
+			                loader.style.display = "none";
+			                console.error("Erreur AJAX :", err);
+			            });
+			    }
+
+			    // 🔹 Rebind SweetAlert pour suppression
+			    function attachDeleteEvents() {
+			        document.querySelectorAll(".del-btn").forEach(btn => {
+			            btn.addEventListener("click", function(e) {
+			                e.preventDefault();
+			                const href = this.href;
+
+			                Swal.fire({
+			                    title: 'Confirmation',
+			                    text: "Voulez-vous supprimer ce profession ?",
+			                    icon: 'warning',
+			                    showCancelButton: true,
+			                    confirmButtonText: 'Oui',
+			                    cancelButtonText: 'Non'
+			                }).then((result) => {
+			                    if (result.isConfirmed) {
+			                        window.location.href = href;
+			                    }
+			                });
+			            });
+			        });
+			    }
+
+				// Fonction pour attacher les événements de tri
+				function attachSortEvents() {
+				    document.querySelectorAll('th.sortable').forEach(th => {
+				        th.style.cursor = 'pointer';
+				        th.onclick = () => {
+				            const column = th.dataset.column;
+
+				            // Si on reclique sur la même colonne, on inverse le sens
+				            if (sortColumn === column) {
+				                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+				            } else {
+				                sortColumn = column;
+				                sortDirection = 'asc';
+				            }
+
+				            // Charger les données triées
+				            loadData(currentKeyword, 0);
+
+				            // Mettre à jour les icônes
+				            updateSortIcons();
+				        };
+				    });
+				}
+
+				// Afficher la flèche sur la colonne triée
+				function updateSortIcons() {
+				    document.querySelectorAll('th.sortable i').forEach(icon => {
+				        icon.className = 'bi bi-arrow-down-up ms-1'; // reset
+				    });
+
+				    if (sortColumn) {
+				        const th = document.querySelector(`th[data-column="${sortColumn}"] i`);
+				        if (th) {
+				            th.className = sortDirection === 'asc' ? 'bi bi-arrow-up ms-1' : 'bi bi-arrow-down ms-1';
+				        }
+				    }
+				}
+				
+			    // 🔹 Pagination courte avec points de suspension
+				function buildPagination(data) {
+				    if (!paginationContainer) return;
+				    paginationContainer.innerHTML = "";
+
+				    const currentPage = data.number;         // page courante (0-index)
+				    const totalPages = data.totalPages;      // total pages
+
+				    if (totalPages <= 1) return;
+
+				    // ⬅ Précédent
+				    paginationContainer.innerHTML += `
+				        <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+				            <a class="page-link" href="#" data-page="${currentPage - 1}">&laquo;</a>
+				        </li>`;
+
+				    // Première page
+				    if (currentPage > 3) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item">
+				                <a class="page-link" href="#" data-page="0">1</a>
+				            </li>`;
+				    }
+
+				    // Pointillés avant
+				    if (currentPage > 4) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item disabled"><span class="page-link">...</span></li>`;
+				    }
+
+				    // Pages autour de la page courante (±2)
+				    const start = Math.max(0, currentPage - 2);
+				    const end = Math.min(totalPages - 1, currentPage + 2);
+				    for (let i = start; i <= end; i++) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item ${i === currentPage ? 'active' : ''}">
+				                <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
+				            </li>`;
+				    }
+
+				    // Pointillés après
+				    if (currentPage < totalPages - 5) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item disabled"><span class="page-link">...</span></li>`;
+				    }
+
+				    // Dernière page
+				    if (currentPage < totalPages - 4) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item">
+				                <a class="page-link" href="#" data-page="${totalPages - 1}">${totalPages}</a>
+				            </li>`;
+				    }
+
+				    // ➡ Suivant
+				    paginationContainer.innerHTML += `
+				        <li class="page-item ${currentPage === totalPages - 1 ? 'disabled' : ''}">
+				            <a class="page-link" href="#" data-page="${currentPage + 1}">&raquo;</a>
+				        </li>`;
+
+				    // Rebind click events
+				    paginationContainer.querySelectorAll(".page-link").forEach(link => {
+				        link.addEventListener("click", function(e) {
+				            e.preventDefault();
+				            const page = parseInt(this.dataset.page);
+				            if (!isNaN(page) && page >= 0 && page < totalPages) {
+				                loadData(currentKeyword, page);
+				            }
+				        });
+				    });
+				}
+
+			    // 🔎 Recherche automatique avec debounce
+			    input.addEventListener("input", function () {
+			        clearTimeout(timeout);
+			        timeout = setTimeout(() => {
+			            currentPage = 0;
+			            loadData(input.value, currentPage);
+			        }, 400);
+			    });
+
+			    // ⚡ Chargement initial
+			    loadData(input.value, currentPage);
+				
+			});
+		</script>	
+	
+	</section>
+</body>
+</html>

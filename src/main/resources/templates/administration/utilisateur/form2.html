@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+    <!-- Contenu spécifique à cette page -->
+    <section layout:fragment="content">
+	   <!-- Ton contenu principal ici -->
+		<div class="container my-2">
+			<div class="container mt-4">
+			    <h2>Gestion des utilisateurs</h2>
+				
+				<form th:action="@{/utilisateurs/save}" th:object="${utilisateur}" method="post" 
+								enctype="multipart/form-data" class="border p-4 rounded shadow-sm bg-white" id="userForm">
+								
+					<input type="hidden" th:field="*{id}"/>
+					
+					<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+				    <h4>Connexion</h4>
+					<div class="row">
+					     <div class="col-sm-12 col-md-6">
+					        <div class="mb-3 form-group">
+					            <label for="username" class="form-label">Identifiant</label>
+								<input type="text" th:field="*{username}" class="form-control" required>
+					        </div>
+					     </div>					 
+					</div>
+					<hr>
+					
+					<div class="row">
+						<h4>Informations Utilisateur</h4>
+					     <div class="col-sm-12 col-md-6">
+					        <div class="mb-3 form-group">
+					            <label for="matricule" class="form-label">Matricule</label>
+								<input type="text" th:field="*{matricule}" class="form-control" required th:disabled="${isUpdate}" oninput="uppercaseWords(this)">
+					        </div>
+					     </div>
+						 
+						 <div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+				            <label for="locataire" class="form-label">Civilité</label>
+							<select th:field="*{titre}" class="form-control" id="titre" th:required="true">
+								<option value=""></option>
+								<option th:each="item : ${listTitre}" th:value="${item}" th:text="${item}"></option>
+							</select>
+							</div>
+				        </div>							 
+					</div>
+					
+					<div class="row">
+					     <div class="col-sm-12 col-md-6">
+					        <div class="mb-3 form-group">
+					            <label for="prenom" class="form-label">Nom</label>
+								<input type="text" th:field="*{nom}" class="form-control" required oninput="uppercaseWords(this)">
+					        </div>
+					     </div>
+						 <div class="col-sm-12 col-md-6">
+					        <div class="mb-3 form-group">
+					            <label for="prenom" class="form-label">Prénom(s)</label>
+								<input type="text" id="prenoms" th:field="*{prenoms}" class="form-control" required oninput="capitalizeWords(this)">
+					        </div>
+					     </div>
+				    </div>
+				    
+				    <div class="row">
+						<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+								<label for="telephone" class="col-form-label">Téléphone</label>
+								<input type="text" class="form-control phone_ci"
+								       th:field="*{telephone}"
+								       placeholder="00 00 00 00 00"
+								       required
+								       maxlength="14"
+								       inputmode="numeric">
+							</div>
+						</div>
+						<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+				        	<label class="form-label">Email :</label>
+				        	<input type="email" th:field="*{email}" class="form-control" required>
+							</div>
+						</div>
+				    </div>
+
+					<hr>
+				    <h4>Assignations (Rôles)</h4>
+				    <div id="assignations-container">
+				        <div th:each="assignation, stat : *{assignations}" class="row">
+							<div class="col-sm-6 col-md-3">
+							 	<div class="mb-3 form-group">	
+								<label>Rôle :</label>
+					            <select th:field="*{assignations[__${stat.index}__].roleId}" class="form-control ">
+					                <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.libelle}"></option>
+					            </select>
+							 	</div>
+							</div>
+							<div class="col-sm-6 col-md-3">
+							 	<div class="mb-3 form-group">
+					            <label>Début :</label>
+					            <input type="date" id="dateDebut" th:field="*{assignations[__${stat.index}__].dateDebut}" class="form-control">
+							 	</div>
+							</div>
+							<div class="col-sm-6 col-md-3">
+							 	<div class="mb-3 form-group">
+					            <label>Fin :</label>
+					            <input type="date" id="dateFin" th:field="*{assignations[__${stat.index}__].dateFin}" class="form-control">
+							 	</div>
+							</div>
+							<div class="col-sm-6 col-md-3">
+								<div class="mb-3 form-group">
+								<label>Action :</label><br/>
+					            <button type="button" class="btn btn-danger w-100" onclick="removeAssignation(this)">❌ Supprimer un rôle</button>
+								</div>
+							</div>
+				        </div>
+				    </div>
+					
+					<div class="mt-3 row g-2">
+						<div class="col-12 col-md-2">
+				    		<button type="button" class="btn btn-primary w-100" onclick="addAssignation()">➕ Ajouter un rôle</button>
+						</div>
+					</div>
+					
+					<hr>	
+									
+					<div class="mt-3 row g-2">
+					    <div class="col-12 col-md-2">
+					        <button type="submit" class="btn btn-primary w-100">
+					            <span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+					        </button>
+					    </div>
+					    <div class="col-12 col-md-2">
+					        <a th:href="@{/utilisateurs}" class="btn btn-danger w-100">
+					            Retour à la liste
+					        </a>
+					    </div>
+					</div>
+					</fieldset>
+			    </form>
+			</div>
+		 </div>
+	
+		<script>
+	        // Toggle sidebar on mobile
+	        document.getElementById('toggleSidebar').addEventListener('click', function () {
+	            document.getElementById('sidebar').classList.toggle('show');
+	        });
+	    </script>
+	
+		
+		<script>
+			//AFFICHE LA PREMIERE LETTRE EN MAJUSCULE
+			function capitalizeWords(input) {
+			    input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+			        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+			    });
+			}
+		
+			//METTRE TOUT LE MOT EN MAJUSCULE
+			function uppercaseWords(input){
+				input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+					return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
+				});
+			}
+		</script>
+		
+		
+		<script>
+		let assignationIndex = /*[[${#lists.size(utilisateur.assignations)}]]*/ 0;
+	
+		function addAssignation() {
+		    const container = document.getElementById("assignations-container");
+		    const newRow = document.createElement("div");
+		    newRow.classList.add("row", "assignation-row");
+	
+		    newRow.innerHTML = `
+		        <div class="col-sm-6 col-md-3">
+		            <label>Rôle :</label>
+		            <select name="assignations[\${assignationIndex}].roleId" class="form-control" required>
+		                <option value="">-- Choisir un rôle --</option>
+		                <!-- Les options sont rendues côté serveur par Thymeleaf -->
+		                <th:block th:each="r : \${roles}">
+		                    <option th:value="\${r.id}" th:text="\${r.libelle}"></option>
+		                </th:block>
+		            </select>
+		        </div>
+		        <div class="col-sm-6 col-md-3">
+		            <label>Début :</label>
+		            <input type="date" name="assignations[\${assignationIndex}].dateDebut" class="form-control">
+		        </div>
+		        <div class="col-sm-6 col-md-3">
+		            <label>Fin :</label>
+		            <input type="date" name="assignations[\${assignationIndex}].dateFin" class="form-control">
+		        </div>
+		        <div class="col-sm-6 col-md-3">
+		            <label>Action :</label><br/>
+		            <button type="button" class="btn btn-danger w-100" onclick="removeAssignation(this)">❌ Supprimer</button>
+		        </div>
+		    `.replace(/\${assignationIndex}/g, assignationIndex);
+	
+		    container.appendChild(newRow);
+		    assignationIndex++;
+		}
+	
+		function removeAssignation(btn) {
+		    btn.closest('.assignation-row').remove();
+		}
+		</script>
+	
+			
+		<script>
+		document.addEventListener("DOMContentLoaded", () => {
+		  document.querySelectorAll('.phone_ci').forEach(input => {
+		    input.addEventListener('input', (e) => {
+		      let v = e.target.value.replace(/\D/g, ''); // garder que les chiffres
+		      v = v.substring(0, 10); // max 10 chiffres
+		      v = v.match(/.{1,2}/g)?.join(' ') ?? v; // groupes de 2 séparés par espace
+		      e.target.value = v;
+		    });
+		  });
+		});
+		</script>
+	
+		<!-- ✅ SweetAlert2 -->
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+	    <!-- ⚠️ Boîte de confirmation avant envoi -->
+	    <script>
+	        document.getElementById('userForm').addEventListener('submit', function (e) {
+	            e.preventDefault(); // Bloque l’envoi automatique
+	            const form = this;
+	            const isEdit = form.querySelector('input[name="id"]').value !== "";
+
+	            Swal.fire({
+	                title: isEdit ? 'Confirmation' : 'Confirmation',
+	                text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
+	                icon: 'question',
+	                showCancelButton: true,
+	                confirmButtonText: 'Oui',
+	                cancelButtonText: 'Non',
+	                reverseButtons: true
+	            }).then((result) => {
+	                if (result.isConfirmed) {
+	                    form.submit(); // Si confirmé → on envoie le formulaire
+	                }
+	            });
+	        
+				// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+			    const successDiv = document.getElementById('successMessage');
+			    if (successDiv && successDiv.textContent.trim() !== '') {
+			        const msg = successDiv.textContent.trim();
+			        Swal.fire({
+			            icon: 'success',
+			            title: 'Succès !',
+			            text: msg,
+			            confirmButtonText: 'OK'
+			        });
+			    }
+			});
+	    </script>
+				
+	</section>
+	
+</body>
+</html>

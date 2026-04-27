@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head th:replace="~{fragments/head :: head}"></head>
+
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Navbar -->
+    <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+    <div class="d-flex flex-grow-1">
+
+        <!-- Sidebar Desktop -->
+        <aside class="d-none d-lg-block" style="width: 250px;">
+            <div th:replace="~{fragments/sidebar :: sidebarDesktop}"></div>
+        </aside>
+
+        <!-- Contenu principal -->
+        <main class="flex-grow-1 p-3 p-lg-4">
+            <section layout:fragment="content"></section>
+        </main>
+
+    </div>
+
+    <!-- Sidebar Mobile Offcanvas -->
+    <div th:replace="~{fragments/sidebar :: sidebarMobile}"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Styles pour mobile -->
+    <style>
+        /* Formulaire pleine largeur sur mobile */
+        @media (max-width: 991.98px) {
+            main {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+        }
+
+        /* Forcer texte des liens du menu mobile en blanc */
+        #sidebarOffcanvas .offcanvas-body a {
+            color: #ffffff !important;
+        }
+    </style>
+
+</body>
+</html>

@@ -1,0 +1,54 @@
+-- immonet.t_agence definition
+
+-- Drop table
+
+-- DROP TABLE immonet.t_agence;
+
+CREATE TABLE immonet.t_agence (
+	idt int4 NOT NULL,
+	date_creation timestamptz(6) NOT NULL,
+	date_modification timestamptz(6) NOT NULL,
+	modifie_par int4 NOT NULL,
+	"version" int4 NOT NULL,
+	actif bool NOT NULL,
+	adresse varchar(500) NULL,
+	code varchar(255) NULL,
+	date_debut_abonnement date NULL,
+	date_fin_abonnement date NULL,
+	deleted bool NOT NULL,
+	email varchar(255) NULL,
+	montant_abonnement int8 NULL,
+	nom varchar(255) NOT NULL,
+	statut_abonnement varchar(20) NULL,
+	telephone varchar(255) NULL,
+	ville varchar(255) NULL,
+	bloque bool NULL,
+	CONSTRAINT t_agence_pkey PRIMARY KEY (idt),
+	CONSTRAINT t_agence_statut_abonnement_check CHECK (((statut_abonnement)::text = ANY ((ARRAY['ACTIF'::character varying, 'EXPIRE'::character varying, 'SUSPENDU'::character varying])::text[]))),
+	CONSTRAINT ukaltpb8sf7jhm8wx35qmt21aly UNIQUE (nom),
+	CONSTRAINT ukf16t6rdqbtthu6o6fqpm6xvmd UNIQUE (code)
+);
+
+///
+
+ALTER TABLE t_appartement ADD COLUMN agence_id INTEGER;
+ALTER TABLE t_bail ADD COLUMN agence_id INTEGER;
+ALTER TABLE t_bailleur ADD COLUMN agence_id INTEGER;
+ALTER TABLE t_locataire ADD COLUMN agence_id INTEGER;
+ALTER TABLE t_carnet ADD COLUMN agence_id INTEGER;
+ALTER TABLE t_identification ADD COLUMN agence_id INTEGER;
+ALTER TABLE t_encaise ADD COLUMN agence_id INTEGER;
+ALTER TABLE t_loyann ADD COLUMN agence_id INTEGER;
+ALTER TABLE t_utilisateur ADD COLUMN agence_id INTEGER;
+ALTER TABLE t_immeuble ADD COLUMN agence_id INTEGER;
+
+ALTER TABLE t_appartement ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
+ALTER TABLE t_bail ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
+ALTER TABLE t_bailleur ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
+ALTER TABLE t_locataire ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
+ALTER TABLE t_carnet ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
+ALTER TABLE t_identification ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
+ALTER TABLE t_encaisse ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
+ALTER TABLE t_loyann ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
+ALTER TABLE t_utilisateur ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
+ALTER TABLE t_immeuble ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);

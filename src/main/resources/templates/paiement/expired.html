@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+    <section layout:fragment="content">
+		<div class="container my-2">
+			<div class="container mt-4">
+				<h3>Abonnement expiré</h3>
+				<p>Votre abonnement est arrivé à expiration.</p>
+
+				<a th:href="@{/paiement/renew}" class="btn btn-danger">
+				    Renouveler mon abonnement
+				</a>					
+			</div>
+		</div>
+    </section>
+</body>
+</html>

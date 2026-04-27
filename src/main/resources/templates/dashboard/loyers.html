@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Loyers</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .paid {
+            background-color: #d4edda;
+            color: #155724;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .not-paid {
+            background-color: #f8d7da;
+            color: #721c24;
+            text-align: center;
+            font-weight: bold;
+        }
+		
+		.not-paid:hover {
+		    background-color: #f5c6cb; /* variante plus vive au survol */
+		}
+
+        th, td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        td:first-child {
+            text-align: left;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+	<section layout:fragment="content">
+		<div class="container mt-4">
+		
+		    <h2 class="mb-2 mb-md-0">Tableau de bord des loyers - Année <span th:text="${annee}"></span></h2>
+			
+			<hr style="border: 1px solid rgb(192, 192, 192);">
+			
+			<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+				<h5>Tableau de bord</h5> <br />
+		    <!-- Filtre année -->
+		    <form method="get" class="row mb-3">
+		        <div class="col-md-2">
+		            <input type="number" name="annee" class="form-control" th:value="${annee}">
+		        </div>
+		        <div class="col-md-2">
+		            <button class="btn btn-primary">Filtrer</button>
+		        </div>
+		    </form>
+		
+		    <div class="table-responsive">
+		
+		        <!--<table class="table table-bordered table-hover">-->
+		
+				<table class="table">
+					<thead class="table-success">
+					
+		            <!--<thead class="table-dark">-->
+		            <tr>
+		                <th>Locataire</th>
+		                <th>Jan</th>
+		                <th>Fév</th>
+		                <th>Mar</th>
+		                <th>Avr</th>
+		                <th>Mai</th>
+		                <th>Juin</th>
+		                <th>Juil</th>
+		                <th>Août</th>
+		                <th>Sep</th>
+		                <th>Oct</th>
+		                <th>Nov</th>
+		                <th>Déc</th>
+		            </tr>
+		            </thead>
+		
+					<tbody>
+						<tr th:each="row : ${dashboard}">
+						    <td th:text="${row.locataire}"></td>
+						    <td th:class="${row.jan == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.jan == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.fev == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.fev == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.mar == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.mar == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.avr == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.avr == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.mai == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.mai == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.jui == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.jui == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.jul == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.jul == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.aou == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.aou == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.sep == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.sep == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.oct == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.oct == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.nov == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.nov == 1} ? '✔' : '✘'"></span>
+						    </td>
+						    <td th:class="${row.dec == 1} ? 'paid' : 'not-paid'">
+						        <span th:text="${row.dec == 1} ? '✔' : '✘'"></span>
+						    </td>
+						</tr>
+					</tbody>
+		
+		        </table>
+				
+				<!--<nav>
+				<div aria-label="Pagination" th:if="${totalPages > 0}">-->
+				<div class="d-flex justify-content-center mt-3" th:if="${totalPages > 0}">
+				    <ul class="pagination">
+
+				        <!-- Précédent -->
+				        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/dashboards/loyers(page=${currentPage-1}, annee=${annee})}">
+				                &laquo;
+				            </a>
+				        </li>
+
+				        <!-- Première page -->
+				        <li class="page-item" th:if="${currentPage > 2}">
+				            <a class="page-link"
+				               th:href="@{/dashboards/loyers(page=0, annee=${annee})}">1</a>
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled" th:if="${currentPage > 3}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Pages autour -->
+				        <li class="page-item"
+				            th:each="i : ${#numbers.sequence(
+				                T(java.lang.Math).max(0, currentPage - 2),
+				                T(java.lang.Math).min(totalPages - 1, currentPage + 2)
+				            )}"
+				            th:classappend="${i == currentPage} ? 'active'">
+
+				            <a class="page-link"
+				               th:text="${i + 1}"
+				               th:href="@{/dashboards/loyers(page=${i}, annee=${annee})}">
+				            </a>
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${currentPage < totalPages - 4}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Dernière page -->
+				        <li class="page-item"
+				            th:if="${currentPage < totalPages - 3}">
+				            <a class="page-link"
+				               th:text="${totalPages}"
+				               th:href="@{/dashboards/loyers(page=${totalPages - 1}, annee=${annee})}">
+				            </a>
+				        </li>
+
+				        <!-- Suivant -->
+				        <li class="page-item"
+				            th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/dashboards/loyers(page=${currentPage+1}, annee=${annee})}">
+				                &raquo;
+				            </a>
+				        </li>
+
+				    </ul>
+				</div>		
+		    </div>
+			</fieldset>
+		</div>
+	</section>
+</body>
+</html>

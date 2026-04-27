@@ -1,0 +1,20 @@
+<!-- Fragment menu latéral -->
+<div th:fragment="sidebar">
+    <div class="sidebar d-flex flex-column justify-content-between">
+        <div>
+            <h4 class="text-center py-3 border-bottom border-light">SIGAC</h4>
+            <a th:href="@{/home}">🏠 Accueil</a>
+            <a th:href="@{/employees}" sec:authorize="hasRole('ADMIN')">👤 Gestion employés</a>
+            <a th:href="@{/employees/search}">🔍 Recherche</a>
+        </div>
+
+        <div class="p-3">
+            <p class="mb-2">Connecté en tant que :<br>
+                <strong sec:authentication="name"></strong>
+            </p>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn logout-btn text-white">Déconnexion</button>
+            </form>
+        </div>
+    </div>
+</div>

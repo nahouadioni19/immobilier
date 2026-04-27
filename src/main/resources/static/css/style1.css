@@ -1,0 +1,224 @@
+body {
+    margin: 0;
+}
+
+.sidebar {
+    height: 100vh;
+    background-color: #343a40;
+}
+
+.sidebar .nav-link {
+    color: #fff;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #495057;
+}
+
+/* === STYLE GLOBAL DU SIDEBAR === */
+.sidebar-green {
+    background: linear-gradient(180deg, #198754 0%, #146c43 100%);
+    color: #fff;
+    min-height: 100vh;
+    padding: 1rem;
+}
+
+/* === Apparence générale du sidebar vert === */
+/*.sidebar-green {
+    background-color: #198754;  vert Bootstrap 
+    color: white;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    overflow-y: auto;
+    padding-top: 1rem;
+    z-index: 1040;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    animation: sidebarSlideIn 0.6s ease-out forwards;  Animation d’apparition 
+    opacity: 0;
+    transform: translateX(-50px);
+}*/
+
+/* === TITRE OU SECTION === */
+.sidebar-green h5, 
+.sidebar-green h6 {
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 0.5rem;
+}
+
+/* === LIENS DU MENU === */
+/*.sidebar-green a {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 0.9rem;
+    color: #e6fff2;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}*/
+
+/* === Animation du sidebar à l'ouverture === */
+@keyframes sidebarSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* === Liens du menu === */
+.sidebar-green a {
+    display: block;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    border-radius: 8px;
+    margin: 3px 10px;
+}
+
+/* Icône à gauche du texte (si tu utilises Bootstrap Icons ou Lucide) */
+.sidebar-green a i {
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
+/* === EFFET AU SURVOL === */
+/*.sidebar-green a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    transform: translateX(3px);
+}
+*/
+
+/* === Effet au survol === */
+.sidebar-green a:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    transform: translateX(4px);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+}
+/* === LIEN ACTIF (page courante) === */
+/*.sidebar-green a.active {
+    background-color: rgba(255, 255, 255, 0.35);
+    color: #fff;
+    font-weight: 600;
+}*/
+/* === Lien actif avec effet Glow === */
+.sidebar-green a.active {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+    transition: all 0.3s ease-in-out;
+}
+/* === SÉPARATEURS OU ESPACEMENTS === */
+.sidebar-green hr {
+    border-color: rgba(255, 255, 255, 0.3);
+    margin: 0.75rem 0;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+}
+
+.user-info img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.logout-btn {
+    background-color: #dc3545;
+    border: none;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: absolute;
+        z-index: 1030;
+        top: 56px;
+        left: -220px;
+        width: 220px;
+        transition: left 0.3s;
+    }
+
+    .sidebar.show {
+        left: 0;
+    }
+}
+
+/* === LIEN ACTIF (page courante) === */
+.sidebar-green a.active {
+    background-color: rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    font-weight: 600;
+    position: relative;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.3); /* effet glow */
+    transition: all 0.3s ease-in-out;
+}
+
+/* Animation subtile d'onde lumineuse */
+.sidebar-green a.active::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0.15),
+        rgba(255, 255, 255, 0.05),
+        rgba(255, 255, 255, 0.15)
+    );
+	animation: shimmer 2.8s infinite;
+	    border-radius: 8px;
+}
+
+/* Keyframes de l’effet de balayage lumineux */
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    50% {
+        left: 100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* === EFFET AU SURVOL (toujours doux) === */
+.sidebar-green a:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    transform: translateX(4px);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+}
+
+/* === Mobile : version offcanvas animée === */
+.offcanvas.sidebar-green {
+    width: 250px;
+    animation: sidebarSlideIn 0.5s ease-out forwards;
+}
+
+/* === Icônes alignées proprement === */
+.sidebar-green i {
+    margin-right: 8px;
+}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head th:replace="~{fragments/head :: head}"></head>
+
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Navbar -->
+    <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+    <div class="d-flex flex-grow-1">
+
+        <!-- Sidebar (desktop) -->
+        <aside class="d-none d-lg-block bg-light border-end" style="width: 250px;">
+            <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+        </aside>
+
+        <!-- Contenu principal -->
+        <main class="flex-grow-1 p-4">
+            <section layout:fragment="content">
+                <!-- Le contenu spécifique des pages sera injecté ici -->
+            </section>
+        </main>
+    </div>
+
+    <!-- Sidebar offcanvas (mobile) -->
+	<!-- Sidebar offcanvas mobile -->
+	<div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+	    <div class="offcanvas-header">
+	        <h5 id="sidebarOffcanvasLabel">SIGimmo</h5>
+	        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
+	    </div>
+	    <div class="offcanvas-body sidebar-green">
+	        <!-- Inclure le contenu du sidebar directement -->
+	        <div th:include="~{fragments/sidebar :: sidebar}"></div>
+	    </div>
+	</div>
+
+
+    <!-- Footer 
+    <footer th:replace="~{fragments/footer :: footer}"></footer>-->
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script pour toggler la sidebar offcanvas sur mobile -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleSidebar = document.getElementById('toggleSidebar');
+            const sidebarOffcanvas = new bootstrap.Offcanvas(document.getElementById('sidebarOffcanvas'));
+
+            toggleSidebar?.addEventListener('click', () => {
+                sidebarOffcanvas.toggle();
+            });
+        });
+    </script>
+
+    <!-- Optionnel : forcer un fond clair dans l’offcanvas pour mieux voir le menu -->
+    <style>
+        #sidebarOffcanvas .offcanvas-body {
+            background-color: #f8f9fa;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Recouvrements</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet"/>
+</head>
+
+<body>
+<section layout:fragment="content">
+
+<div class="container my-2">
+
+    <!-- ===================== FILTRES ===================== -->
+    <form th:action="@{/encaissements}" method="get" class="row g-3 mb-3 align-items-end">
+
+        <!-- Locataire -->
+        <div class="col-md-4">
+            <label class="form-label">Locataire</label>
+            <select name="locataireId" class="form-select">
+                <option value="">Tous</option>
+                <option th:each="bail : ${baux}"
+                        th:value="${bail.id}"
+                        th:text="${bail.locataire.nom}"
+                        th:selected="${selectedLocataire != null and bail.id == selectedLocataire}">
+                </option>
+            </select>
+        </div>
+
+        <!-- Mois -->
+        <div class="col-md-3">
+            <label class="form-label">Mois</label>
+            <select name="mois" class="form-select">
+                <option th:each="m, stat : ${moisList}"
+                        th:value="${stat.index + 1}"
+                        th:text="${m}"
+                        th:selected="${moisIndex == stat.index + 1}">
+                </option>
+            </select>
+        </div>
+
+        <!-- Année -->
+        <div class="col-md-2">
+            <label class="form-label">Année</label>
+            <select name="annee" class="form-select">
+                <option th:each="y : ${#numbers.sequence(2024, currentYear + 5)}"
+                        th:value="${y}"
+                        th:text="${y}"
+                        th:selected="${y == annee}">
+                </option>
+            </select>
+        </div>
+
+        <!-- Bouton -->
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+        </div>
+
+    </form>
+
+    <!-- ===================== TITRE ===================== -->
+    <h2 class="mb-3">
+        Recouvrements - Mois: <span th:text="${mois}"></span> /
+        Année: <span th:text="${annee}"></span>
+    </h2>
+
+    <!-- ===================== TABLEAU ===================== -->
+    <table class="table table-bordered table-striped">
+        <thead class="table-success">
+        <tr>
+            <th>Locataire</th>
+            <th>Loyer Mensuel</th>
+            <th>Montant Payé</th>
+            <th>Reste</th>
+            <th>Statut</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="r : ${recouvrements}">
+            <td th:text="${r.locataireNom}">Nom</td>
+            <td th:text="${#numbers.formatInteger(r.loyerMensuel,0)}">0</td>
+            <td th:text="${#numbers.formatInteger(r.montantPaye,0)}">0</td>
+            <td th:text="${#numbers.formatInteger(r.reste,0)}">0</td>
+            <td>
+                <span th:classappend="${
+                        r.statut == 'PAYE' ? 'badge bg-success' :
+                        r.statut == 'PARTIEL' ? 'badge bg-warning' :
+                        r.statut == 'IMPAYE' ? 'badge bg-danger' :
+                        r.statut == 'RETARD' ? 'badge bg-danger' :
+                        'badge bg-secondary'
+                    }"
+                      th:text="${r.statut}">
+                </span>
+            </td>
+        </tr>
+        </tbody>
+
+        <!-- Totaux -->
+        <tfoot class="table-light fw-bold">
+        <tr>
+            <td>Total</td>
+            <td th:text="${#numbers.formatInteger(totalLoyer,0)}">0</td>
+            <td th:text="${#numbers.formatInteger(totalPaye,0)}">0</td>
+            <td th:text="${#numbers.formatInteger(totalReste,0)}">0</td>
+            <td></td>
+        </tr>
+        </tfoot>
+    </table>
+	
+	<!-- Pagination -->
+		<div class="d-flex justify-content-center mt-3" th:if="${recouvrementsPage.totalElements > 0}">
+		    <ul class="pagination">
+
+		        <!-- Précédent -->
+		        <li class="page-item"
+		            th:classappend="${recouvrementsPage.first} ? 'disabled'">
+		            <a class="page-link"				               
+					   th:href="@{/encaissements(page=${recouvrementsPage.number - 1},mois=${mois},
+					                                             annee=${annee},
+					                                             locataireId=${selectedLocataire})}">
+		                &laquo;
+		            </a>
+		        </li>
+
+		        <!-- Première page -->
+		        <li class="page-item"
+		            th:if="${recouvrementsPage.number > 2}">
+		            <a class="page-link"
+		               th:href="@{/encaissements(page=0,mois=${mois},
+					                                    annee=${annee},
+					                                    locataireId=${selectedLocataire})}">1</a>
+		        </li>
+
+		        <!-- ... -->
+		        <li class="page-item disabled"
+		            th:if="${recouvrementsPage.number > 3}">
+		            <span class="page-link">...</span>
+		        </li>
+
+		        <!-- Pages autour -->
+		        <li class="page-item"
+		            th:each="i : ${#numbers.sequence(
+		                T(java.lang.Math).max(0, recouvrementsPage.number - 2),
+		                T(java.lang.Math).min(recouvrementsPage.totalPages - 1, recouvrementsPage.number + 2)
+		            )}"
+		            th:classappend="${i == recouvrementsPage.number} ? 'active'">
+
+		            <a class="page-link"
+		               th:text="${i + 1}"
+					   th:href="@{/encaissements(page=${i},mois=${mois},
+					                                       annee=${annee},
+					                                       locataireId=${selectedLocataire})}">
+		            </a>
+
+		        </li>
+
+		        <!-- ... -->
+		        <li class="page-item disabled"
+		            th:if="${recouvrementsPage.number < recouvrementsPage.totalPages - 4}">
+		            <span class="page-link">...</span>
+		        </li>
+
+		        <!-- Dernière page -->
+		        <li class="page-item"
+		            th:if="${recouvrementsPage.number < recouvrementsPage.totalPages - 3}">
+		            <a class="page-link"
+		               th:href="@{/encaissements(page=${recouvrementsPage.totalPages - 1},mois=${mois},
+					                                             annee=${annee},
+					                                             locataireId=${selectedLocataire})}"
+		               th:text="${recouvrementsPage.totalPages}">
+		            </a>
+		        </li>
+
+		        <!-- Suivant -->
+		        <li class="page-item"
+		            th:classappend="${recouvrementsPage.last} ? 'disabled'">
+		            <a class="page-link"
+		               th:href="@{/encaissements(page=${recouvrementsPage.number + 1},mois=${mois},
+					                                             annee=${annee},
+					                                             locataireId=${selectedLocataire})}">
+		                &raquo;
+		            </a>				
+					
+		        </li>
+
+		    </ul>
+		</div>
+
+</div>
+
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+
+</section>
+</body>
+</html>

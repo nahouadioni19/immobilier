@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+	<!-- Fragment spécifique à cette page -->
+	<section layout:fragment="content">
+        <div class="container my-2">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Gestion des utilisateurs</h2>
+				<div class="d-flex align-items-center">
+					<!-- Zone de recherche dynamique -->
+			        <input type="text" id="searchInput" class="form-control me-2"
+			               placeholder="Rechercher..." autocomplete="off">						   
+	                <a th:href="@{/utilisateurs/create}" class="btn btn-primary">Nouveau</a>
+				</div>
+            </div>
+			
+			<hr style="border: 1px solid rgb(192, 192, 192);">
+												
+		<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+			<h5>Liste des utilisateurs</h5> <br />
+			
+			<div id="utilisateursTable">
+	            <table class="table">
+	                <thead class="table-success">
+	                <tr>
+	                    <th>Matricule</th>
+						<th>Identifiant</th>
+	                    <th>Nom Prénom(s)</th>
+						<th>Statut</th>
+	                    <th>Action</th>
+	                </tr>
+	                </thead>
+	                <tbody id="utilisateurTableBody">
+	                <tr th:each="user : ${utilisateursPage.content}">
+						<td class="text-truncate" style="max-width: 250px;" th:text="${user.matricule}">1</td>
+						<td class="text-truncate" style="max-width: 250px;" th:text="${user.username}">1</td>
+	                    <td class="text-truncate" style="max-width: 250px;" th:text="|${user.nom} ${user.prenoms}|">1</td>
+						<td>
+						    <span th:if="${user.enabled}" class="badge bg-success">Actif</span>
+						    <span th:if="${!user.enabled}" class="badge bg-danger">Inactif</span>
+						</td>
+
+	                    <td>
+	                        <div class="d-flex justify-content-center">
+	                            <div class="dropdown">
+	                                <button class="btn" type="button" id="dropdownMenuButton"
+	                                        data-bs-toggle="dropdown" aria-expanded="false">
+	                                    <i class="bi bi-three-dots-vertical"></i>
+	                                </button>
+	                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+	                                    <li>
+	                                        <a class="dropdown-item" th:href="@{'/utilisateurs/edit/' + ${user.id}}">
+	                                            <i class="bi bi-pencil me-2"></i>Modifier
+	                                        </a>
+	                                    </li>
+										
+										<li>
+										    <a class="dropdown-item reinit-btn" th:href="@{'/utilisateurs/reinitialise/' + ${user.id}}">
+										        <i class="bi bi-arrow-counterclockwise me-2"></i>Réinitialiser
+										    </a>
+										</li>
+										
+										<!-- Activer / Désactiver -->
+									    <li th:if="${user.enabled}">
+									        <a class="dropdown-item text-warning"
+									           th:href="@{'/utilisateurs/desactiver/' + ${user.id}}">
+									            <i class="bi bi-person-x me-2"></i>Désactiver
+									        </a>
+									    </li>
+
+									    <li th:if="${!user.enabled}">
+									        <a class="dropdown-item text-success"
+									           th:href="@{'/utilisateurs/activer/' + ${user.id}}">
+									            <i class="bi bi-person-check me-2"></i>Activer
+									        </a>
+									    </li>
+										
+	                                    <li>
+	                                        <a class="dropdown-item del-btn" th:href="@{'/utilisateurs/delete/' + ${user.id}}">
+	                                            <i class="bi bi-trash me-2"></i>Supprimer
+	                                        </a>
+	                                    </li>
+	                                </ul>
+	                            </div>
+	                        </div>
+	                    </td>
+	                </tr>
+	                <tr th:if="${#lists.isEmpty(utilisateursPage.content)}">
+	                    <td colspan="4" class="text-center">Aucun utilisateur trouvé.</td>
+	                </tr>
+	                </tbody>
+	            </table>     
+			</div>
+			
+            <!-- Pagination -->
+				<div class="d-flex justify-content-center mt-3" th:if="${utilisateursPage.totalElements > 0}">
+				    <ul class="pagination">
+
+				        <!-- Précédent -->
+				        <li class="page-item"
+				            th:classappend="${utilisateursPage.first} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/utilisateurs(page=${utilisateursPage.number - 1})}">
+				                &laquo;
+				            </a>
+				        </li>
+
+				        <!-- Première page -->
+				        <li class="page-item"
+				            th:if="${utilisateursPage.number > 2}">
+				            <a class="page-link"
+				               th:href="@{/utilisateurs(page=0)}">1</a>
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${utilisateursPage.number > 3}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Pages autour -->
+				        <li class="page-item"
+				            th:each="i : ${#numbers.sequence(
+				                T(java.lang.Math).max(0, utilisateursPage.number - 2),
+				                T(java.lang.Math).min(utilisateursPage.totalPages - 1, utilisateursPage.number + 2)
+				            )}"
+				            th:classappend="${i == utilisateursPage.number} ? 'active'">
+
+				            <a class="page-link"
+				               th:text="${i + 1}"
+				               th:href="@{/utilisateurs(page=${i})}">
+				            </a>
+
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${utilisateursPage.number < utilisateursPage.totalPages - 4}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Dernière page -->
+				        <li class="page-item"
+				            th:if="${utilisateursPage.number < utilisateursPage.totalPages - 3}">
+				            <a class="page-link"
+				               th:href="@{/utilisateurs(page=${utilisateursPage.totalPages - 1})}"
+				               th:text="${utilisateursPage.totalPages}">
+				            </a>
+				        </li>
+
+				        <!-- Suivant -->
+				        <li class="page-item"
+				            th:classappend="${utilisateursPage.last} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/utilisateurs(page=${utilisateursPage.number + 1})}">
+				                &raquo;
+				            </a>
+				        </li>
+
+				    </ul>
+				</div>
+
+			</fieldset>
+		</div>
+	
+		<script>
+			document.addEventListener("DOMContentLoaded", function () {
+			    const searchInput = document.getElementById("searchInput");
+			    const tableContainer = document.getElementById("utilisateursPage");
+			
+			    searchInput.addEventListener("keyup", function () {
+			        const keyword = this.value;
+			
+			        fetch(`/utilisateurs/search?keyword=${keyword}`)
+			            .then(response => response.text())
+			            .then(html => {
+			                tableContainer.innerHTML = html; // remplacer la table
+			            });
+			    });
+			});
+		</script>
+		
+		<script>
+		const searchInput = document.getElementById('searchInput');
+		const tableBody = document.getElementById('utilisateurTableBody');
+		
+		searchInput.addEventListener('input', function() {
+		    const keyword = this.value;
+		
+		    fetch(`/utilisateurs/search?keyword=${encodeURIComponent(keyword)}`)
+		        .then(response => {
+		            if (!response.ok) throw new Error('Erreur réseau');
+		            return response.json(); // on attend JSON côté backend
+		        })
+		        .then(data => {
+		            // On vide le tableau
+		            tableBody.innerHTML = '';
+		            
+		            // On ajoute les nouvelles lignes
+		            data.forEach(type => {
+		                const row = document.createElement('tr');
+		                row.innerHTML = `
+		                    <td>${type.code}</td>
+		                    <td>${type.libelle}</td>
+		                `;
+		                tableBody.appendChild(row);
+		            });
+		        })
+		        .catch(error => console.error('Erreur:', error));
+		});
+		</script>
+		
+		<!-- SweetAlert2 -->
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+		    // Sélectionner tous les boutons réinitialiser
+		    document.querySelectorAll('.reinit-btn').forEach(btn => {
+		        btn.addEventListener('click', function(e) {
+		            e.preventDefault(); // empêcher le href="#"
+
+		            const href = this.href;
+
+		            Swal.fire({
+		                title: 'Confirmation',
+		                text: "Voulez-vous réinitialiser le mot de passe ?",
+		                icon: 'warning',
+		                showCancelButton: true,
+		                confirmButtonText: 'Oui',
+		                cancelButtonText: 'Non'
+		            }).then((result) => {
+		                if (result.isConfirmed) {
+		                    // Redirection vers le controller
+		                    window.location.href = href;
+		                }
+		            });
+		        });
+		    });
+		});
+		</script>
+
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+		
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+		    // Sélectionner tous les boutons réinitialiser
+		    document.querySelectorAll('.del-btn').forEach(btn => {
+		        btn.addEventListener('click', function(e) {
+		            e.preventDefault(); // empêcher le href="#"
+
+		            const href = this.href;
+
+		            Swal.fire({
+		                title: 'Confirmation',
+		                text: "Voulez-vous supprimer ?",
+		                icon: 'warning',
+		                showCancelButton: true,
+		                confirmButtonText: 'Oui',
+		                cancelButtonText: 'Non'
+		            }).then((result) => {
+		                if (result.isConfirmed) {
+		                    // Redirection vers le controller
+		                    window.location.href = href;
+		                }
+		            });
+		        });
+			
+			// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+			    const successDiv = document.getElementById('successMessage');
+			    if (successDiv && successDiv.textContent.trim() !== '') {
+			        const msg = successDiv.textContent.trim();
+			        Swal.fire({
+			            icon: 'success',
+			            title: 'Succès !',
+			            text: msg,
+			            confirmButtonText: 'OK'
+			        });
+			    }
+			});
+		});
+		</script>
+	
+	</section>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+<section layout:fragment="content">
+    <div class="container my-2">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Gestion des professions</h2>
+            <div class="d-flex align-items-center">
+                <a th:href="@{/professions/create}" class="btn btn-primary">Nouveau</a>
+            </div>
+        </div>
+
+        <hr>
+
+        <fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+            <h5>Liste des professions</h5><br/>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <input type="text" id="searchInput"
+                           class="form-control"
+                           placeholder="Rechercher désignation"
+                           autocomplete="off">
+                </div>
+            </div>
+
+            <div id="professionsTable">
+                <div id="loader" class="text-center my-3 d-none">
+                    <div class="spinner-border text-primary"></div>
+                    <div>Recherche en cours...</div>
+                </div>
+
+                <table class="table">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Désignation</th>
+                            <th style="width: 50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="professionTableBody">
+                        <tr>
+                            <td colspan="2" class="text-center">Chargement...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Pagination">
+                <ul class="pagination justify-content-end" id="paginationContainer"></ul>
+            </nav>
+        </fieldset>
+    </div>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Script de recherche AJAX -->
+    <script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const contextPath = /*[[@{/}]]*/ "";
+
+        // ⚡ Empêche rechargement du formulaire avec ENTER
+        const searchInput = document.getElementById("searchInput");
+        if(searchInput){
+            searchInput.addEventListener("keydown", (e) => {
+                if(e.key === "Enter"){
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+
+        class SearchTable {
+            constructor(config) {
+                this.input = document.getElementById(config.inputId);
+                this.tableBody = document.getElementById(config.tableBodyId);
+                this.loader = document.getElementById(config.loaderId);
+                this.pagination = document.querySelector(config.paginationSelector);
+                this.apiUrl = config.apiUrl;
+                this.renderRow = config.renderRow;
+                this.pageSize = config.pageSize || 10;
+                this.currentPage = 0;
+                this.currentKeyword = "";
+                this.timeout = null;
+                this.init();
+            }
+
+            init() {
+                if (this.input) {
+                    this.input.addEventListener("input", () => {
+                        clearTimeout(this.timeout);
+                        this.timeout = setTimeout(() => {
+                            this.currentKeyword = this.input.value;
+                            this.load(0);
+                        }, 400);
+                    });
+                }
+                this.load();
+            }
+
+            async load(page = 0) {
+                this.currentPage = page;
+                this.showLoader();
+                try {
+                    const url = `${this.apiUrl}?keyword=${encodeURIComponent(this.currentKeyword)}&page=${page}&size=${this.pageSize}`;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error("Erreur serveur");
+                    const data = await res.json();
+                    this.render(data);
+                } catch(e) {
+                    console.error("Erreur chargement :", e);
+                    this.tableBody.innerHTML = `<tr><td colspan="100%" class="text-danger text-center">Erreur de chargement</td></tr>`;
+                    if(this.pagination) this.pagination.innerHTML = "";
+                } finally {
+                    this.hideLoader();
+                }
+            }
+
+            render(data) {
+                this.tableBody.innerHTML = "";
+                if (!data.content || data.content.length === 0) {
+                    this.tableBody.innerHTML = `<tr><td colspan="100%" class="text-center">Aucun résultat</td></tr>`;
+                    if(this.pagination) this.pagination.innerHTML = "";
+                    return;
+                }
+
+                let rows = "";
+                data.content.forEach(item => {
+                    rows += this.renderRow(item);
+                });
+                this.tableBody.innerHTML = rows;
+                this.attachDeleteEvents();
+                this.buildPagination(data);
+            }
+
+            attachDeleteEvents() {
+                document.querySelectorAll(".del-btn").forEach(btn => {
+                    btn.onclick = (e) => {
+                        e.preventDefault();
+                        const href = btn.href;
+                        Swal.fire({
+                            title: 'Confirmation',
+                            text: "Supprimer cet élément ?",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: "Oui",
+                            cancelButtonText: "Annuler"
+                        }).then(r => {
+                            if(r.isConfirmed) window.location.href = href;
+                        });
+                    };
+                });
+            }
+
+            buildPagination(data) {
+                if (!this.pagination) return;
+                const totalPages = data.totalPages;
+                const current = data.number;
+                this.pagination.innerHTML = "";
+                if(totalPages <= 1) return;
+
+                let pages = "";
+
+                for(let i = 0; i < totalPages; i++){
+                    pages += `<li class="page-item ${i===current?'active':''}">
+                        <a class="page-link" href="#" data-page="${i}">${i+1}</a>
+                    </li>`;
+                }
+
+                this.pagination.innerHTML = pages;
+
+                this.pagination.querySelectorAll(".page-link").forEach(link => {
+                    link.onclick = (e) => {
+                        e.preventDefault();
+                        this.load(parseInt(link.dataset.page));
+                    };
+                });
+            }
+
+            showLoader() { if(this.loader) this.loader.classList.remove("d-none"); }
+            hideLoader() { if(this.loader) this.loader.classList.add("d-none"); }
+        }
+
+        new SearchTable({
+            inputId: "searchInput",
+            tableBodyId: "professionTableBody",
+            loaderId: "loader",
+            paginationSelector: "#paginationContainer",
+            apiUrl: contextPath + "professions/api/search",
+            renderRow: (p) => `
+            <tr>
+                <td class="text-truncate" style="max-width:300px;">${p.libelle ?? ''}</td>
+                <td>
+                    <div class="d-flex justify-content-center">
+                        <div class="dropdown">
+                            <button class="btn" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="${contextPath}professions/edit/${p.id}">
+                                        <i class="bi bi-pencil me-2"></i>Modifier
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item del-btn" href="${contextPath}professions/delete/${p.id}">
+                                        <i class="bi bi-trash me-2"></i>Supprimer
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </td>
+            </tr>`
+        });
+
+    });
+    </script>
+</section>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+	<!-- Fragment spécifique à cette page -->
+	 <section layout:fragment="content">
+		<div class="container my-2">
+			<div class="d-flex justify-content-between align-items-center mb-3">
+			      <h2>Gestion des locataires</h2>
+			      <a th:href="@{/locataires/create}" class="btn btn-primary">Nouveau</a>
+			</div>
+			<hr style="border: 1px solid rgb(192, 192, 192);">
+			
+			<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+							
+				<div class="row mb-3">
+				    <div class="col-md-4">
+				        <input type="text" id="searchInput"
+				               class="form-control"
+				               placeholder="Rechercher nom, prénom ou téléphone"
+				               autocomplete="off">
+				    </div>
+				</div>
+				
+				<div id="locataireTable">
+					<div id="loader" class="text-center my-3 d-none">
+					    <div class="spinner-border text-primary"></div>
+					    <div>Recherche en cours...</div>
+					</div>
+					
+				    <table class="table">
+				        <thead class="table-success">
+				        <tr>						            
+				            <th>Prénom</th>
+				            <th>Nom</th>
+							<th>Téléphone</th>
+							<th>Action</th>
+				        </tr>
+				        </thead>
+				        <tbody id="locataireTableBody">
+				        <!--<tr th:each="locataire : ${locatairesPage}">-->
+						<tr th:each="locataire : ${locatairesPage.content}">
+				            <input type="hidden" th:name="locataire.id" th:value="${locataire.id}" />
+				            <td th:text="${locataire.prenom}" th:title="${locataire.prenom}">jean</td>
+				            <td th:text="${locataire.nom}">soro</td>
+							<td th:text="${locataire.telephone}">0000000000</td>
+							<td>
+							    <div class="d-flex justify-content-center">
+							        <div class="dropdown">
+							            <button class="btn" type="button" id="dropdownMenuButton"
+							                    data-bs-toggle="dropdown" aria-expanded="false">
+							                <i class="bi bi-three-dots-vertical"></i>
+							            </button>
+	
+							            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+							                <li>
+							                    <a class="dropdown-item" th:href="@{'/locataires/edit/' + ${locataire.id}}">
+							                        <i class="bi bi-pencil me-2"></i>Modifier
+							                    </a>
+							                </li>
+							                <li>
+							                    <a class="dropdown-item del-btn" th:href="@{'/locataires/delete/' + ${locataire.id}}">
+							                        <i class="bi bi-trash me-2"></i>Supprimer
+							                    </a>
+							                </li>
+							            </ul>
+							        </div>
+							    </div>
+							</td>
+	
+				        </tr>
+						<tr th:if="${#lists.isEmpty(locatairesPage.content)}">
+					        <td colspan="4" class="text-center">Aucun locataire trouvé.</td>
+					    </tr>
+				        </tbody>
+				    </table>
+				</div>
+				<!-- Pagination -->
+				<div class="d-flex justify-content-center mt-3" th:if="${locatairesPage.totalElements > 0}">
+				    <ul class="pagination">
+
+				        <!-- Précédent -->
+				        <li class="page-item"
+				            th:classappend="${locatairesPage.first} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/locataires(page=${locatairesPage.number - 1})}">
+				                &laquo;
+				            </a>
+				        </li>
+
+				        <!-- Première page -->
+				        <li class="page-item"
+				            th:if="${locatairesPage.number > 2}">
+				            <a class="page-link"
+				               th:href="@{/locataires(page=0)}">1</a>
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${locatairesPage.number > 3}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Pages autour -->
+				        <li class="page-item"
+				            th:each="i : ${#numbers.sequence(
+				                T(java.lang.Math).max(0, locatairesPage.number - 2),
+				                T(java.lang.Math).min(locatairesPage.totalPages - 1, locatairesPage.number + 2)
+				            )}"
+				            th:classappend="${i == locatairesPage.number} ? 'active'">
+
+				            <a class="page-link"
+				               th:text="${i + 1}"
+				               th:href="@{/locataires(page=${i})}">
+				            </a>
+
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${locatairesPage.number < locatairesPage.totalPages - 4}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Dernière page -->
+				        <li class="page-item"
+				            th:if="${locatairesPage.number < locatairesPage.totalPages - 3}">
+				            <a class="page-link"
+				               th:href="@{/locataires(page=${locatairesPage.totalPages - 1})}"
+				               th:text="${locatairesPage.totalPages}">
+				            </a>
+				        </li>
+
+				        <!-- Suivant -->
+				        <li class="page-item"
+				            th:classappend="${locatairesPage.last} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/locataires(page=${locatairesPage.number + 1})}">
+				                &raquo;
+				            </a>
+				        </li>
+
+				    </ul>
+				</div>
+				 
+			</fieldset>
+		</div>
+		
+		<!-- SweetAlert2 -->
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+		
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+				
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+		    // Sélectionner tous les boutons réinitialiser
+		    document.querySelectorAll('.del-btn').forEach(btn => {
+		        btn.addEventListener('click', function(e) {
+		            e.preventDefault(); // empêcher le href="#"
+
+		            const href = this.href;
+
+		            Swal.fire({
+		                title: 'Confirmation',
+		                text: "Voulez-vous supprimer ?",
+		                icon: 'warning',
+		                showCancelButton: true,
+		                confirmButtonText: 'Oui',
+		                cancelButtonText: 'Non'
+		            }).then((result) => {
+		                if (result.isConfirmed) {
+		                    // Redirection vers le controller
+		                    window.location.href = href;
+		                }
+		            });
+		        });
+			
+			// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+			    const successDiv = document.getElementById('successMessage');
+			    if (successDiv && successDiv.textContent.trim() !== '') {
+			        const msg = successDiv.textContent.trim();
+			        Swal.fire({
+			            icon: 'success',
+			            title: 'Succès !',
+			            text: msg,
+			            confirmButtonText: 'OK'
+			        });
+			    }
+			});
+		});
+		</script>
+		
+		<script th:inline="javascript">
+			document.addEventListener("DOMContentLoaded", function () {
+
+			    const input = document.getElementById("searchInput");
+			 //   const form = input.closest("form");
+			    const tableBody = document.getElementById("locataireTableBody");
+			    const loader = document.getElementById("loader");
+			    const paginationContainer = document.querySelector(".pagination");
+				const contextPath = /*[[@{/}]]*/ ""; // résout vers /immobilier
+				
+			    let timeout = null;
+			    let currentPage = 0;
+			    let currentKeyword = "";
+
+			    // Empêcher le submit classique du formulaire
+			  //  form.addEventListener("submit", function(e) {
+			  //      e.preventDefault();
+			  //  });
+
+			    // Charger les données depuis l'API
+			    function loadData(keyword, page = 0) {
+			        loader.style.display = "block";
+			        currentKeyword = keyword;
+
+			        const url = /*[[@{/locataires/api/search}]]*/ 
+			                    + "?keyword=" + encodeURIComponent(keyword) 
+			                    + "&page=" + page;
+
+			        fetch(url)
+			            .then(res => res.json())
+			            .then(data => {
+			                loader.style.display = "none";
+			                tableBody.innerHTML = "";
+
+			                if (!data.content || data.content.length === 0) {
+			                    tableBody.innerHTML = `
+			                        <tr>
+			                            <td colspan="4" class="text-center">
+			                                Aucun locataire trouvé.
+			                            </td>
+			                        </tr>`;
+			                    if (paginationContainer) paginationContainer.innerHTML = "";
+			                    return;
+			                }
+
+			                // 🚀 Table avec dropdown
+			                data.content.forEach(b => {
+			                    tableBody.innerHTML += `
+			                        <tr>
+			                            <td>${b.prenom ?? ''}</td>
+			                            <td>${b.nom ?? ''}</td>
+			                            <td>${b.telephone ?? ''}</td>
+			                            <td>
+			                                <div class="d-flex justify-content-center">
+			                                    <div class="dropdown">
+			                                        <button class="btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+			                                            <i class="bi bi-three-dots-vertical"></i>
+			                                        </button>
+			                                        <ul class="dropdown-menu">
+			                                            <li>
+			                                                <a class="dropdown-item" href="${contextPath}locataires/edit/${b.id}">
+			                                                    <i class="bi bi-pencil me-2"></i>Modifier
+			                                                </a>
+			                                            </li>
+			                                            <li>
+			                                                <a class="dropdown-item del-btn" href="${contextPath}locataires/delete/${b.id}">
+			                                                    <i class="bi bi-trash me-2"></i>Supprimer
+			                                                </a>
+			                                            </li>
+			                                        </ul>
+			                                    </div>
+			                                </div>
+			                            </td>
+			                        </tr>`;
+			                });
+
+			                attachDeleteEvents();
+			                buildPagination(data);
+			            })
+			            .catch(err => {
+			                loader.style.display = "none";
+			                console.error("Erreur AJAX :", err);
+			            });
+			    }
+
+			    // 🔹 Rebind SweetAlert pour suppression
+			    function attachDeleteEvents() {
+			        document.querySelectorAll(".del-btn").forEach(btn => {
+			            btn.addEventListener("click", function(e) {
+			                e.preventDefault();
+			                const href = this.href;
+
+			                Swal.fire({
+			                    title: 'Confirmation',
+			                    text: "Voulez-vous supprimer ce locataire ?",
+			                    icon: 'warning',
+			                    showCancelButton: true,
+			                    confirmButtonText: 'Oui',
+			                    cancelButtonText: 'Non'
+			                }).then((result) => {
+			                    if (result.isConfirmed) {
+			                        window.location.href = href;
+			                    }
+			                });
+			            });
+			        });
+			    }
+
+			    // 🔹 Pagination courte avec points de suspension
+				function buildPagination(data) {
+				    if (!paginationContainer) return;
+				    paginationContainer.innerHTML = "";
+
+				    const currentPage = data.number;         // page courante (0-index)
+				    const totalPages = data.totalPages;      // total pages
+
+				    if (totalPages <= 1) return;
+
+				    // ⬅ Précédent
+				    paginationContainer.innerHTML += `
+				        <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+				            <a class="page-link" href="#" data-page="${currentPage - 1}">&laquo;</a>
+				        </li>`;
+
+				    // Première page
+				    if (currentPage > 3) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item">
+				                <a class="page-link" href="#" data-page="0">1</a>
+				            </li>`;
+				    }
+
+				    // Pointillés avant
+				    if (currentPage > 4) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item disabled"><span class="page-link">...</span></li>`;
+				    }
+
+				    // Pages autour de la page courante (±2)
+				    const start = Math.max(0, currentPage - 2);
+				    const end = Math.min(totalPages - 1, currentPage + 2);
+				    for (let i = start; i <= end; i++) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item ${i === currentPage ? 'active' : ''}">
+				                <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
+				            </li>`;
+				    }
+
+				    // Pointillés après
+				    if (currentPage < totalPages - 5) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item disabled"><span class="page-link">...</span></li>`;
+				    }
+
+				    // Dernière page
+				    if (currentPage < totalPages - 4) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item">
+				                <a class="page-link" href="#" data-page="${totalPages - 1}">${totalPages}</a>
+				            </li>`;
+				    }
+
+				    // ➡ Suivant
+				    paginationContainer.innerHTML += `
+				        <li class="page-item ${currentPage === totalPages - 1 ? 'disabled' : ''}">
+				            <a class="page-link" href="#" data-page="${currentPage + 1}">&raquo;</a>
+				        </li>`;
+
+				    // Rebind click events
+				    paginationContainer.querySelectorAll(".page-link").forEach(link => {
+				        link.addEventListener("click", function(e) {
+				            e.preventDefault();
+				            const page = parseInt(this.dataset.page);
+				            if (!isNaN(page) && page >= 0 && page < totalPages) {
+				                loadData(currentKeyword, page);
+				            }
+				        });
+				    });
+				}
+
+			    // 🔎 Recherche automatique avec debounce
+			    input.addEventListener("keyup", function () {
+			        clearTimeout(timeout);
+			        timeout = setTimeout(() => {
+			            currentPage = 0;
+			            loadData(input.value, currentPage);
+			        }, 400);
+			    });
+
+			    // ⚡ Chargement initial
+			    loadData(input.value, currentPage);
+
+			});
+		</script>
+			
+	</section>	
+	 
+</body>
+</html>

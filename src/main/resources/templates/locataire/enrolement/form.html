@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+    <section layout:fragment="content">
+        <!-- Ton contenu principal ici -->
+		<div class="container my-2">
+			<div class="container mt-4">
+			   <h2>Gestion des locataires</h2>
+				<hr>
+								
+			    <form th:action="@{/locataires/save}" th:object="${locataire}" method="post" enctype="multipart/form-data"
+											class="border p-4 rounded shadow-sm bg-white" id="locataireForm">
+											
+			        <input type="hidden" th:field="*{id}"/>
+					<input type="hidden" th:field="*{version}"/>
+					<!--<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">-->
+					<h4>Informations du locataire</h4>
+					<div class="row">
+					     <div class="col-sm-12 col-md-6">
+					        <div class="mb-3 form-group">
+					            <label for="nom" class="form-label">Nom<span style="color:red;"> *</span></label>
+					            <input type="text" th:field="*{nom}" class="form-control" required oninput="uppercaseWords(this)">
+					        </div>
+					     </div>
+						 <div class="col-sm-12 col-md-6">
+						 	<div class="mb-3 form-group">
+					            <label for="prenom" class="form-label">Prénom(s)<span style="color:red;"> *</span></label>
+					            <input type="text" th:field="*{prenom}" class="form-control" required oninput="capitalizeWords(this)">
+					        </div>
+						 </div>
+					</div>
+					
+					<div class="row">
+						<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+					            <label for="sexe" class="form-label">Sexe</label>
+					            <select th:field="*{sexe}" class="form-select">
+									<option value=""></option>
+					                <option value="Feminin">Féminin</option>
+					                <option value="Masculin">Masculin</option>
+					            </select>
+					        </div>
+				        </div>
+						<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+					            <label for="type" class="form-label">Type de locataire</label>
+					            <select th:field="*{type}" class="form-select">
+									<option value=""></option>
+					                <option value="Morale">Personne morale</option>
+					                <option value="Physique">Personne physique</option>
+					            </select>
+					        </div>
+				        </div>						
+			        </div>
+					
+					<div class="row">
+					     <div class="col-sm-12 col-md-6">
+					        <div class="mb-3 form-group">
+					            <label for="telephone" class="form-label">Céllulaire<span style="color:red;"> *</span></label>
+					            <!--<input type="tel" th:field="*{telephone}" class="form-control" required>-->
+								<input type="text" th:field="*{telephone}" class="form-control phone_ci" placeholder="00 00 00 00 00" maxlength="14" inputmode="numeric" required>
+					        </div>
+					     </div>
+
+						 <div class="col-sm-12 col-md-6">
+						 	<div class="mb-3 form-group">
+					            <label for="email" class="form-label">E.mail</label>
+					            <input type="text" th:field="*{email}" class="form-control" >
+					        </div>
+						 </div>
+					</div>
+					
+					<div class="row">
+						<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+								<label for="perschg" class="form-label">Personne en charge</label>
+								<input type="text" th:field="*{perschg}" class="form-control" >
+							</div>
+						</div>
+						<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+					            <label for="profession" class="form-label">Profession</label>
+					            <select th:field="*{profession}" class="form-select">
+					                <option value=""></option>
+									<option th:each="prof : ${professions}"
+					                        th:value="${prof.id}"
+					                        th:text="${prof.libelle}">
+					                </option>
+					            </select>
+					        </div>
+				        </div>
+						<!--<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+					            <label for="pays" class="form-label">Nationalité</label>
+					            <select th:field="*{pays}" class="form-select">
+					                <option value=""></option>
+									<option th:each="pys : ${listePays}"
+					                        th:value="${pys.id}"
+					                        th:text="${pys.libelle}">
+					                </option>
+					            </select>
+					        </div>
+				        </div>-->
+					</div>
+					
+					<hr>
+					
+					<h4>Informations personne à contacter</h4>
+					<div class="row">
+					     <div class="col-sm-12 col-md-6">
+					        <div class="mb-3 form-group">
+					            <label for="nom" class="form-label">Nom<span style="color:red;"> *</span></label>
+					            <input type="text" th:field="*{nomContact}" class="form-control" required oninput="uppercaseWords(this)">
+					        </div>
+					     </div>
+						 <div class="col-sm-12 col-md-6">
+						 	<div class="mb-3 form-group">
+					            <label for="prenom" class="form-label">Prénom(s)<span style="color:red;"> *</span></label>
+					            <input type="text" th:field="*{prenomContact}" class="form-control" required oninput="capitalizeWords(this)">
+					        </div>
+						 </div>
+					</div>
+					<div class="row">
+					     <div class="col-sm-12 col-md-6">
+					        <div class="mb-3 form-group">
+					            <label for="telephone" class="form-label">Céllulaire<span style="color:red;"> *</span></label>
+					            <!--<input type="tel" th:field="*{telContact}" class="form-control" required>-->
+								<input type="text" th:field="*{telContact}" class="form-control phone_ci" placeholder="00 00 00 00 00" maxlength="14" inputmode="numeric" required>
+					        </div>
+					     </div>
+						 <div class="col-sm-12 col-md-6">
+						 	<div class="mb-3 form-group">
+					            <label for="email" class="form-label">E.mail</label>
+					            <input type="text" th:field="*{emailContact}" class="form-control" >
+					        </div>
+						 </div>
+					</div>
+					
+					<hr>
+					<h4>Document</h4>
+					<div class="row">
+						<div class="col-sm-12 col-md-6">			
+							<div class="mb-3 form-group">
+							    <label for="documentIdentite" class="form-label">Document d’identité :</label>
+							    <input type="file" id="documentIdentite" name="documentIdentite" class="form-control">
+	
+							    <!-- 🔹 Aperçu du fichier déjà enregistré -->
+							    <div th:if="${documentIdentiteUrl != null}" class="mt-3 border rounded p-2">
+							        <p class="fw-bold">Document actuel :</p>
+	
+							        <!-- Si c’est une image -->
+							        <img th:if="${#strings.endsWith(documentIdentiteUrl, '.jpg') 
+							                    or #strings.endsWith(documentIdentiteUrl, '.jpeg') 
+							                    or #strings.endsWith(documentIdentiteUrl, '.png')}"
+							             th:src="@{${documentIdentiteUrl}}"
+							             alt="Document d'identité"
+							             style="max-width: 200px; border-radius: 5px;">
+	
+							        <!-- Si c’est un PDF -->
+							        <div th:if="${#strings.endsWith(documentIdentiteUrl, '.pdf')}">
+							            <a th:href="@{${documentIdentiteUrl}}" target="_blank" class="btn btn-outline-primary btn-sm">
+							                📄 Ouvrir le document PDF
+							            </a>
+							        </div>
+							    </div>
+							</div>
+							<div id="previewLive" class="mt-2"></div>
+						</div>
+					</div>
+					
+					<hr>
+					
+					<div class="mt-3 row g-2">
+					    <div class="col-12 col-md-2">
+					        <button type="submit" class="btn btn-primary w-100">
+					            <span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+					        </button>
+					    </div>
+					    <div class="col-12 col-md-2">
+					        <a th:href="@{/locataires}" class="btn btn-danger w-100">
+					            Retour à la liste
+					        </a>
+					    </div>
+					</div>
+					<!--</fieldset>-->
+			    </form>
+			</div>
+		 </div>	
+		
+		<script>
+			//AFFICHE LA PREMIERE LETTRE EN MAJUSCULE
+			function capitalizeWords(input) {
+			    input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+			        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+			    });
+			}
+		
+			//METTRE TOUT LE MOT EN MAJUSCULE
+			function uppercaseWords(input){
+				input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+					return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
+				});
+			}
+		</script>
+		
+		<!-- ✅ SweetAlert2 -->
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+	    <!-- ⚠️ Boîte de confirmation avant envoi -->
+	    <script>
+	        document.getElementById('locataireForm').addEventListener('submit', function (e) {
+	            e.preventDefault(); // Bloque l’envoi automatique
+	            const form = this;
+	        //    const isEdit = form.querySelector('input[name="id"]').value !== "";
+				const idField = form.querySelector('input[name="id"]');
+				const idValue = idField ? idField.value.trim() : "";
+				console.log("ID trouvé :", idValue);
+	        // ✅ Création si id vide ou null
+		        const isEdit = idValue !== null && idValue !== "" && idValue !== "0";
+		        console.log("isEdit =", isEdit);
+
+	            Swal.fire({
+	                title: isEdit ? 'Confirmation' : 'Confirmation',
+	                text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
+	                icon: 'question',
+	                showCancelButton: true,
+	                confirmButtonText: 'Oui',
+	                cancelButtonText: 'Non',
+	                reverseButtons: true
+	            }).then((result) => {
+	                if (result.isConfirmed) {
+	                    form.submit(); // Si confirmé → on envoie le formulaire
+	                }
+	            });
+
+				// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+				    const successDiv = document.getElementById('successMessage');
+				    if (successDiv && successDiv.textContent.trim() !== '') {
+				        const msg = successDiv.textContent.trim();
+				        Swal.fire({
+				            icon: 'success',
+				            title: 'Succès !',
+				            text: msg,
+				            confirmButtonText: 'OK'
+				        });
+				    }
+				});
+	    </script>
+		
+		<script>
+		document.getElementById('documentIdentite').addEventListener('change', function (event) {
+		    const previewContainer = document.querySelector('#previewLive');
+		    previewContainer.innerHTML = ''; // vide le contenu précédent
+		    const file = event.target.files[0];
+		    if (!file) return;
+
+		    if (file.type.startsWith('image/')) {
+		        const img = document.createElement('img');
+		        img.src = URL.createObjectURL(file);
+		        img.style.maxWidth = '200px';
+		        img.style.borderRadius = '5px';
+		        previewContainer.appendChild(img);
+		    } else if (file.type === 'application/pdf') {
+		        const pdfLink = document.createElement('a');
+		        pdfLink.href = URL.createObjectURL(file);
+		        pdfLink.textContent = "📄 Prévisualiser le PDF";
+		        pdfLink.target = "_blank";
+		        previewContainer.appendChild(pdfLink);
+		    }
+		});
+		</script>
+		
+		<!-- ==== Scripts utilitaires ==== -->
+		<script>
+		    function capitalizeWords(input) {
+		        input.value = input.value.replace(/\b[\p{L}']+/gu, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+		    }
+		    function uppercaseWords(input){
+		        input.value = input.value.replace(/\b[\p{L}']+/gu, w => w.charAt(0).toUpperCase() + w.slice(1).toUpperCase());
+		    }
+		    document.addEventListener("DOMContentLoaded", () => {
+		        document.querySelectorAll('.phone_ci').forEach(input => {
+		            input.addEventListener('input', (e) => {
+		                let v = e.target.value.replace(/\D/g, '').substring(0,10);
+		                e.target.value = v.match(/.{1,2}/g)?.join(' ') ?? v;
+		            });
+		        });
+		    });
+		</script>
+	
+    </section>
+	
+</body>
+</html>

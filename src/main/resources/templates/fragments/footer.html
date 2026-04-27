@@ -1,0 +1,8 @@
+
+    <footer th:fragment="footer" class="bg-dark text-light mt-auto py-3">
+        <div class="container text-center">
+            <span>&copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}"></span> IMMONET - Tous droits réservés.</span>
+            <br>
+            <small class="text-muted">Développé par votre équipe IT</small>
+        </div>
+    </footer>

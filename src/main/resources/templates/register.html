@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenue</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="image-left">
+    <img src="/images/drapeau_CI.jpg" alt="Illustration" class="full-image">
+</div>
+
+<div class="register-right">
+    <div class="register-container">
+		<div style="text-align: center; margin-bottom: 1em;">
+		   <img src="/images/logo_armoirie.png" alt="Logo" style="height: 80px;">
+		</div>
+        <h1>Créer un compte</h1>
+        <form th:action="@{/register}" method="post" th:object="${userForm}">
+			<label >Prénom(s)<span style="color:red;"> *</span></label>
+            <input type="text" th:field="*{prenoms}" placeholder="Prénoms" oninput="capitalizeWords(this)" required>
+			<label >Nom<span style="color:red;"> *</span></label>
+            <input type="text" th:field="*{nom}" placeholder="Nom" oninput="uppercaseWords(this)" required>
+			<label >Téléphone</label>
+            <input type="tel" th:field="*{telephone}" placeholder="Téléphone">
+			<label >E.mail<span style="color:red;"> *</span></label>
+            <input type="email" th:field="*{email}" placeholder="Email" required>
+			<!--<label >Utilisateur<span style="color:red;"> *</span></label>
+            <input type="text" th:field="*{username}" placeholder="Nom d'utilisateur" required>	-->		
+			<label >Mot de passe<span style="color:red;"> *</span></label>
+            <input type="password" th:field="*{password}" placeholder="Le mot de passe" required>
+			<label>Confirmer le mot de passe<span style="color:red;"> *</span></label>
+			<input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirmez le mot de passe" required>
+			<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+            <button type="submit">S’inscrire</button>
+        </form>
+        <p class="login-link">
+            Déjà inscrit ? <a th:href="@{/login}">Se connecter</a>
+        </p>
+    </div>
+</div>
+	
+	<script>
+		//AFFICHE LA PREMIERE LETTRE EN MAJUSCULE
+		function capitalizeWords(input) {
+		    input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+		    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+		    });
+		}
+				
+		//METTRE TOUT LE MOT EN MAJUSCULE
+		function uppercaseWords(input){
+			input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+			return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
+			});
+		}
+	</script>
+	
+	<script>
+	    const form = document.querySelector('form');
+	    form.addEventListener('submit', function (event) {
+	        const password = document.querySelector('[name="password"]').value;
+	        const confirmPassword = document.querySelector('[name="confirmPassword"]').value;
+	        const button = form.querySelector('button[type="submit"]');
+
+	        if (password !== confirmPassword) {
+	            event.preventDefault(); // Empêche l'envoi du formulaire
+	            alert("Les mots de passe ne correspondent pas.");
+	            return;
+	        }
+
+	        // Désactive le bouton si tout est OK
+	        button.disabled = true;
+	        button.textContent = "Envoi en cours...";
+	    });
+	</script>
+
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+	  <!--<style>
+	  .select2-container .select2-selection--single {
+	      height: 38px;
+	      padding: 5px 12px;
+	  }
+
+	  .select2-container--default .select2-selection--single {
+	      border: 1px solid #ced4da;
+	      border-radius: 0.375rem;
+	  }
+
+	  .select2-container--default .select2-selection--single .select2-selection__arrow {
+	      height: 36px;
+	  }
+	  </style>-->
+<body>
+    <section layout:fragment="content">
+        <!-- Ton contenu principal ici -->
+		<div class="container my-2">
+			<div class="container mt-4">
+				<h2>Gestion des bails</h2>
+				<hr>
+				<form th:action="@{/bails/save}" th:object="${bail}" method="post" enctype="multipart/form-data" 
+											class="border p-4 rounded shadow-sm bg-white" id="bailForm">
+					<div id="step1">
+					<input type="hidden" th:field="*{id}"/>						
+				        <!-- Sélection du locataire -->
+					<input type="hidden" th:field="*{version}" />
+					
+					<!--<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">-->
+					<h4>Informations du bail</h4>
+						
+					<div class="row">
+						<div class="col-sm-6 col-md-4">
+							<div class="mb-3 form-group">
+								<label for="locataireSelect" class="form-label">Locataire</label>
+								<select id="locataireSelect"
+								        name="locataire.id"
+								        class="form-select"
+								        style="width:100%"
+								        required>
+								</select>
+							</div>
+						</div>
+						<div class="col-sm-6 col-md-4">
+						    <div class="mb-3 form-group">
+						        <label class="form-label">Téléphone :</label>
+						        <input type="text" id="telInput" class="form-control" readonly>
+						    </div>
+						</div>
+						
+						<div class="col-sm-6 col-md-4">
+						    <div class="mb-3 form-group">
+						        <label class="form-label">E.mail :</label>
+						        <input type="text" id="emailInput" class="form-control" readonly>
+						    </div>
+						</div>
+					</div>
+					<hr>
+					
+					<div class="row">
+						<!-- Sélection de l'appartement -->
+						<div class="col-sm-6 col-md-4">
+							<div class="mb-3 form-group">
+					            <label for="appartement" class="form-label">Appartement</label>
+					             <select th:field="*{appartement}" id="appartementSelect" class="form-select" required>
+					                <option value="">-- Choisir un appartement --</option>
+									<option th:each="app : ${appartements}"
+					                        th:value="${app.id}"
+					                        th:data-loyer="${app.loyerMensuel}"
+											th:data-design="${app.libelle}"
+					                        th:text="${app.numAppart + ' - ' + app.libelle}">
+					                </option>
+					            </select>
+							</div>
+				        </div>
+						
+						<div class="col-sm-6 col-md-4">
+						    <div class="mb-3 form-group">
+						        <label class="form-label">Libellé :</label>
+						        <input type="text" id="libelleInput" class="form-control" readonly>
+						    </div>
+						</div>
+						
+						<div class="col-sm-6 col-md-4">
+						    <div class="mb-3 form-group">
+						        <label class="form-label">Loyer mensuel :</label>
+						        <input type="text" id="loyerDisplay" class="form-control" readonly>
+								<!-- binding caché -->
+								<input type="hidden" th:field="*{montantLoyer}" id="loyerInput">
+								
+								
+						    </div>
+						</div>
+					</div>
+			        <!-- Dates du bail -->					
+					<hr>
+					
+					<div class="row">
+					    <!-- Total caution -->
+					    <div class="col-sm-6 col-md-4">
+					        <div class="mb-3 form-group">
+					            <label>Total caution</label>
+					            <input type="text" id="cautionDisplay" class="form-control" placeholder="0">
+					            <input type="hidden" th:field="*{caution}" id="cautionInput">
+					        </div>
+					    </div>
+
+					    <!-- Total avance -->
+					    <div class="col-sm-6 col-md-4">
+					        <div class="mb-3 form-group">
+					            <label>Total avance</label>
+					            <input type="text" id="avanceDisplay" class="form-control" placeholder="0">
+					            <input type="hidden" th:field="*{avance}" id="avanceInput">
+					        </div>
+					    </div>
+
+					    <!-- Total honoraire -->
+					    <div class="col-sm-6 col-md-4">
+					        <div class="mb-3 form-group">
+					            <label>Total honoraire</label>
+					            <input type="text" id="honoraireDisplay" class="form-control" placeholder="0">
+					            <input type="hidden" th:field="*{honoraire}" id="honoraireInput">
+					        </div>
+					    </div>
+
+					    <!-- Total à payer -->
+					    <div class="col-sm-6 col-md-4">
+					        <div class="mb-3 form-group">
+					            <label>Total à payer</label>
+					            <input type="text" id="totalDisplay" class="form-control" readonly>
+					            <input type="hidden" th:field="*{total}" id="totalInput">
+					        </div>
+					    </div>
+						
+					    <!-- Dates -->
+					    <div class="col-sm-6 col-md-4">
+					        <div class="mb-3 form-group">
+					            <label for="dateDebut" class="form-label">Date début bail</label>
+					            <input type="date" id="dateDebut" th:field="*{dateDebut}" class="form-control" required>
+					        </div>
+					    </div>
+
+					    <div class="col-sm-6 col-md-4">
+					        <div class="mb-3 form-group">
+					            <label for="dateFin" class="form-label">Date début paiement</label>
+					            <input type="date" th:field="*{dateFin}" class="form-control">
+					        </div>
+					    </div>
+					</div>
+			        
+					<hr>
+					
+					<div class="row">
+						<div class="col-sm-6 col-md-4">
+							<div class="mb-3 form-group">
+					            <label for="utilite" class="form-label">Usage</label>
+					            <select th:field="*{utilite}" class="form-select">
+					                <option value="BUREAU">Bureau</option>
+					                <option value="HABITATION">Habitation</option>
+					                <option value="COMMERCE">Commerce</option>
+					            </select>
+					        </div>
+				        </div>
+						<div class="col-sm-6 col-md-4">
+							<div class="mb-3 form-group">
+					            <label for="statut" class="form-label">Statut</label>
+					            <select th:field="*{statut}" class="form-select">
+					                <option value="ACTIF">Actif</option>
+					                <option value="RESILIE">Résilié</option>
+					                <option value="EXPIRE">Expiré</option>
+					            </select>
+					        </div>
+				        </div>						
+			        </div>
+					
+					<hr>
+											
+					<div class="mt-3 row g-2">
+					    <div class="col-12 col-md-2">
+					        <button type="submit" class="btn btn-primary w-100">
+					            <span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+					        </button>
+					    </div>
+					    <div class="col-12 col-md-2">
+					        <a th:href="@{/bails}" class="btn btn-danger w-100">
+					            Retour à la liste
+					        </a>
+					    </div>
+					</div>
+					<!--</fieldset>-->
+					</div>
+				</form>
+			</div>
+		 </div>
+		 
+		<script>
+			//AFFICHE LA PREMIERE LETTRE EN MAJUSCULE
+			function capitalizeWords(input) {
+			    input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+			        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+			    });
+			}
+		
+			//METTRE TOUT LE MOT EN MAJUSCULE
+			function uppercaseWords(input){
+				input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+					return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
+				});
+			}
+		</script>
+		
+		<script>
+		    function validateStepAndProceed(currentStepId, nextStepNumber) {
+		        const currentStep = document.getElementById(currentStepId);
+		        const requiredFields = currentStep.querySelectorAll('[required]');
+		        let allValid = true;
+	
+		        requiredFields.forEach(field => {
+		            if (!field.checkValidity()) {
+		                field.classList.add('is-invalid'); // Ajout classe Bootstrap
+		                allValid = false;
+		            } else {
+		                field.classList.remove('is-invalid');
+		            }
+		        });
+	
+		        if (allValid) {
+		            showStep(nextStepNumber); // Si tout est OK, on passe à l'étape suivante
+		        } else {
+		            // Scroll vers le premier champ invalide
+		            const firstInvalid = currentStep.querySelector('.is-invalid');
+		            if (firstInvalid) {
+		                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		            }
+		        }
+		    }
+		</script>
+						
+		<script>
+			//NAVIGUER ENTRE PAGE
+			function showStep(stepNumber) {
+		        document.getElementById('step1').style.display = stepNumber === 1 ? 'block' : 'none';
+		        document.getElementById('step2').style.display = stepNumber === 2 ? 'block' : 'none';
+		        window.scrollTo(0, 0); // remonte en haut
+		    }			
+		</script>
+		
+		<script>
+		document.addEventListener("DOMContentLoaded", function () {
+		    const select = document.getElementById("appartementSelect");
+		    const loyerInput = document.getElementById("loyerInput");   // hidden pour Spring
+		    const loyerDisplay = document.getElementById("loyerDisplay"); // visible formaté
+			const libelleInput = document.getElementById("libelleInput");
+	
+		    function formatNumber(value) {
+		        return value.toLocaleString("fr-FR");
+		    }
+	
+		    function updateAppartementInfos() {
+		        const selectedOption = select.options[select.selectedIndex];
+		        if (selectedOption) {
+		            const loyer = selectedOption.getAttribute("data-loyer") || "";
+					const design = selectedOption.getAttribute("data-design") || "";
+					
+		            // ✅ Visible : affichage formaté
+		            loyerDisplay.value = loyer ? formatNumber(parseInt(loyer))  : "";
+	
+		            // ✅ Hidden brut : valeur numérique pour Spring
+		            loyerInput.value = loyer;
+					libelleInput.value = design;
+		        }
+		    }
+	
+		    // Quand on change d’appartement
+		    select.addEventListener("change", updateAppartementInfos);
+	
+		    // Auto-remplissage au chargement (utile en EDIT)
+		    updateAppartementInfos();
+		});
+		</script>
+	
+		
+		<!--<script>
+		document.addEventListener("DOMContentLoaded", function () {
+		    const select = document.getElementById("locataireSelect");
+		    const telInput = document.getElementById("telInput");
+		    const emailInput = document.getElementById("emailInput");
+	
+		    function updateLocataireInfos() {
+		        const selectedOption = select.options[select.selectedIndex];
+		        if (selectedOption) {
+		            telInput.value = selectedOption.getAttribute("data-tel") || "";
+		            emailInput.value = selectedOption.getAttribute("data-email") || "";
+		        }
+		    }
+	
+		    // 🔹 Quand on change le locataire
+		    select.addEventListener("change", updateLocataireInfos);
+	
+		    // 🔹 Remplir automatiquement si on est en mode EDIT
+		    updateLocataireInfos();
+		});
+		</script>-->
+		
+	
+		<script>
+		document.addEventListener("DOMContentLoaded", function () {
+		    const cautionInput = document.getElementById("cautionInput");
+		    const avanceInput = document.getElementById("avanceInput");
+		    const honoraireInput = document.getElementById("honoraireInput");
+		    const totalInput = document.getElementById("totalInput");
+	
+		    const cautionDisplay = document.getElementById("cautionDisplay");
+		    const avanceDisplay = document.getElementById("avanceDisplay");
+		    const honoraireDisplay = document.getElementById("honoraireDisplay");
+		    const totalDisplay = document.getElementById("totalDisplay");
+	
+		    function parseNumber(value) {
+		        return parseFloat(value.toString().replace(/\s/g, "").replace(",", ".")) || 0;
+		    }
+	
+		    function formatNumber(value) {
+		        return value.toLocaleString("fr-FR");
+		    }
+	
+		    function updateDisplaysFromInputs() {
+		        // Si les displays sont vides, utiliser les valeurs des hidden inputs (utile en EDIT)
+		        if (!cautionDisplay.value) cautionDisplay.value = cautionInput.value ? formatNumber(parseNumber(cautionInput.value)) : "";
+		        if (!avanceDisplay.value) avanceDisplay.value = avanceInput.value ? formatNumber(parseNumber(avanceInput.value)) : "";
+		        if (!honoraireDisplay.value) honoraireDisplay.value = honoraireInput.value ? formatNumber(parseNumber(honoraireInput.value)) : "";
+	
+		        // Calcul du total
+		        const caution = parseNumber(cautionDisplay.value);
+		        const avance = parseNumber(avanceDisplay.value);
+		        const honoraire = parseNumber(honoraireDisplay.value);
+		        const total = caution + avance + honoraire;
+	
+		        // Affichage formaté
+				cautionDisplay.value = caution ? formatNumber(caution) : "";
+				avanceDisplay.value = avance ? formatNumber(avance) : "";
+				honoraireDisplay.value = honoraire ? formatNumber(honoraire) : "";
+		        totalDisplay.value = total ? formatNumber(total) : "";
+	
+		        // Hidden inputs pour l'enregistrement
+		        cautionInput.value = caution;
+		        avanceInput.value = avance;
+		        honoraireInput.value = honoraire;
+		        totalInput.value = total;
+		    }
+	
+		    // Listener sur les displays pour mettre à jour hidden inputs et total
+		    [cautionDisplay, avanceDisplay, honoraireDisplay].forEach(input => {
+		        input.addEventListener("input", updateDisplaysFromInputs);
+		    });
+	
+		    // Initialisation au chargement (CREATE ou EDIT)
+		    updateDisplaysFromInputs();
+		});
+		</script>
+		
+		<!-- ✅ SweetAlert2 -->
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+	    <!-- ⚠️ Boîte de confirmation avant envoi -->
+	    <script>
+	        document.getElementById('bailForm').addEventListener('submit', function (e) {
+	            e.preventDefault(); // Bloque l’envoi automatique
+	            const form = this;
+	           // const isEdit = form.querySelector('input[name="id"]').value !== "";
+			   const idField = form.querySelector('input[name="id"]');
+   				const idValue = idField ? idField.value.trim() : "";
+   				console.log("ID trouvé :", idValue);
+   	        // ✅ Création si id vide ou null
+   		        const isEdit = idValue !== null && idValue !== "" && idValue !== "0";
+   		        console.log("isEdit =", isEdit);
+
+	            Swal.fire({
+	                title: isEdit ? 'Confirmation' : 'Confirmation',
+	                text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
+	                icon: 'question',
+	                showCancelButton: true,
+	                confirmButtonText: 'Oui',
+	                cancelButtonText: 'Non',
+	                reverseButtons: true
+	            }).then((result) => {
+	                if (result.isConfirmed) {
+	                    form.submit(); // Si confirmé → on envoie le formulaire
+	                }
+	            });
+
+				// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+				    const successDiv = document.getElementById('successMessage');
+				    if (successDiv && successDiv.textContent.trim() !== '') {
+				        const msg = successDiv.textContent.trim();
+				        Swal.fire({
+				            icon: 'success',
+				            title: 'Succès !',
+				            text: msg,
+				            confirmButtonText: 'OK'
+				        });
+				    }
+				});
+	    </script>
+		
+		<!-- jQuery (OBLIGATOIRE avant Select2) -->
+		<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+		<!-- Select2 CSS -->
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+
+		<!-- Select2 JS -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+		
+		<script>
+		$(document).ready(function() {
+		    $('.select2').select2({
+		        placeholder: "Sélectionner une option",
+		        allowClear: true,
+		        width: '100%'
+		    });
+		});
+		</script>
+		
+		<script th:inline="javascript">
+			$(document).ready(function() {
+			    $('#locataireSelect').select2({
+			        placeholder: 'Rechercher un locataire',
+			        width: '100%',
+			        minimumInputLength: 1,
+			        ajax: {
+			            url: /*[[@{/locataires/api/locataires}]]*/,
+			            dataType: 'json',
+			            delay: 250,
+			            data: function(params) {
+			                return { term: params.term };
+			            },
+			            processResults: function(data) {
+			                return data;
+			            }
+			        }
+			    });
+			});
+		</script>
+
+
+
+		
+    </section>
+	
+</body>
+</html>

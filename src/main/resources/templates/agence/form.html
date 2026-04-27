@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+    <section layout:fragment="content">
+        <!-- Ton contenu principal ici -->
+		<div class="container my-2">
+			<div class="container mt-4">
+			   <h2>Gestion des agences</h2>
+				<hr>
+
+				<form th:action="@{/agences/save}" th:object="${agenceForm}" method="post"	enctype="multipart/form-data"
+								class="border p-4 rounded shadow-sm bg-white" id="agenceForm">
+					
+					<input type="hidden" th:field="*{id}" />
+					
+					<div class="row">
+					     <div class="col-sm-12 col-md-6">
+					        <div class="mb-3 form-group">
+						    <label>Nom<span style="color:red;"> *</span></label>
+						    <input type="text" th:field="*{nom}" required  class="form-control" oninput="uppercaseWords(this)"/>
+					        </div>
+					     </div>
+						 <div class="col-sm-12 col-md-6">
+						 	<div class="mb-3 form-group">
+						    <label>Code<span style="color:red;"> *</span></label>
+						    <input type="text" th:field="*{code}"  class="form-control" oninput="uppercaseWords(this)"/>
+						 	</div>
+						 </div>
+					</div>
+					
+					<div class="row">
+					     <div class="col-sm-12 col-md-6">
+					        <div class="mb-3 form-group">
+						    <label>Téléphone</label>
+						    <input type="text" th:field="*{telephone}" class="form-control"/>
+					        </div>
+					     </div>
+						 <div class="col-sm-12 col-md-6">
+						 	<div class="mb-3 form-group">
+						    <label>Email</label>
+						    <input type="email" th:field="*{email}" class="form-control"/>
+						 	</div>
+						 </div>
+					</div>
+					
+					<div class="row">
+						<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+						    <label>Adresse</label>
+						    <input type="text" th:field="*{adresse}" class="form-control" oninput="uppercaseWords(this)"/>
+							</div>
+						</div>
+						
+						<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">				
+					    <label>Ville</label>
+					    <input type="text" th:field="*{ville}" class="form-control" oninput="uppercaseWords(this)"/>
+							</div>
+						</div>
+					</div>
+				
+					<div class="row">
+						<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+						    <label>Montant abonnement</label>
+						    <input type="number" th:field="*{montantAbonnement}" class="form-control"/>
+							</div>
+						</div>
+						<div class="col-sm-12 col-md-6">
+							<div class="mb-3 form-group">
+						    <label>Date début</label>
+						    <input type="date" th:field="*{dateDebutAbonnement}" class="form-control"/>
+							</div>
+						</div>
+					</div>
+					
+					<div class="row">
+
+					    <!-- DATE FIN -->
+					    <div class="col-md-6">
+					        <div class="mb-3">
+					            <label class="form-label">Date fin</label>
+					            <input type="date"
+					                   th:field="*{dateFinAbonnement}"
+					                   class="form-control"/>
+					        </div>
+					    </div>
+
+						<!-- ACTIF / BLOQUAGE -->
+						<div class="col-md-6 d-flex flex-column justify-content-center">
+
+						    <!-- hidden pour éviter null sur checkbox 
+						    <input type="hidden" th:field="*{bloque}" value="false"/>-->
+
+						    <div class="form-check">
+						        <input type="checkbox"
+						               th:field="*{bloque}"
+						               id="bloqueCheck"
+						               class="form-check-input"/>
+
+						        <label class="form-check-label" for="bloqueCheck">
+						            Bloquer l'agence
+						        </label>
+						    </div>
+
+						    <!-- STATUT (utilise la logique backend UNIQUEMENT) -->
+						    <span th:switch="${agenceForm.statutReel}" class="mt-2">
+
+						        <span th:case="'ACTIF'" class="text-success">
+						            ✔ Actif
+						        </span>
+
+						        <span th:case="'EXPIRE'" class="text-danger">
+						            ⚠ Expiré
+						        </span>
+
+						        <span th:case="'SUSPENDU'" class="text-warning">
+						            ⛔ Suspendu
+						        </span>
+
+						    </span>
+
+						    <!-- MESSAGE EXPIRATION -->
+							<div th:if="${agenceForm.dateFinAbonnement != null 
+							            and T(java.time.LocalDate).now().isAfter(agenceForm.dateFinAbonnement)}"
+							     class="alert alert-danger mt-2 p-2">
+							    ⚠ Abonnement expiré — accès désactivé
+							</div>
+
+						</div>
+
+					</div>
+				
+					<hr>
+										
+					<div class="mt-3 row g-2">
+					    <div class="col-12 col-md-2">
+					        <button type="submit" class="btn btn-primary w-100">
+					            <span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+					        </button>
+					    </div>
+					    <div class="col-12 col-md-2">
+					        <a th:href="@{/agences}" class="btn btn-danger w-100">
+					            Retour à la liste
+					        </a>
+					    </div>
+					</div>
+				
+				</form>
+
+			</div>
+		 </div>	
+		
+		<script>
+			//AFFICHE LA PREMIERE LETTRE EN MAJUSCULE
+			function capitalizeWords(input) {
+			    input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+			        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+			    });
+			}
+		
+			//METTRE TOUT LE MOT EN MAJUSCULE
+			function uppercaseWords(input){
+				input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+					return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
+				});
+			}
+		</script>
+		
+		<!-- ✅ SweetAlert2 -->
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+	    <!-- ⚠️ Boîte de confirmation avant envoi -->
+	    <script>
+			document.getElementById('agenceForm').addEventListener('submit', function (e) {
+			    e.preventDefault();
+			    const form = this;
+
+			    const idField = form.querySelector('input[name="id"]');
+			    const idValue = idField ? idField.value.trim() : "";
+
+			    const isEdit = idValue !== null && idValue !== "" && idValue !== "0";
+
+			    Swal.fire({
+			        title: 'Confirmation',
+			        text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
+			        icon: 'question',
+			        showCancelButton: true,
+			        confirmButtonText: 'Oui',
+			        cancelButtonText: 'Non',
+			        reverseButtons: true
+			    }).then((result) => {
+			        if (result.isConfirmed) {
+			            form.submit();
+			        }
+			    });
+			});
+			
+			document.addEventListener("DOMContentLoaded", function () {
+			    const successDiv = document.getElementById('successMessage');
+
+			    if (successDiv && successDiv.textContent.trim() !== '') {
+			        Swal.fire({
+			            icon: 'success',
+			            title: 'Succès !',
+			            text: successDiv.textContent.trim(),
+			            confirmButtonText: 'OK'
+			        });
+			    }
+			});
+			
+	    </script>
+		
+		<script>
+		document.getElementById('documentIdentite').addEventListener('change', function (event) {
+		    const previewContainer = document.querySelector('#previewLive');
+		    previewContainer.innerHTML = ''; // vide le contenu précédent
+		    const file = event.target.files[0];
+		    if (!file) return;
+	
+		    if (file.type.startsWith('image/')) {
+		        const img = document.createElement('img');
+		        img.src = URL.createObjectURL(file);
+		        img.style.maxWidth = '200px';
+		        img.style.borderRadius = '5px';
+		        previewContainer.appendChild(img);
+		    } else if (file.type === 'application/pdf') {
+		        const pdfLink = document.createElement('a');
+		        pdfLink.href = URL.createObjectURL(file);
+		        pdfLink.textContent = "📄 Prévisualiser le PDF";
+		        pdfLink.target = "_blank";
+		        previewContainer.appendChild(pdfLink);
+		    }
+		});
+		</script>
+	
+	</section>
+</body>
+</html>

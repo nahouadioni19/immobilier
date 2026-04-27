@@ -1,0 +1,10 @@
+<jboss-deployment-structure>
+    <deployment>
+        <exclusions>
+            <!-- Exclure le logging de WildFly pour éviter le conflit avec Logback -->
+            <!--<module name="org.apache.commons.logging" />
+            <module name="org.slf4j" />
+            <module name="org.jboss.logging" />-->
+        </exclusions>
+    </deployment>
+</jboss-deployment-structure>

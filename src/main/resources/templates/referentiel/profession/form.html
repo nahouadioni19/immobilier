@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+<section layout:fragment="content">
+    <div class="container my-2">
+        <div class="container mt-4">
+            <h2>Gestion des professions</h2>
+
+            <form th:action="@{/professions/save}" th:object="${profession}" method="post" class="border p-4 rounded shadow-sm bg-white" id="professionForm">
+                <input type="hidden" th:field="*{id}"/>
+				<input type="hidden" th:field="*{version}" />
+				
+                <!--<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">-->
+                    <div class="mb-3">
+                        <label for="libelle" class="form-label">Désignation</label>
+                        <input type="text" th:field="*{libelle}" class="form-control" placeholder="Profession" required oninput="capitalizeWords(this)">
+                    </div>
+
+                    <hr>
+
+                    <div class="mt-3 row g-2">
+                        <div class="col-12 col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+                            </button>
+                        </div>
+                        <div class="col-12 col-md-2">
+                            <a th:href="@{/professions}" class="btn btn-danger w-100">Retour à la liste</a>
+                        </div>
+                    </div>
+                <!--</fieldset>-->
+            </form>
+        </div>
+    </div>
+
+    <!-- JS pour majuscules / capitalisation -->
+    <script>
+        function capitalizeWords(input) {
+            input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            });
+        }
+
+        function uppercaseWords(input){
+            input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+                return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
+            });
+        }
+    </script>
+	
+	<!-- ✅ SweetAlert2 -->
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+		
+	    <!-- ⚠️ Boîte de confirmation avant envoi -->
+	    <script>
+	        document.getElementById('professionForm').addEventListener('submit', function (e) {
+	            e.preventDefault(); // Bloque l’envoi automatique
+	            const form = this;
+	            //const isEdit = form.querySelector('input[name="id"]').value !== "";
+				const idField = form.querySelector('input[name="id"]');
+				const idValue = idField ? idField.value.trim() : "";
+				console.log("ID trouvé :", idValue);
+	        // ✅ Création si id vide ou null
+		        const isEdit = idValue !== null && idValue !== "" && idValue !== "0";
+		        console.log("isEdit =", isEdit);
+
+	            Swal.fire({
+	                title: isEdit ? 'Confirmation' : 'Confirmation',
+	                text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
+	                icon: 'question',
+	                showCancelButton: true,
+	                confirmButtonText: 'Oui',
+	                cancelButtonText: 'Non',
+	                reverseButtons: true
+	            }).then((result) => {
+	                if (result.isConfirmed) {
+	                    form.submit(); // Si confirmé → on envoie le formulaire
+	                }
+	            });
+			
+			// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+			    const successDiv = document.getElementById('successMessage');
+			    if (successDiv && successDiv.textContent.trim() !== '') {
+			        const msg = successDiv.textContent.trim();
+			        Swal.fire({
+			            icon: 'success',
+			            title: 'Succès !',
+			            text: msg,
+			            confirmButtonText: 'OK'
+			        });
+			    }
+			});
+	    </script>
+		
+	</section>
+</body>
+</html>

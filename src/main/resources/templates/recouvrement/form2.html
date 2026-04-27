@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<body>
+<section layout:fragment="content">
+    <div class="container my-2">
+        <div class="container mt-4">
+			<h2>Gestion des locataires</h2>
+			<form th:action="@{/recouvrement/save}" th:object="${encaisse}" method="post">
+
+			    <!-- Sélection du bail -->
+			    <div class="mb-3">
+			        <label for="bail">Contrat (Bail)</label>
+			        <select th:field="*{bail}" id="bail" class="form-select" onchange="updateBailDetails()">
+			            <option value="">-- Choisir un contrat --</option>
+			            <option th:each="c : ${bails}"
+			                    th:value="${c.connumero}"
+			                    th:text="${c.locprenom + ' - ' + c.locnom}"
+			                    th:data-loctel="${c.loctel}"
+			                    th:data-locemail="${c.locemail}"
+			                    th:data-loyer="${c.conloyer}"
+			                    th:data-numero="${c.numero}"
+			                    th:data-usglibelle="${c.usglibelle}"
+			                    th:data-bailibelle="${c.bailibelle}"
+			                    th:data-lastpayment="${#dates.format(c.derniereDate,'yyyy-MM-dd')}">
+			            </option>
+			        </select>
+			    </div>
+
+			    <!-- Infos bail -->
+			    <div class="row">
+			        <div class="col-md-6 mb-3">
+			            <label>Téléphone</label>
+			            <input type="text" id="telephone" class="form-control" readonly/>
+			        </div>
+			        <div class="col-md-6 mb-3">
+			            <label>Email</label>
+			            <input type="text" id="email" class="form-control" readonly/>
+			        </div>
+			    </div>
+
+			    <div class="row">
+			        <div class="col-md-4 mb-3">
+			            <label>Loyer</label>
+			            <input type="text" id="loyer" class="form-control" readonly/>
+			        </div>
+			        <div class="col-md-4 mb-3">
+			            <label>Numéro Appartement</label>
+			            <input type="text" id="numero" class="form-control" readonly/>
+			        </div>
+			        <div class="col-md-4 mb-3">
+			            <label>Usage</label>
+			            <input type="text" id="usglibelle" class="form-control" readonly/>
+			        </div>
+			    </div>
+
+			    <div class="row">
+			        <div class="col-md-6 mb-3">
+			            <label>Bail Libellé</label>
+			            <input type="text" id="bailibelle" class="form-control" readonly/>
+			        </div>
+			        <div class="col-md-6 mb-3">
+			            <label>Date Encaissement</label>
+			            <input type="date" id="encdate" th:field="*{encDate}" class="form-control"/>
+			        </div>
+			    </div>
+
+			    <!-- Résultats calculés -->
+			    <div class="row">
+			        <div class="col-md-6 mb-3">
+			            <label>Arriérés</label>
+			            <input type="text" id="arrieres" class="form-control" readonly/>
+			        </div>
+			        <div class="col-md-6 mb-3">
+			            <label>Pénalité</label>
+			            <input type="text" id="penalite" class="form-control" readonly/>
+			        </div>
+			    </div>
+
+			    <button type="submit" class="btn btn-primary">Enregistrer</button>
+			</form>
+		</div>
+    </div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+			<script>
+			    function calculateArrieresEtPenalite(loyer, lastpayment, encdate) {
+			        if (!lastpayment || !encdate) {
+			            return { arrieres: 0, penalite: 0 };
+			        }
+
+			        const diffMois = (encdate.getFullYear() - lastpayment.getFullYear()) * 12
+			                       + (encdate.getMonth() - lastpayment.getMonth());
+
+			        let arrieres = diffMois > 0 ? diffMois * loyer : 0;
+			        let penalite = diffMois > 1 ? (diffMois - 1) * (loyer * 0.05) : 0;
+
+			        return { arrieres, penalite };
+			    }
+
+			    function updateBailDetails() {
+			        const select = document.getElementById("bail");
+			        const option = select.options[select.selectedIndex];
+
+			        if (!option || !option.dataset.loctel) {
+			            return; // aucun bail sélectionné
+			        }
+
+			        const ds = option.dataset;
+			        const encDateInput = document.getElementById("encdate");
+			        const encDate = encDateInput.value ? new Date(encDateInput.value) : new Date();
+			        const lastpayment = ds.lastpayment ? new Date(ds.lastpayment) : null;
+
+			        const result = calculateArrieresEtPenalite(Number(ds.loyer), lastpayment, encDate);
+
+			        document.getElementById("telephone").value = ds.loctel || "";
+			        document.getElementById("email").value = ds.locemail || "";
+			        document.getElementById("loyer").value = ds.loyer || "";
+			        document.getElementById("numero").value = ds.numero || "";
+			        document.getElementById("usglibelle").value = ds.usglibelle || "";
+			        document.getElementById("bailibelle").value = ds.bailibelle || "";
+			        document.getElementById("arrieres").value = result.arrieres || 0;
+			        document.getElementById("penalite").value = result.penalite || 0;
+			    }
+
+			    document.addEventListener("DOMContentLoaded", function () {
+			        const select = document.getElementById("bail");
+			        if (select) {
+			            // Si aucun bail sélectionné, on prend le premier dispo
+			            if (select.selectedIndex <= 0 && select.options.length > 1) {
+			                select.selectedIndex = 1;
+			            }
+			            updateBailDetails();
+			            select.addEventListener("change", updateBailDetails);
+
+			            const encDateInput = document.getElementById("encdate");
+			            if (encDateInput) {
+			                encDateInput.addEventListener("change", updateBailDetails);
+			            }
+			        }
+			    });
+			</script>
+
+
+</section>
+
+</body>
+</html>

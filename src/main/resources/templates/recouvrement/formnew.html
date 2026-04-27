@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+  <body>
+	  <section layout:fragment="content">
+	      <div class="container my-2">
+	          <div class="container mt-4">
+				<form th:action="@{/recouvrements/save}" th:object="${encaisse}" method="post" 
+				      class="border p-4 rounded shadow-sm bg-white" id="encaisseForm">
+
+				    <h2>Ajouter un recouvrement</h2>
+
+				    <!-- Champs internes -->
+				    <input type="hidden" th:field="*{id}" />
+				    <input type="hidden" th:field="*{version}" />
+
+				    <!-- Hidden fields pour selects dynamiques -->
+				    <input type="hidden" th:field="*{utilisateur.id}" id="hiddenAgent">
+				    <input type="hidden" th:field="*{bail.id}" id="hiddenBail">
+				    <input type="hidden" th:field="*{identification.id}" id="hiddenIdentification">
+
+				    <!-- Hidden fields calculs -->
+				    <input type="hidden" th:field="*{encloyer}" id="conloyerInput">
+				    <input type="hidden" th:field="*{encArriere}" id="arriereInput">
+				    <input type="hidden" th:field="*{encPenalite}" id="penaliteInput">
+				    <input type="hidden" th:field="*{enctotal}" id="totalInput">
+				    <input type="hidden" th:field="*{encDeb}" id="arrieredInput">
+				    <input type="hidden" th:field="*{encFin}" id="arrierefInput">
+				    <input type="hidden" th:field="*{encMontant}" id="montantInput">
+
+				    <fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+
+				        <!-- Agent -->
+				        <div class="mb-3">
+				            <label for="agentSelect">Agent de recouvrement</label>
+				            <select id="agentSelect" class="form-select">
+				                <option value="">Tous les agents</option>
+				                <option th:each="u : ${utilisateurs}" th:value="${u.id}" 
+				                        th:text="|${u.prenoms} ${u.nom}|"></option>
+				            </select>
+				        </div>
+
+				        <!-- Bail / Locataire -->
+				        <div class="mb-3">
+				            <label for="bail">Locataire</label>
+				            <select id="bail" data-selected-id="${encaisse.bail?.id}" class="form-select">
+				                <option value="">-- Choisir un contrat --</option>
+				            </select>
+				        </div>
+
+				        <!-- Identification / Quittance -->
+				        <div class="mb-3">
+				            <label for="identification">Numéro du reçu</label>
+				            <select id="identification" data-selected-id="${encaisse.identification?.id}" class="form-select">
+				                <option value="">-- Choisir le numéro de quittance --</option>
+				            </select>
+				        </div>
+
+				        <!-- Date encaissement -->
+				        <div class="mb-3">
+				            <label for="encDate">Date recouvrement</label>
+				            <input type="date" id="encDate" th:field="*{encDate}" class="form-control" required
+				                   th:attr="max=${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}" />
+				        </div>
+
+				        <!-- Montants calculés -->
+				        <div class="mb-3">
+				            <label>Loyer FCFA</label>
+				            <input type="text" id="conloyer" class="form-control" readonly>
+				        </div>
+
+				        <div class="mb-3">
+				            <label>Arriéré(s) FCFA</label>
+				            <input type="text" id="arriereDisplay" class="form-control" readonly>
+				        </div>
+
+				        <div class="mb-3">
+				            <label>Pénalité retard FCFA</label>
+				            <input type="text" id="penaliteDisplay" class="form-control" readonly>
+				        </div>
+
+				        <div class="mb-3">
+				            <label>Total à payer FCFA</label>
+				            <input type="text" id="totalDisplay" class="form-control" readonly>
+				        </div>
+
+				        <!-- Montant payé -->
+				        <div class="mb-3">
+				            <label>Montant payé</label>
+				            <input type="text" id="montantDisplay" class="form-control" placeholder="0">
+				        </div>
+
+				        <!-- Boutons -->
+				        <div class="mt-3 d-flex gap-2">
+				            <button type="submit" class="btn btn-primary">
+				                <span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+				            </button>
+				            <a th:href="@{/recouvrements}" class="btn btn-danger">Retour à la liste</a>
+				        </div>
+
+				    </fieldset>
+
+				</form>
+	          </div>
+	      </div>
+		  
+		  <script th:inline="javascript">
+			document.addEventListener("DOMContentLoaded", function () {
+
+			    const agentSelect = document.getElementById("agentSelect");
+			    const bailSelect = document.getElementById("bail");
+			    const identificationSelect = document.getElementById("identification");
+			    const encDateInput = document.getElementById("encDate");
+			    const montantInput = document.getElementById("montantInput");
+			    const montantDisplay = document.getElementById("montantDisplay");
+
+			    const hiddenAgent = document.getElementById("hiddenAgent");
+			    const hiddenBail = document.getElementById("hiddenBail");
+			    const hiddenIdentification = document.getElementById("hiddenIdentification");
+
+			    // ─────────────── UTILITAIRES ───────────────
+			    function parseNumber(value) {
+			        return parseFloat(value.toString().replace(/\s/g, "").replace(",", ".")) || 0;
+			    }
+
+			    function formatNumber(value) {
+			        return value.toLocaleString("fr-FR");
+			    }
+
+			    function calculateArrieres(loyer, firstUnpaidDate, encDate) {
+			        loyer = parseFloat(loyer) || 0;
+			        if (!firstUnpaidDate || !loyer || !encDate)
+			            return { arrieres: 0, penalite: 0, total: loyer, debut: '', fin: '' };
+
+			        const paiementDate = new Date(encDate);
+			        let dueDate = new Date(firstUnpaidDate);
+
+			        if (paiementDate < dueDate) {
+			            return { arrieres: 0, penalite: 0, total: 0, debut: '', fin: '' };
+			        }
+
+			        let nbMoisDus = 0;
+			        let moisAvecPenalite = 0;
+
+			        while (dueDate <= paiementDate) {
+			            nbMoisDus++;
+			            const isCurrentMonth =
+			                dueDate.getMonth() === paiementDate.getMonth() &&
+			                dueDate.getFullYear() === paiementDate.getFullYear();
+			            if (isCurrentMonth) {
+			                if (paiementDate.getDate() > 10) moisAvecPenalite++;
+			            } else {
+			                moisAvecPenalite++;
+			            }
+			            dueDate.setMonth(dueDate.getMonth() + 1);
+			        }
+
+			        const arrieres = loyer * nbMoisDus;
+			        const penalite = loyer * 0.1 * moisAvecPenalite;
+			        const total = arrieres + penalite;
+
+			        const debut = new Date(firstUnpaidDate);
+			        const fin = new Date(paiementDate.getFullYear(), paiementDate.getMonth(), 1);
+
+			        const formatMois = d => ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear();
+
+			        return {
+			            arrieres,
+			            penalite,
+			            total,
+			            debut: formatMois(debut),
+			            fin: formatMois(fin)
+			        };
+			    }
+
+			    function updateBailDetails() {
+			        const selected = bailSelect.options[bailSelect.selectedIndex];
+			        if (!selected || !selected.dataset) return;
+
+			        hiddenBail.value = selected.value;
+
+			        const ds = selected.dataset;
+			        const encloyer = parseFloat(ds.loyer || 0);
+			        const lastPayment = ds.lastpayment ? ds.lastpayment : null;
+			        const encDate = encDateInput.value;
+
+			        const result = calculateArrieres(encloyer, lastPayment, encDate);
+
+			        document.getElementById("conloyer").value = encloyer.toLocaleString("fr-FR") + " FCFA";
+			        document.getElementById("conloyerInput").value = encloyer;
+
+			        document.getElementById("arriereDisplay").value = result.arrieres.toLocaleString("fr-FR") + " FCFA";
+			        document.getElementById("arriereInput").value = result.arrieres;
+
+			        document.getElementById("penaliteDisplay").value = result.penalite.toLocaleString("fr-FR") + " FCFA";
+			        document.getElementById("penaliteInput").value = result.penalite;
+
+			        document.getElementById("totalDisplay").value = result.total.toLocaleString("fr-FR") + " FCFA";
+			        document.getElementById("totalInput").value = result.total;
+
+			        document.getElementById("arriereDebut").value = result.debut;
+			        document.getElementById("arrieredInput").value = result.debut;
+			        document.getElementById("arriereFin").value = result.fin;
+			        document.getElementById("arrierefInput").value = result.fin;
+			    }
+
+			    function updateMontant() {
+			        const encMontant = parseNumber(montantDisplay.value);
+			        montantDisplay.value = encMontant ? formatNumber(encMontant) : "";
+			        montantInput.value = encMontant;
+			    }
+
+			    montantDisplay.addEventListener("input", updateMontant);
+
+			    // ─────────────── SELECT DYNAMIQUE ───────────────
+			    function chargerSelect(url, selectElement, placeholder, mapper, selectedId = null) {
+			        fetch(url)
+			            .then(resp => resp.json())
+			            .then(data => {
+			                selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+			                data.forEach(item => {
+			                    let option = document.createElement("option");
+			                    mapper(option, item);
+			                    if (selectedId && selectedId.toString() === item.id.toString()) {
+			                        option.selected = true;
+			                    }
+			                    selectElement.appendChild(option);
+			                });
+			                updateBailDetails();
+			            })
+			            .catch(err => console.error("Erreur chargement :", err));
+			    }
+
+			    function chargerBails(agentId = null, selectedId = null) {
+			        let url = "/immobilier/bails/api/bails";
+			        if (agentId) url += "?agentId=" + agentId;
+			        chargerSelect(url, bailSelect, "-- Choisir un contrat --", (option, b) => {
+			            option.value = b.id;
+			            option.text = b.locprenom + " - " + b.numero;
+			            option.dataset.loyer = b.montantloyer;
+			            option.dataset.locprenom = b.locprenom;
+			            option.dataset.loctel = b.loctel;
+			            option.dataset.bailibelle = b.bailibelle;
+			            option.dataset.numero = b.numero;
+			            option.dataset.usglibelle = b.usglibelle;
+			            option.dataset.lastpayment = b.derniereDatePaiement;
+			        }, selectedId);
+			    }
+
+			    function chargerIdentifications(agentId = null, selectedId = null) {
+			        let url = "/immobilier/carnets/api/identifications";
+			        if (agentId) url += "?agentId=" + agentId;
+			        chargerSelect(url, identificationSelect, "-- Choisir le numéro de quittance --", (option, i) => {
+			            option.value = i.id;
+			            option.text = i.numero;
+			        }, selectedId);
+			    }
+
+			    // Agent
+			    if (agentSelect) {
+			        agentSelect.addEventListener("change", function () {
+			            hiddenAgent.value = this.value;
+			            const agentId = this.value;
+			            chargerBails(agentId);
+			            chargerIdentifications(agentId);
+			        });
+			    }
+
+			    // Bail et identification
+			    bailSelect.addEventListener("change", () => { hiddenBail.value = bailSelect.value; updateBailDetails(); });
+			    identificationSelect.addEventListener("change", () => { hiddenIdentification.value = identificationSelect.value; });
+
+			    // Initialisation EDIT
+			    const existingAgentId = agentSelect ? agentSelect.value : null;
+			    const existingBailId = bailSelect.getAttribute("data-selected-id");
+			    const existingIdentificationId = identificationSelect.getAttribute("data-selected-id");
+
+			    chargerBails(existingAgentId, existingBailId);
+			    chargerIdentifications(existingAgentId, existingIdentificationId);
+
+			});
+		  </script>
+		  
+	  </section>
+	</body>
+</html>

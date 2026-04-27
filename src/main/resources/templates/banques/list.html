@@ -1,0 +1,66 @@
+<div th:fragment="tableFragment">
+    <table class="table">
+        <thead class="table-success">
+        <tr>
+            <th>Code</th>
+            <th>Sigle</th>
+            <th>Désignation</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="banque : ${banques}">
+            <td th:text="${banque.bancode}"></td>
+            <td th:text="${banque.bansigle}"></td>
+            <td th:text="${banque.banlibelle}"></td>
+            <td>
+                <div class="d-flex justify-content-center">
+                    <div class="dropdown">
+                        <button class="btn" type="button" id="dropdownMenuButton"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <li>
+                                <a class="dropdown-item"
+                                   th:href="@{'/banques/edit/' + ${banque.bancode}}">
+                                    <i class="bi bi-pencil me-2"></i>Modifier
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item del-btn"
+                                   th:href="@{'/banques/delete/' + ${banque.bancode}}">
+                                    <i class="bi bi-trash me-2"></i>Supprimer
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(banques)}">
+            <td colspan="4" class="text-center text-muted">Aucune banque trouvée.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <nav aria-label="Pagination" th:if="${totalPages > 1}">
+        <ul class="pagination justify-content-end">
+            <li th:classappend="${currentPage == 0} ? 'disabled'" class="page-item">
+                <a class="page-link" href="#" th:onclick="'searchBanques(' + (${currentPage}-1) + ');return false;'">&lt;&lt;</a>
+            </li>
+
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" href="#"
+                   th:text="${i + 1}"
+                   th:onclick="'searchBanques(' + ${i} + ');return false;'"></a>
+            </li>
+
+            <li th:classappend="${currentPage == totalPages - 1} ? 'disabled'" class="page-item">
+                <a class="page-link" href="#" th:onclick="'searchBanques(' + (${currentPage}+1) + ');return false;'">&gt;&gt;</a>
+            </li>
+        </ul>
+    </nav>
+</div>

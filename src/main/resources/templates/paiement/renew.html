@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+	<body>
+	    <section layout:fragment="content">
+			<div class="container my-2">
+				<div class="container mt-4">
+				   <h3>Paiement Mobile Money</h3>
+					<hr>
+	
+					<form method="post" action="/paiement/valider">
+					    <input type="hidden" name="paiementId" th:value="${paiementId}" />
+					
+					    <label>Choisir opérateur :</label>
+					    <select name="operateur" class="form-control">
+					        <option value="ORANGE">Orange Money</option>
+					        <option value="MTN">MTN Money</option>
+					        <option value="MOOV">Moov Money</option>
+					    </select>
+						<p>Montant à payer : <strong th:text="${montant}"></strong> FCFA</p>
+					    <button type="submit" class="btn btn-success mt-3">
+					        Payer maintenant
+					    </button>
+					</form>
+					
+				</div>
+			</div>
+	    </section>
+	</body>
+</html>

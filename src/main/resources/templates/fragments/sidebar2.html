@@ -1,0 +1,222 @@
+<!-- templates/fragments/sidebar.html -->
+
+<!-- Bouton toggle (mobile) -->
+<button class="btn btn-dark d-lg-none m-2" type="button"
+        data-bs-toggle="offcanvas"
+        data-bs-target="#sidebarOffcanvas"
+        aria-controls="sidebarOffcanvas">
+    ☰ SIGimmo
+</button>
+
+<!-- Sidebar fixe (desktop) -->
+<nav class="sidebar p-3 bg-success text-white position-fixed top-0 start-0 h-100 d-none d-lg-block" th:fragment="sidebar">
+	<!-- ==== MENU PRINCIPAL ==== -->
+	<div class="menu-section p-3">
+	    <ul class="nav flex-column">
+	        <li class="nav-item" th:if="${userRoles.contains('ADMIN')}">
+	            <a class="nav-link d-flex align-items-center" th:href="@{/}">🏠 Accueil</a>
+	        </li>
+			
+			<!--<li class="nav-item" th:if="${userRoles.contains('ADMIN') or userRoles.contains('DIREC')}">
+		        <a class="nav-link d-flex align-items-center" th:href="@{/dashboards/loyers}">
+		            <i class="bi bi-speedometer2 me-2"></i>
+		            <span>Tableau de bord ✔ Dashboard paiements</span>
+		        </a>
+		    </li>-->
+			
+			<!-- dashboard desktop -->
+	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('ADMIN')}">
+	            <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#dashboardMenuDesktop"
+	               role="button" aria-expanded="false" aria-controls="dashboardMenuDesktop">
+	                <i class="bi bi-building me-2"></i> Tableau de bord▾
+	            </a>
+	            <div class="collapse ps-3" id="dashboardMenuDesktop">
+	                <ul class="nav flex-column">
+	                    <li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/dashboards/loyers}"> ✔ Paiements</a></li>
+	                    <li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/dashboards/loyers-montant}"> 💰 Montants</a></li>
+	                </ul>
+	            </div>
+	        </li>
+			
+	        <li class="nav-item" th:if="${userRoles.contains('DIREC')}">
+	            <a class="nav-link d-flex align-items-center" th:href="@{/banques}"
+	               th:classappend="${currentUri != null and currentUri.startsWith('/banques')} ? ' active' : ''">
+	                🏛️ Banque
+	            </a>
+	        </li>
+	
+	        <li class="nav-item" th:if="! ${userRoles.contains('ADMIN')}">
+	            <a class="nav-link d-flex align-items-center" th:href="@{/carnets}"
+	               th:classappend="${currentUri != null and currentUri.startsWith('/carnets')} ? ' active' : ''">
+	               🧾 Carnet
+	            </a>
+	        </li>
+	
+	        <li class="nav-item" th:if="! ${userRoles.contains('ADMIN')}">
+	            <a class="nav-link d-flex align-items-center" th:href="@{/recouvrements}"
+	               th:classappend="${currentUri.startsWith('/recouvrements') ? ' active' : ''}">
+	               💰 Recouvrement
+	            </a>
+	        </li>
+	
+	        <!-- Bailleur desktop -->
+	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('ADMIN')}">
+	            <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#bailleurMenuDesktop"
+	               role="button" aria-expanded="false" aria-controls="bailleurMenuDesktop">
+	                <i class="bi bi-building me-2"></i> Bailleur ▾
+	            </a>
+	            <div class="collapse ps-3" id="bailleurMenuDesktop">
+	                <ul class="nav flex-column">
+	                    <li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/bailleurs}"><i class="bi bi-person-badge me-2"></i> Enrolement</a></li>
+	                    <li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/patrimoines}"><i class="bi bi-buildings me-2"></i> Patrimoine</a></li>
+	                </ul>
+	            </div>
+	        </li>
+	
+	        <!-- Locataire desktop -->
+	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('ADMIN')}">
+	            <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#locataireMenuDesktop"
+	               role="button" aria-expanded="false" aria-controls="locataireMenuDesktop">
+	                <i class="bi bi-person-vcard me-2"></i> Locataire ▾
+	            </a>
+	            <div class="collapse ps-3" id="locataireMenuDesktop">
+	                <ul class="nav flex-column">
+	                    <li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/locataires}"><i class="bi bi-person-vcard me-2"></i> Enrolement</a></li>
+	                    <li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/bails}"><i class="bi bi-file-earmark-text me-2"></i> Bail</a></li>
+	                </ul>
+	            </div>
+	        </li>
+	
+	        <!-- Administration desktop -->
+	        <li class="nav-item" th:if="${userRoles.contains('ADMIN')}">
+	            <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#adminMenuDesktop"
+	               role="button" aria-expanded="false" aria-controls="adminMenuDesktop">
+	                <i class="bi bi-person-gear me-2"></i> Administration ▾
+	            </a>
+	            <div class="collapse ps-3" id="adminMenuDesktop">
+	                <ul class="nav flex-column">
+	                    <li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/type-roles}"><i class="bi bi-diagram-3 me-2"></i> Type rôle</a></li>
+	                    <li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/roles}"><i class="bi bi-key me-2"></i> Rôle</a></li>
+	                    <li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/utilisateurs}"><i class="bi bi-person-plus"></i> Utilisateur</a></li>
+	                </ul>
+	            </div>
+	        </li>
+			
+			<!-- Administration desktop -->
+	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('ADMIN')}">
+	            <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#referenMenuDesktop"
+	               role="button" aria-expanded="false" aria-controls="referenMenuDesktop">
+	                <i class="bi bi-archive"></i> Référentiel ▾
+	            </a>
+	            <div class="collapse ps-3" id="referenMenuDesktop">
+	                <ul class="nav flex-column">
+	                    <li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/professions}"><i class="bi bi-person-badge"></i> Profession</a></li>
+	                    <!--<li class="nav-item"><a class="nav-link d-flex align-items-center" th:href="@{/pays}"><i class="bi bi-key me-2"></i> Pays</a></li>-->
+	                </ul>
+	            </div>
+	        </li>
+	    </ul>
+	</div>
+</nav>
+
+<!-- Offcanvas mobile -->
+<div class="offcanvas offcanvas-start bg-dark text-white" 
+     tabindex="-1" 
+     id="sidebarOffcanvas">
+    <div class="offcanvas-header border-bottom border-secondary">
+        <h5 class="offcanvas-title text-white">SIGimmo</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <ul class="nav flex-column">
+
+            <li class="nav-item" th:if="${userRoles.contains('ADMIN')}">
+                <a class="nav-link text-white" th:href="@{/}">
+                    🏠 Accueil
+                </a>
+            </li>
+			
+			<li class="nav-item" th:if="${userRoles.contains('ADMIN') or userRoles.contains('DIREC')}">
+		        <a class="nav-link d-flex align-items-center" th:href="@{/dashboards/loyers}">
+		            <i class="bi bi-speedometer2 me-2"></i>
+		            <span>Tableau de bord</span>
+		        </a>
+		    </li>
+
+            <li class="nav-item" th:if="${userRoles.contains('DIREC')}">
+                <a class="nav-link text-white" th:href="@{/banques}">
+                    🏛️ Banque
+                </a>
+            </li>
+
+            <li class="nav-item" th:if="! ${userRoles.contains('ADMIN')}">
+                <a class="nav-link text-white" th:href="@{/carnets}">
+                    🧾 Carnet
+                </a>
+            </li>
+
+            <li class="nav-item" th:if="! ${userRoles.contains('ADMIN')}">
+                <a class="nav-link text-white" th:href="@{/recouvrements}">
+                    💰 Recouvrement
+                </a>
+            </li>
+
+            <!-- Bailleur mobile -->
+            <li class="nav-item" th:if="${userRoles.contains('ADMIN') or userRoles.contains('DIREC')}">
+                <a class="nav-link text-white" data-bs-toggle="collapse" href="#bailleurMenuMobile"
+                   role="button" aria-expanded="false" aria-controls="bailleurMenuMobile">
+                    <i class="bi bi-building me-2"></i> Bailleur ▾
+                </a>
+                <div class="collapse ps-3" id="bailleurMenuMobile">
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link text-white" th:href="@{/bailleurs}"><i class="bi bi-person-badge me-2"></i> Enrôlement</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" th:href="@{/patrimoines}"><i class="bi bi-buildings me-2"></i> Patrimoine</a></li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Locataire mobile -->
+            <li class="nav-item" th:if="${userRoles.contains('ADMIN') or userRoles.contains('DIREC')}">
+                <a class="nav-link text-white" data-bs-toggle="collapse" href="#locataireMenuMobile"
+                   role="button" aria-expanded="false" aria-controls="locataireMenuMobile">
+                    <i class="bi bi-person-vcard me-2"></i> Locataire ▾
+                </a>
+                <div class="collapse ps-3" id="locataireMenuMobile">
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link text-white" th:href="@{/locataires}"><i class="bi bi-person-vcard me-2"></i> Enrôlement</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" th:href="@{/bails}"><i class="bi bi-file-earmark-text me-2"></i> Bail</a></li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Administration mobile -->
+            <li class="nav-item" th:if="${userRoles.contains('ADMIN')}">
+                <a class="nav-link text-white" data-bs-toggle="collapse" href="#adminMenuMobile"
+                   role="button" aria-expanded="false" aria-controls="adminMenuMobile">
+                    <i class="bi bi-person-gear me-2"></i> Administration ▾
+                </a>
+                <div class="collapse ps-3" id="adminMenuMobile">
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link text-white" th:href="@{/type-roles}"><i class="bi bi-diagram-3 me-2"></i> Type rôle</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" th:href="@{/roles}"><i class="bi bi-key me-2"></i> Rôle</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" th:href="@{/utilisateurs}"><i class="bi bi-person-plus"></i> Utilisateur</a></li>
+                    </ul>
+                </div>
+            </li>
+
+			<!-- Administration mobile -->
+            <li class="nav-item" th:if="${userRoles.contains('ADMIN') or userRoles.contains('DIREC')}">
+                <a class="nav-link text-white" data-bs-toggle="collapse" href="#referenMenuMobile"
+                   role="button" aria-expanded="false" aria-controls="referenMenuMobile">
+                    <i class="bi bi-archive"></i> Référentiel ▾
+                </a>
+                <div class="collapse ps-3" id="referenMenuMobile">
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link text-white" th:href="@{/professions}"><i class="bi bi-people-fill"></i> Profession</a></li>
+                        <!--<li class="nav-item"><a class="nav-link text-white" th:href="@{/pays}"><i class="bi bi-key me-2"></i> Pays </a></li>-->
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>

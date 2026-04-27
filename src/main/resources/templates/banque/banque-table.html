@@ -1,0 +1,41 @@
+<!-- banque/banque-table.html -->
+<table class="table table-striped table-bordered" th:fragment="banqueTable">
+    <tbody>
+    <tr th:each="banque : ${banques}">
+        <td th:text="${banque.bancode}"></td>
+        <td th:text="${banque.bansigle}"></td>
+        <td th:text="${banque.banlibelle}"></td>
+        <td>
+            <div class="d-flex justify-content-center">
+                <div class="dropdown">
+                    <button class="btn" type="button" id="dropdownMenuButton"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <li>
+                            <a class="dropdown-item" th:href="@{'/banques/edit/' + ${banque.bancode}}">
+                                <i class="bi bi-pencil me-2"></i>Modifier
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{'/banques/delete/' + ${banque.bancode}}"
+                               onclick="return confirm('Voulez-vous vraiment supprimer ?')">
+                                <i class="bi bi-trash me-2"></i>Supprimer
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{'/banques/transmettre/' + ${banque.bancode}}">
+                                <i class="bi bi-send me-2"></i>Transmettre
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(banques)}">
+        <td colspan="4" class="text-center">Aucune banque trouvée.</td>
+    </tr>
+    </tbody>
+</table>

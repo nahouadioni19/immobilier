@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+  <body>
+	  <section layout:fragment="content">
+	      <div class="container my-2">
+	          <div class="container mt-4">
+				<h2>Ajouter un recouvrement</h2>
+	              <form th:action="@{/recouvrements/save}" th:object="${encaisse}" method="post" 
+	                    class="border p-4 rounded shadow-sm bg-white" id="encaisseForm">
+	                  
+	                  
+	                  <input type="hidden" th:field="*{id}" id="encaisseId"/>
+	                  <input type="hidden" th:field="*{version}"/>
+					  
+					  <!-- Hidden fields pour selects dynamiques -->
+	  				   <!--<input type="text" th:field="*{utilisateur.id}" id="hiddenAgent">-->
+					   
+					   <input type="hidden" th:field="*{utilisateur.id}" id="hiddenAgent" th:data-user-id="${#authentication.principal.id}">
+					   
+	  				   <input type="hidden" th:field="*{bail.id}" id="hiddenBail">
+	  				   <input type="hidden" th:field="*{identification.id}" id="hiddenIdentification">
+	
+	  				    <!-- Hidden fields calculs -->
+	  				   <input type="hidden" th:field="*{encloyer}" id="conloyerInput">
+	  				   <input type="hidden" th:field="*{encArriere}" id="arriereInput">
+	  				   <input type="hidden" th:field="*{encPenalite}" id="penaliteInput">
+	  				   <input type="hidden" th:field="*{enctotal}" id="totalInput">
+	  				   <input type="hidden" th:field="*{encDeb}" id="arrieredInput">
+	  				   <input type="hidden" th:field="*{encFin}" id="arrierefInput">
+	  				   <input type="hidden" th:field="*{encMontant}" id="montantInput">
+
+	                  <!--<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">-->
+	                      
+	                      <!-- Agent de recouvrement -->
+	                      <div class="row" th:if="! ${userRoles.contains('RECOUV')}"><!--th:if="${#sets.contains(userRoles, 'NSI')}">-->	                         
+                              <div class="mb-1">
+								  <label for="utilisateur" class="form-label">
+	  								    <span style="font-style: italic;">Agent de recouvrement</span>
+	  								    <span class="text-danger">*</span>
+	  							  </label>									  
+								  <select id="agentSelect" class="form-select" >
+										<option value="9999999">-- Choix --</option>
+	  						            <option value="">Tous les agents</option>
+	  						            <option th:each="u : ${utilisateurs}"
+	  						                    th:value="${u.id}"
+	  						                    th:text="|${u.prenoms} ${u.nom}|">
+	  						            </option>
+	  						       </select>
+                              </div>
+	                      </div>
+
+	                      <!-- Bail / Locataire -->
+						  
+		                      <div class="mb-1">
+								<label for="encDate" class="form-label">
+								    <span style="font-style: italic;">Date de recouvrement</span>
+								    <span class="text-danger">*</span>
+								</label>
+	                              <input type="date" id="encDate" th:field="*{encDate}" class="form-control" required 
+								  					th:attr="max=${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}" />
+	                          </div>
+	
+							<div class="mb-1">
+						          <label for="bail" class="form-label">
+									<span style="font-style: italic;">Locataire</span>
+									<span class="text-danger">*</span>
+								  </label>				  
+								  <select id="bail" th:data-selected-id="${encaisse.bail?.id}" class="form-select" required>
+								      <option value="">-- Choisir un contrat --</option>
+								  </select>
+							</div>
+						
+						
+							<div class="mb-1">
+	                              <label>								
+										<span style="font-style: italic;">Numéro de reçu</span>
+										<span class="text-danger">*</span>								
+								  </label>
+								  <select id="identification" name="identification" th:data-selected-id="${encaisse.identification?.id}" class="form-select" required>
+								      <option value="">-- Choisir le numéro de quittance --</option>
+								  </select>
+		                      </div>      
+	
+		                      <!-- Arriérés / Loyer / Pénalités / Total -->
+	                      	  <div class="mb-1">
+	                              <label>
+										<span style="font-style: italic;">Arriéré(s) FCFA</span>
+										<span class="text-danger"></span>									
+								  </label>
+	                              <input type="text" id="arriereDisplay" class="form-control" disabled>                              
+	                          </div>
+						  
+						  
+	                          <div class="mb-1">
+	                              <label>
+										<span style="font-style: italic;">De</span>
+										<span class="text-danger"></span>
+								  </label>
+	                              <input type="text" id="arriereDebut" class="form-control" disabled>
+	                          </div>
+								  
+	                          <div class="mb-1">
+	                              <label>
+										<span style="font-style: italic;">A</span>
+										<span class="text-danger"></span>
+								  </label>
+	                              <input type="text" id="arriereFin" class="form-control" disabled>
+		                      </div>
+						  
+						  
+		                      <div class="mb-1">
+	                              <label>
+									<span style="font-style: italic;">Loyer FCFA</span>
+									<span class="text-danger"></span>
+								  </label>
+	                              <input type="text" id="conloyer" class="form-control" disabled>
+	                          </div>
+								  
+	                          <div class="mb-1">
+	                              <label>
+									<span style="font-style: italic;">Pénalité retard (FCFA)</span>
+									<span class="text-danger"></span>
+								  </label>
+	                              <input type="text" id="penaliteDisplay" class="form-control" disabled>
+	                          </div>
+						  
+	                          <div class="mb-1">
+	                              <label>
+									<span style="font-style: italic;">Total à payer (FCFA)</span>
+									<span class="text-danger"></span>
+								  </label>
+	                              <input type="text" id="totalDisplay" class="form-control" disabled>
+		                      </div>
+	
+		                      <!-- Montant payé / Mode / Quittance -->
+		                      <div class="mb-1">
+	                              <label>
+									<span style="font-style: italic;">Montant payé</span>
+									<span class="text-danger">*</span>
+								  </label>
+	                              <input type="text" id="montantDisplay" class="form-control" placeholder="0">
+	                          </div>
+						  
+						  
+                          <div class="mb-1">
+                              <label>
+								<span style="font-style: italic;">Mode de paiement</span>
+								<span class="text-danger">*</span>
+							  </label>
+                              <select th:field="*{encMode}" id="encMode" class="form-select" required>
+                                  <option value="">-- Choisir le mode --</option>
+                                  <option value="ESPÈCES">Espèces</option>
+                                  <option value="CHÈQUE">Chèque</option>
+                                  <option value="VIREMENT">Virement</option>
+                                  <option value="MOBILE MONEY">Mobile Money</option>
+                              </select>
+                          </div>
+						  
+	                      <!-- Boutons -->
+	                      <div class="mt-3 row g-2">
+	                          <div class="col-12 col-md-2">
+	                              <button type="submit" class="btn btn-primary w-100">
+	                                  <span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+	                              </button>
+	                          </div>
+	                          <div class="col-12 col-md-2">
+	                              <a th:href="@{/recouvrements}" class="btn btn-danger w-100">Retour à la liste</a>
+	                          </div>
+	                      </div>
+
+	                  <!--</fieldset>-->
+	              </form>
+	          </div>
+	      </div>
+		  
+		  <!-- ✅ SweetAlert2 -->
+		  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+		  <div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+		  <!-- ⚠️ Boîte de confirmation avant envoi -->
+		  <script>
+		      document.getElementById('encaisseForm').addEventListener('submit', function (e) {
+		          e.preventDefault(); // Bloque l’envoi automatique
+		          const form = this;
+		      //    const isEdit = form.querySelector('input[name="id"]').value !== "";
+		  		const idField = form.querySelector('input[name="id"]');
+		  		const idValue = idField ? idField.value.trim() : "";
+		  		console.log("ID trouvé :", idValue);
+		      // ✅ Création si id vide ou null
+		          const isEdit = idValue !== null && idValue !== "" && idValue !== "0";
+		          console.log("isEdit =", isEdit);
+
+		          Swal.fire({
+		              title: isEdit ? 'Confirmation' : 'Confirmation',
+		              text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
+		              icon: 'question',
+		              showCancelButton: true,
+		              confirmButtonText: 'Oui',
+		              cancelButtonText: 'Non',
+		              reverseButtons: true
+		          }).then((result) => {
+		              if (result.isConfirmed) {
+		                  form.submit(); // Si confirmé → on envoie le formulaire
+		              }
+		          });
+
+		  		// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+		  		    const successDiv = document.getElementById('successMessage');
+		  		    if (successDiv && successDiv.textContent.trim() !== '') {
+		  		        const msg = successDiv.textContent.trim();
+		  		        Swal.fire({
+		  		            icon: 'success',
+		  		            title: 'Succès !',
+		  		            text: msg,
+		  		            confirmButtonText: 'OK'
+		  		        });
+		  		    }
+		  		});
+		  </script>
+		  
+		  <script th:inline="javascript">
+		  document.addEventListener("DOMContentLoaded", function () {
+
+		      // ─────────────── ELEMENTS ───────────────
+		      const agentSelect = document.getElementById("agentSelect");
+		      const bailSelect = document.getElementById("bail");
+		      const identificationSelect = document.getElementById("identification");
+		      const encDateInput = document.getElementById("encDate");
+		      const montantInput = document.getElementById("montantInput");
+		      const montantDisplay = document.getElementById("montantDisplay");
+
+		      const hiddenAgent = document.getElementById("hiddenAgent");
+		      const hiddenBail = document.getElementById("hiddenBail");
+		      const hiddenIdentification = document.getElementById("hiddenIdentification");
+
+		      // ─────────────── VARIABLES EDIT ───────────────
+		      const existingAgentId = hiddenAgent.value || null;
+		      const existingBailId = bailSelect.dataset.selectedId || null;
+		      const existingIdentificationId = identificationSelect.dataset.selectedId || null;
+
+		      if (existingBailId) hiddenBail.value = existingBailId;
+		      if (existingIdentificationId) hiddenIdentification.value = existingIdentificationId;
+
+		      // ─────────────── UTILITAIRES ───────────────
+		      function parseNumber(value) {
+		          return parseFloat(value.toString().replace(/\s/g, "").replace(",", ".")) || 0;
+		      }
+
+		      function formatNumber(value) {
+		          return value.toLocaleString("fr-FR");
+		      }
+
+		      function calculateArrieres(loyer, firstUnpaidDate, encDate) {
+		          loyer = parseFloat(loyer) || 0;
+		          if (!firstUnpaidDate || !encDate || loyer === 0) return { arrieres:0, penalite:0, total:0, debut:'', fin:'' };
+
+		          const debut = new Date(firstUnpaidDate + "T00:00:00");
+		          const paiement = new Date(encDate + "T00:00:00");
+		          if (isNaN(debut.getTime()) || isNaN(paiement.getTime()) || paiement < debut)
+		              return { arrieres:0, penalite:0, total:0, debut:'', fin:'' };
+
+		          let nbMois = (paiement.getFullYear() - debut.getFullYear())*12 + paiement.getMonth() - debut.getMonth() + 1;
+		          const arrieres = nbMois * loyer;
+		          const penalite = paiement.getDate() > 10 ? arrieres*0.1 : 0;
+		          const total = arrieres + penalite;
+
+		          return {
+		              arrieres,
+		              penalite,
+		              total,
+		              debut: debut.toLocaleDateString("fr-FR",{ month:"2-digit", year:"numeric" }),
+		              fin: paiement.toLocaleDateString("fr-FR",{ month:"2-digit", year:"numeric" })
+		          };
+		      }
+
+		      // ─────────────── BAIL DETAILS ───────────────
+		      function updateBailDetails() {
+		          const selected = bailSelect.options[bailSelect.selectedIndex];
+		          if (!selected || !selected.value || !selected.dataset || !encDateInput.value) return;
+
+		          const encDate = encDateInput.value;
+		          hiddenBail.value = selected.value;
+
+		          const ds = selected.dataset;
+		          const encloyer = parseFloat(ds.loyer || 0);
+
+		          const lastPayment = ds.lastpayment && ds.lastpayment !== 'null'
+		              ? ds.lastpayment.split("T")[0]
+		              : (ds.datedebut && ds.datedebut !== 'null' ? ds.datedebut.split("T")[0] : encDate);
+
+		          const result = calculateArrieres(encloyer, lastPayment, encDate);
+
+		          document.getElementById("conloyer").value = encloyer.toLocaleString("fr-FR")+" FCFA";
+		          document.getElementById("conloyerInput").value = encloyer;
+		          document.getElementById("arriereDisplay").value = result.arrieres.toLocaleString("fr-FR")+" FCFA";
+		          document.getElementById("arriereInput").value = result.arrieres;
+		          document.getElementById("penaliteDisplay").value = result.penalite.toLocaleString("fr-FR")+" FCFA";
+		          document.getElementById("penaliteInput").value = result.penalite;
+		          document.getElementById("totalDisplay").value = result.total.toLocaleString("fr-FR")+" FCFA";
+		          document.getElementById("totalInput").value = result.total;
+		          document.getElementById("arriereDebut").value = result.debut;
+		          document.getElementById("arriereFin").value = result.fin;
+		          document.getElementById("arrieredInput").value = result.debut;
+		          document.getElementById("arrierefInput").value = result.fin;
+
+		          montantDisplay.value = result.total.toLocaleString("fr-FR");
+		          montantInput.value = result.total;
+		      }
+
+		      // ─────────────── MONTANT INPUT ───────────────
+		      function updateMontant() {
+		          const encMontant = parseNumber(montantDisplay.value);
+		          montantDisplay.value = encMontant ? formatNumber(encMontant) : "";
+		          montantInput.value = encMontant;
+		      }
+		      montantDisplay.addEventListener("input", updateMontant);
+
+		      // ─────────────── CHARGEMENT DYNAMIQUE SELECT ───────────────
+		      function chargerSelect(url, selectElement, placeholder, mapper, selectedId = null) {
+		          fetch(url)
+		              .then(resp => resp.json())
+		              .then(data => {
+		                  selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+		                  data.forEach(item => {
+		                      let option = document.createElement("option");
+		                      mapper(option, item);
+
+		                      if (selectedId && selectedId == item.id) {
+		                          option.selected = true;
+		                          hiddenIdentification.value = item.id; // ✅ hidden
+		                      }
+
+		                      selectElement.appendChild(option);
+		                  });
+		                  updateBailDetails();
+		              })
+		              .catch(err => console.error("Erreur chargement :", err));
+		      }
+
+		      function chargerBails(agentId = null, selectedId = null) {
+		          let url = "/immobilier/bails/api/bails";
+		          if (agentId) url += "?agentId="+agentId;
+		          chargerSelect(url, bailSelect, "-- Choisir un contrat --", (option,b) => {
+		              option.value = b.id;
+		              option.text = b.locprenom + " - " + b.numero;
+		              option.dataset.loyer = b.montantloyer;
+		              option.dataset.locprenom = b.locprenom;
+		              option.dataset.loctel = b.loctel;
+		              option.dataset.bailibelle = b.bailibelle;
+		              option.dataset.numero = b.numero;
+		              option.dataset.usglibelle = b.usglibelle;
+		              option.dataset.lastpayment = b.derniereDatePaiement;
+		              option.dataset.datedebut = b.dateDebut;
+		          }, selectedId);
+		      }
+
+			  function chargerIdentifications(agentId = null, encaisseId = null, selectedId = null) {
+			      let url = "/immobilier/carnets/api/identifications";
+
+			      if (agentId) url += "?agentId=" + agentId;
+			      if (encaisseId) url += "&encaisseId=" + encaisseId;
+
+			      chargerSelect(url, identificationSelect, "-- Choisir le numéro de quittance --", (option,i) => {
+			          option.value = i.id;
+			          option.text = i.numero;
+			      }, selectedId);
+			  }
+			  
+		      // ─────────────── EVENTS ───────────────
+			  const connectedUserId = hiddenAgent.dataset.userId;
+
+			  if (agentSelect) {
+			      agentSelect.addEventListener("change", function () {
+					  
+					  let agentId = this.value;
+
+					          // ───── CAS "Tous les agents"
+					          let agentIdBail = agentId || null;              // pour les contrats
+					          let agentIdIdentification = agentId || connectedUserId; // pour les quittances
+
+					          hiddenAgent.value = agentIdIdentification;
+
+					          chargerBails(agentIdBail);
+					          chargerIdentifications(agentIdIdentification);
+			          
+			      });
+			  }
+			  
+		      /*if (agentSelect) {
+		          agentSelect.addEventListener("change", function () {
+		              hiddenAgent.value = this.value;
+		              const agentId = this.value;
+		              chargerBails(agentId);
+		              chargerIdentifications(agentId);
+		          });
+		      }*/
+
+		      bailSelect.addEventListener("change", () => { hiddenBail.value = bailSelect.value; updateBailDetails(); });
+		      identificationSelect.addEventListener("change", () => { hiddenIdentification.value = identificationSelect.value; });
+		      encDateInput.addEventListener("change", updateBailDetails);
+
+		      // ─────────────── INITIALISATION EDIT ───────────────
+		      if (montantInput.value) montantDisplay.value = Number(montantInput.value).toLocaleString("fr-FR");
+		      chargerBails(existingAgentId, existingBailId);
+			  
+			  const encaisseId = document.getElementById("encaisseId")?.value || null;
+			  chargerIdentifications(existingAgentId, encaisseId, existingIdentificationId);
+
+		  });
+		  </script>
+		  		  
+	  </section>
+	</body>
+</html>

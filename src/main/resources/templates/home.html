@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+<section layout:fragment="content">
+    <div class="container-fluid p-4">
+		<div class="container mt-4">
+			
+			<div th:if="${#sets.contains(userRoles, 'ADMIN')}">
+			
+        <h1 class="mb-4">Tableau de bord</h1>
+
+        <!-- Statistiques -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Locataires</h6>
+                        <h3 class="fw-bold text-primary" th:text="${totalLocataires}"></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Baux actifs</h6>
+                        <h3 class="fw-bold text-success" th:text="${totalBaux}"></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Recouvrements</h6>
+                        <h3 class="fw-bold text-warning" th:text="${totalRecouvrements}"></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Arriérés</h6>
+                        <h3 class="fw-bold text-danger" th:text="${totalArrieres}"></h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+		
+		<!--<div class="row">
+
+		    <div class="col-md-4">
+		        <div class="card bg-primary text-white p-3">
+		            <h5>Total à payer</h5>
+		            <h3 th:text="${stats.totalAPayer} + ' FCFA'"></h3>
+		        </div>
+		    </div>
+
+		    <div class="col-md-4">
+		        <div class="card bg-success text-white p-3">
+		            <h5>Total payé</h5>
+		            <h3 th:text="${stats.totalPaye} + ' FCFA'"></h3>
+		        </div>
+		    </div>
+
+		    <div class="col-md-4">
+		        <div class="card bg-danger text-white p-3">
+		            <h5>Retard</h5>
+		            <h3 th:text="${stats.totalRetard} + ' FCFA'"></h3>
+		        </div>
+		    </div>
+
+		</div>-->
+		
+
+        <!-- Graphique -->
+        <!--<div class="row">
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Évolution des loyers encaissés</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartLoyers"></canvas>
+                    </div>
+                </div>
+            </div>
+             Derniers recouvrements 
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Derniers recouvrements</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li th:each="rec : ${#lists.sequence(1,3)}"
+                                class="list-group-item">
+                                Contrat #<span th:text="${rec}"></span> - <span th:text="${rec * 50000}"></span> FCFA
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+		</div>
+	</div>
+    </div>
+</section>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+    const labels = /*[[${mois}]]*/ [];
+    const data = /*[[${loyers}]]*/ [];
+
+    new Chart(document.getElementById('chartLoyers'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Loyers encaissés (FCFA)',
+                data: data,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.3,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+/*]]>*/
+</script>
+
+</body>
+</html>

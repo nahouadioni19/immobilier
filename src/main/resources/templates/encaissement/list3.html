@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Recouvrements</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet"/>
+</head>
+
+<body>
+<section layout:fragment="content">
+
+<div class="container mt-4">
+
+    <h2 class="mb-2 mb-md-0">
+        Tableau de bord des encaissements - Année <span th:text="${annee}"></span>
+    </h2>
+
+    <hr style="border: 1px solid #ccc;">
+
+    <fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+
+        <h5>Filtre</h5>
+
+        <!-- ===================== FILTRE ANNEE ===================== -->
+        <form method="get" class="row mb-3">
+            <div class="col-md-2">
+                <input type="number" name="annee"
+                       class="form-control"
+                       th:value="${annee}">
+            </div>
+
+            <div class="col-md-2">
+                <button class="btn btn-primary">Filtrer</button>
+            </div>
+        </form>
+
+        <!-- ===================== TABLE ===================== -->
+        <div class="table-responsive">
+
+            <table class="table table-bordered">
+
+                <thead class="table-success">
+                <tr>
+                    <th>Locataire</th>
+                    <th>Jan</th>
+                    <th>Fév</th>
+                    <th>Mar</th>
+                    <th>Avr</th>
+                    <th>Mai</th>
+                    <th>Juin</th>
+                    <th>Juil</th>
+                    <th>Août</th>
+                    <th>Sep</th>
+                    <th>Oct</th>
+                    <th>Nov</th>
+                    <th>Déc</th>
+                    <th>Total</th>
+                </tr>
+                </thead>
+
+                <!-- ===================== BODY ===================== -->
+                <tbody>
+                <tr th:each="row : ${dashboardEncaissements}">
+
+                    <td th:text="${row.locataire}"></td>
+
+                    <td th:text="${row.janFormatted}"
+                        th:class="${row.janPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.fevFormatted}"
+                        th:class="${row.fevPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.marFormatted}"
+                        th:class="${row.marPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.avrFormatted}"
+                        th:class="${row.avrPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.maiFormatted}"
+                        th:class="${row.maiPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.juiFormatted}"
+                        th:class="${row.juiPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.julFormatted}"
+                        th:class="${row.julPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.aouFormatted}"
+                        th:class="${row.aouPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.sepFormatted}"
+                        th:class="${row.sepPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.octFormatted}"
+                        th:class="${row.octPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.novFormatted}"
+                        th:class="${row.novPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.decFormatted}"
+                        th:class="${row.decPaid} ? 'bg-success text-white' : 'bg-danger text-white'"
+                        style="text-align:right;"></td>
+
+                    <td th:text="${row.totalFormatted}"
+                        style="text-align:right; font-weight:bold; background:#e2e3e5;">
+                    </td>
+
+                </tr>
+                </tbody>
+
+                <!-- ===================== FOOTER ===================== -->
+                <tfoot class="table-secondary">
+                <tr>
+                    <th>Total</th>
+
+                    <th th:text="${totalJanFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalFevFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalMarFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalAvrFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalMaiFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalJuiFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalJulFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalAouFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalSepFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalOctFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalNovFormatted}" style="text-align:right"></th>
+                    <th th:text="${totalDecFormatted}" style="text-align:right"></th>
+
+                    <th th:text="${totalGlobalFormatted}"
+                        style="text-align:right; font-weight:bold; background:#d1d3d4;">
+                    </th>
+
+                </tr>
+                </tfoot>
+
+            </table>
+
+        </div>
+
+        <!-- ===================== PAGINATION ===================== -->
+        <div class="d-flex justify-content-center mt-3"
+             th:if="${totalPages > 0}">
+
+            <ul class="pagination">
+
+                <li class="page-item"
+                    th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/encaissements(page=${currentPage-1}, annee=${annee})}">
+                        &laquo;
+                    </a>
+                </li>
+
+                <li class="page-item"
+                    th:each="i : ${#numbers.sequence(0, totalPages-1)}"
+                    th:classappend="${i == currentPage} ? 'active'">
+
+                    <a class="page-link"
+                       th:text="${i + 1}"
+                       th:href="@{/encaissements(page=${i}, annee=${annee})}">
+                    </a>
+
+                </li>
+
+                <li class="page-item"
+                    th:classappend="${currentPage == totalPages-1} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/encaissements(page=${currentPage+1}, annee=${annee})}">
+                        &raquo;
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+    </fieldset>
+
+</div>
+
+</section>
+</body>
+</html>

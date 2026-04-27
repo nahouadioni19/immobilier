@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+	<!-- Fragment spécifique à cette page -->
+	<section layout:fragment="content">
+		<div class="container my-2">
+			<div class="d-flex justify-content-between align-items-center mb-3">
+			      <h2>Gestion des bails</h2>
+			      <a th:href="@{/bails/create}" class="btn btn-primary">Nouveau</a>
+			</div>
+			
+			<hr style="border: 1px solid rgb(192, 192, 192);">
+						
+			<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+				<h5>Liste des bails</h5> <br />    
+			
+				<div class="row mb-3">
+				    <div class="col-md-4">
+				        <input type="text" id="searchInput"
+				               class="form-control"
+				               placeholder="Rechercher nom, prénom"
+				               autocomplete="off">
+				    </div>
+				</div>
+				
+			<div id="bailTable">								
+				<div id="loader" class="text-center my-3 d-none">
+				    <div class="spinner-border text-primary"></div>
+				    <div>Recherche en cours...</div>
+				</div>
+					
+			  <div class="table-responsive">
+			    <table class="table ">
+			        <thead class="table-success">
+			        <tr>
+			            <th>Locataire</th>
+						<th>Appartement</th>
+						<th>Montant payé</th>
+						<th>Statut</th>
+						<th></th>
+			        </tr>
+			        </thead>
+			        <tbody id="bailTableBody">
+					<tr th:each="bail : ${bailsPage.content}"
+						    th:classappend="${bail.statut == T(com.app.enums.StatutBail).RESILIE} ? 'table-secondary text-muted' : ''">
+
+						<td th:text="|${bail.locataireNom} ${bail.locatairePrenom}|"></td>
+						<td th:text="|${bail.appartementNum} ${bail.appartementLibelle}|"></td>
+						<td th:text="${bail.total}"></td>
+						<td th:text="${bail.statut}"></td>
+						<td>
+						    <div class="d-flex justify-content-center">
+						        <div class="dropdown">
+						            <button class="btn" type="button" id="dropdownMenuButton"
+						                    data-bs-toggle="dropdown" aria-expanded="false">
+						                <i class="bi bi-three-dots-vertical"></i>
+						            </button>
+
+						            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">										
+										<li th:if="${bail.statut == T(com.app.enums.StatutBail).ACTIF}">
+										    <a class="dropdown-item"
+										       th:href="@{'/bails/edit/' + ${bail.id}}">
+										        <i class="bi bi-pencil me-2"></i> Modifier
+										    </a>
+										</li>
+
+										<li th:if="${bail.statut == T(com.app.enums.StatutBail).ACTIF}">
+										    <a class="dropdown-item text-warning"
+										       th:href="@{'/bails/resilier/' + ${bail.id}}">
+										        <i class="bi bi-x-circle me-2"></i> Résilier
+										    </a>
+										</li>
+										
+										<span th:if="${bail.statut == T(com.app.enums.StatutBail).ACTIF}"
+									          class="badge bg-success">
+									        Actif
+									    </span>
+
+									    <span th:if="${bail.statut == T(com.app.enums.StatutBail).RESILIE}"
+									          class="badge bg-danger">
+									        Résilié
+									    </span>
+
+						                <!--<li>
+						                    <a class="dropdown-item del-btn" th:href="@{'/bails/delete/' + ${bail.connumero}}">
+						                        <i class="bi bi-trash me-2"></i>Supprimer
+						                    </a>
+						                </li>-->
+						            </ul>
+						        </div>
+						    </div>
+						</td>
+			        </tr>
+					<tr th:if="${#lists.isEmpty(bailsPage.content)}">
+				        <td colspan="4" class="text-center">Aucun bail trouvé.</td>
+				    </tr>
+			        </tbody>
+			    </table>
+			  </div>
+			</div>
+			<!-- Pagination -->			  
+			  <nav aria-label="Pagination" th:if="${bailsPage.totalElements > 0}">
+			      <ul class="pagination justify-content-end">
+
+			          <!-- Précédent -->
+			          <li class="page-item"
+			              th:classappend="${bailsPage.first} ? 'disabled'">
+			              <a class="page-link"
+			                 th:href="@{/bails(page=${bailsPage.number - 1})}">
+			                  &laquo;
+			              </a>
+			          </li>
+
+			          <!-- Première page -->
+			          <li class="page-item"
+			              th:if="${bailsPage.number > 2}">
+			              <a class="page-link"
+			                 th:href="@{/bails(page=0)}">1</a>
+			          </li>
+
+			          <!-- ... -->
+			          <li class="page-item disabled"
+			              th:if="${bailsPage.number > 3}">
+			              <span class="page-link">...</span>
+			          </li>
+
+			          <!-- Pages autour -->
+			          <li class="page-item"
+			              th:each="i : ${#numbers.sequence(
+			                  T(java.lang.Math).max(0, bailsPage.number - 2),
+			                  T(java.lang.Math).min(bailsPage.totalPages - 1, bailsPage.number + 2)
+			              )}"
+			              th:classappend="${i == bailsPage.number} ? 'active'">
+
+			              <a class="page-link"
+			                 th:text="${i + 1}"
+			                 th:href="@{/bails(page=${i})}">
+			              </a>
+
+			          </li>
+
+			          <!-- ... -->
+			          <li class="page-item disabled"
+			              th:if="${bailsPage.number < bailsPage.totalPages - 4}">
+			              <span class="page-link">...</span>
+			          </li>
+
+			          <!-- Dernière page -->
+			          <li class="page-item"
+			              th:if="${bailsPage.number < bailsPage.totalPages - 3}">
+			              <a class="page-link"
+			                 th:href="@{/bails(page=${bailsPage.totalPages - 1})}"
+			                 th:text="${bailsPage.totalPages}">
+			              </a>
+			          </li>
+
+			          <!-- Suivant -->
+			          <li class="page-item"
+			              th:classappend="${bailsPage.last} ? 'disabled'">
+			              <a class="page-link"
+			                 th:href="@{/bails(page=${bailsPage.number + 1})}">
+			                  &raquo;
+			              </a>
+			          </li>
+
+			      </ul>
+			  </nav>
+
+			  
+			  
+			</fieldset>
+		</div>
+	
+	<script>
+	document.querySelectorAll('.format-fr').forEach(td => {
+	    const value = parseFloat(td.textContent.replace(/\s/g,'')); // supprime espaces éventuels
+	    if (!isNaN(value)) {
+	        td.textContent = value.toLocaleString('fr-FR');
+	    }
+	});
+	</script>
+	
+	<!-- SweetAlert2 -->
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+		
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+				
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+		    // Sélectionner tous les boutons réinitialiser
+		    document.querySelectorAll('.del-btn').forEach(btn => {
+		        btn.addEventListener('click', function(e) {
+		            e.preventDefault(); // empêcher le href="#"
+
+		            const href = this.href;
+
+		            Swal.fire({
+		                title: 'Confirmation',
+		                text: "Voulez-vous supprimer ?",
+		                icon: 'warning',
+		                showCancelButton: true,
+		                confirmButtonText: 'Oui',
+		                cancelButtonText: 'Non'
+		            }).then((result) => {
+		                if (result.isConfirmed) {
+		                    // Redirection vers le controller
+		                    window.location.href = href;
+		                }
+		            });
+		        });
+			
+			// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+			    const successDiv = document.getElementById('successMessage');
+			    if (successDiv && successDiv.textContent.trim() !== '') {
+			        const msg = successDiv.textContent.trim();
+			        Swal.fire({
+			            icon: 'success',
+			            title: 'Succès !',
+			            text: msg,
+			            confirmButtonText: 'OK'
+			        });
+			    }
+			});
+		});
+		</script>
+		
+		
+		<script th:inline="javascript">
+			document.addEventListener("DOMContentLoaded", function () {
+
+			    const input = document.getElementById("searchInput");
+			    const tableBody = document.getElementById("bailTableBody");
+			    const loader = document.getElementById("loader");
+			    const paginationContainer = document.querySelector(".pagination");
+			    const contextPath = /*[[@{/}]]*/ "";
+
+			    let timeout = null;
+			    let currentKeyword = "";
+
+			    function loadData(keyword = "", page = 0) {
+			        loader.style.display = "block";
+			        currentKeyword = keyword;
+
+			        fetch(`${contextPath}bails/api/search?keyword=${encodeURIComponent(currentKeyword)}&page=${page}`)
+			            .then(res => res.json())
+			            .then(data => {
+			                loader.style.display = "none";
+			                tableBody.innerHTML = "";
+
+			                if (!data.content || data.content.length === 0) {
+			                    tableBody.innerHTML = `
+			                        <tr>
+			                            <td colspan="5" class="text-center">Aucun contrat de bail trouvé.</td>
+			                        </tr>`;
+			                    paginationContainer.innerHTML = "";
+			                    return;
+			                }
+
+			                data.content.forEach(b => {
+			                    const isActif = b.statut === "ACTIF";
+
+			                    tableBody.innerHTML += `
+			                        <tr class="${!isActif ? 'table-secondary text-muted' : ''}">
+			                            <td>${b.locataireNom ?? ""}</td>
+			                            <td>${b.appartementNum ?? ""} ${b.appartementLibelle ?? ""}</td>
+			                            <td>${(b.total ?? 0).toLocaleString('fr-FR')}</td>
+			                            <td>
+			                                <span class="badge ${isActif ? 'bg-success' : 'bg-danger'}">
+			                                    ${b.statut}
+			                                </span>
+			                            </td>
+			                            <td>
+			                                ${isActif ? `
+			                                <div class="dropdown">
+			                                    <button class="btn" type="button" data-bs-toggle="dropdown">
+			                                        <i class="bi bi-three-dots-vertical"></i>
+			                                    </button>
+			                                    <ul class="dropdown-menu">
+
+			                                        <li>
+			                                            <a class="dropdown-item" 
+			                                               href="${contextPath}bails/edit/${b.id}">
+			                                               Modifier
+			                                            </a>
+			                                        </li>
+
+			                                        <li>
+			                                            <a class="dropdown-item text-warning resilier-btn"
+			                                               href="${contextPath}bails/resilier/${b.id}">
+			                                               <i class="bi bi-x-circle me-2"></i> Résilier
+			                                            </a>
+			                                        </li>
+
+			                                        <li>
+			                                            <a class="dropdown-item del-btn" 
+			                                               href="${contextPath}bails/delete/${b.id}">
+			                                               Supprimer
+			                                            </a>
+			                                        </li>
+
+			                                    </ul>
+			                                </div>
+			                                ` : '<span class="text-muted">...</span>'}
+			                            </td>
+			                        </tr>`;
+			                });
+
+			                attachDeleteEvents();
+			                attachResilierEvents(); // <-- Nouvelle fonction pour résilier
+			                buildPagination(data);
+			            })
+			            .catch(err => {
+			                loader.style.display = "none";
+			                console.error("Erreur AJAX :", err);
+			            });
+			    }
+
+			    // Confirmation suppression
+			    function attachDeleteEvents() {
+			        document.querySelectorAll(".del-btn").forEach(btn => {
+			            btn.addEventListener("click", function(e) {
+			                e.preventDefault();
+			                const href = this.href;
+			                Swal.fire({
+			                    title: 'Confirmation',
+			                    text: "Voulez-vous supprimer ce bail ?",
+			                    icon: 'warning',
+			                    showCancelButton: true,
+			                    confirmButtonText: 'Oui',
+			                    cancelButtonText: 'Non'
+			                }).then((result) => {
+			                    if (result.isConfirmed) window.location.href = href;
+			                });
+			            });
+			        });
+			    }
+
+			    // Confirmation résiliation
+			    function attachResilierEvents() {
+			        document.querySelectorAll(".resilier-btn").forEach(btn => {
+			            btn.addEventListener("click", function(e) {
+			                e.preventDefault();
+			                const href = this.href;
+			                Swal.fire({
+			                    title: 'Confirmation',
+			                    text: "Voulez-vous vraiment résilier ce bail ?",
+			                    icon: 'warning',
+			                    showCancelButton: true,
+			                    confirmButtonText: 'Oui, résilier',
+			                    cancelButtonText: 'Non'
+			                }).then((result) => {
+			                    if (result.isConfirmed) window.location.href = href;
+			                });
+			            });
+			        });
+			    }
+
+			    // Pagination dynamique (ruban limité à maxVisible pages)
+			    function buildPagination(data) {
+			        if (!paginationContainer) return;
+			        paginationContainer.innerHTML = "";
+
+			        const totalPages = data.totalPages;
+			        const currentPage = data.number;
+
+			        if (totalPages <= 1) return;
+
+			        const maxVisible = 5;
+			        let start = Math.max(0, currentPage - 2);
+			        let end = Math.min(totalPages - 1, currentPage + 2);
+
+			        if (currentPage < 3) end = Math.min(totalPages - 1, maxVisible - 1);
+			        if (currentPage > totalPages - 4) start = Math.max(0, totalPages - maxVisible);
+
+			        paginationContainer.innerHTML += `
+			            <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+			                <a class="page-link" href="#" data-page="${currentPage - 1}">&laquo;</a>
+			            </li>`;
+
+			        if (start > 0) {
+			            paginationContainer.innerHTML += `
+			                <li class="page-item">
+			                    <a class="page-link" href="#" data-page="0">1</a>
+			                </li>
+			                <li class="page-item disabled">
+			                    <span class="page-link">...</span>
+			                </li>`;
+			        }
+
+			        for (let i = start; i <= end; i++) {
+			            paginationContainer.innerHTML += `
+			                <li class="page-item ${i === currentPage ? 'active' : ''}">
+			                    <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
+			                </li>`;
+			        }
+
+			        if (end < totalPages - 1) {
+			            paginationContainer.innerHTML += `
+			                <li class="page-item disabled">
+			                    <span class="page-link">...</span>
+			                </li>
+			                <li class="page-item">
+			                    <a class="page-link" href="#" data-page="${totalPages - 1}">
+			                        ${totalPages}
+			                    </a>
+			                </li>`;
+			        }
+
+			        paginationContainer.innerHTML += `
+			            <li class="page-item ${currentPage === totalPages - 1 ? 'disabled' : ''}">
+			                <a class="page-link" href="#" data-page="${currentPage + 1}">&raquo;</a>
+			            </li>`;
+
+			        paginationContainer.querySelectorAll(".page-link").forEach(link => {
+			            link.addEventListener("click", function(e) {
+			                e.preventDefault();
+			                const page = parseInt(this.dataset.page);
+			                if (!isNaN(page)) loadData(currentKeyword, page);
+			            });
+			        });
+			    }
+
+			    input.addEventListener("keyup", function () {
+			        clearTimeout(timeout);
+			        timeout = setTimeout(() => loadData(input.value || "", 0), 400);
+			    });
+
+			    loadData();
+			});
+		</script>
+		
+	</section>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+    <!-- Contenu spécifique à cette page -->
+    <section layout:fragment="content">
+        <div class="container my-2">
+            <div class="container mt-4">
+                <h2>Gestion des bailleurs</h2>
+
+                <form th:action="@{/bailleurs/save}" th:object="${bailleur}" method="post" enctype="multipart/form-data" 
+										class="border p-4 rounded shadow-sm bg-white" id="bailleurForm">
+                    <input type="hidden" th:field="*{id}"/>
+					<input type="hidden" th:field="*{version}" />
+					<input type="hidden" th:field="*{agence.id}" />
+					
+                    <!--<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">-->
+                        <h4>Bailleur</h4>
+                        <div class="row">
+							<div class="col-md-6 mb-3">
+                                <label for="nom" class="form-label">Nom<span style="color:red;"> *</span></label>
+                                <input type="text" th:field="*{nom}" class="form-control" required oninput="uppercaseWords(this)">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="prenom" class="form-label">Prénom(s)<span style="color:red;"> *</span></label>
+                                <input type="text" th:field="*{prenom}" class="form-control" required oninput="capitalizeWords(this)">
+                            </div>                            
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="datenais" class="form-label">Date de naissance</label>
+                                <input type="date" th:field="*{dateNaissance}" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lieunais" class="form-label">Lieu de naissance</label>
+                                <input type="text" th:field="*{lieuNaissance}" class="form-control" oninput="capitalizeWords(this)">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="cellulaire" class="form-label">Téléphone 1<span style="color:red;"> *</span></label>
+                                <!--<input type="tel" th:field="*{cellulaire}" class="form-control" required>-->
+								<input type="text" th:field="*{cellulaire}" class="form-control phone_ci" placeholder="00 00 00 00 00" maxlength="14" inputmode="numeric" required>
+                            </div>
+							<div class="col-md-4 mb-3">
+                                <label for="cellulaire" class="form-label">Téléphone 2<span style="color:red;"> *</span></label>
+                                <!--<input type="tel" th:field="*{cellulaire}" class="form-control" required>-->
+								<input type="text" th:field="*{telephone}" class="form-control phone_ci" placeholder="00 00 00 00 00" maxlength="14" inputmode="numeric">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="email" class="form-label">E.mail</label>
+                                <input type="email" th:field="*{email}" class="form-control" >
+                            </div>
+                        </div>
+
+                    <!-- Contact -->
+					<hr>
+                        <h4>Contact</h4>
+                        <div class="row">                            
+                            <div class="col-md-6 mb-3">
+                                <label for="nomContact" class="form-label">Nom<span style="color:red;"> *</span></label>
+                                <input type="text" th:field="*{nomContact}" class="form-control" required oninput="uppercaseWords(this)">
+                            </div>
+							<div class="col-md-6 mb-3">
+                                <label for="prenomContact" class="form-label">Prénom(s)<span style="color:red;"> *</span></label>
+                                <input type="text" th:field="*{prenomContact}" class="form-control" required oninput="capitalizeWords(this)">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="telContact" class="form-label">Téléphone<span style="color:red;"> *</span></label>
+                                <!--<input type="tel" th:field="*{telContact}" class="form-control" required>-->
+								<input type="text" th:field="*{telContact}" class="form-control phone_ci" placeholder="00 00 00 00 00" maxlength="14" inputmode="numeric" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="emailContact" class="form-label">E.mail</label>
+                                <input type="email" th:field="*{emailContact}" class="form-control" >
+                            </div>
+                        </div>
+
+                    <!-- Documents -->
+					<hr>
+                        <h4>Documents</h4>
+                        <div class="row">
+                            <!--<div class="col-md-6 mb-3">-->
+                                <!--<label for="carteIdentite" class="form-label">Carte d'identité</label>
+                                <input type="file" name="carteIdentite" id="carteIdentite" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required>
+                                <div th:if="${carteIdentiteUrl}">
+                                    <span>Fichier actuel :</span>
+                                    <a th:href="@{${carteIdentiteUrl}}" target="_blank">Voir la carte</a>
+                                </div>-->
+								
+								
+								<div class="col-sm-12 col-md-6">			
+									<div class="mb-3 form-group">
+									    <label for="carteIdentite" class="form-label">Carte d'identité</label>
+									    <input type="file" id="carteIdentite" name="carteIdentite" class="form-control">
+			
+									    <!-- 🔹 Aperçu du fichier déjà enregistré -->
+									    <div th:if="${carteIdentiteUrl != null}" class="mt-3 border rounded p-2">
+									        <p class="fw-bold">Document actuel :</p>
+			
+									        <!-- Si c’est une image -->
+									        <img th:if="${#strings.endsWith(carteIdentiteUrl, '.jpg') 
+									                    or #strings.endsWith(carteIdentiteUrl, '.jpeg') 
+									                    or #strings.endsWith(carteIdentiteUrl, '.png')}"
+									             th:src="@{${carteIdentiteUrl}}"
+									             alt="Document d'identité"
+									             style="max-width: 200px; border-radius: 5px;">
+			
+									        <!-- Si c’est un PDF -->
+									        <div th:if="${#strings.endsWith(carteIdentiteUrl, '.pdf')}">
+									            <a th:href="@{${carteIdentiteUrl}}" target="_blank" class="btn btn-outline-primary btn-sm">
+									                📄 Ouvrir le document PDF
+									            </a>
+									        </div>
+									    </div>
+									</div>
+									<div id="previewLive" class="mt-2"></div>
+								</div>
+                            <!--</div>-->
+							
+                            <!--<div class="col-md-6 mb-3">
+                                <label for="factureCie" class="form-label">Facture CIE</label>
+                                <input type="file" name="factureCie" id="factureCie" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required>
+                                <div th:if="${factureCieUrl}">
+                                    <span>Fichier actuel :</span>
+                                    <a th:href="@{${factureCieUrl}}" target="_blank">Voir la facture</a>
+                                </div>
+                            </div>-->
+							
+							
+							<div class="col-sm-12 col-md-6">			
+								<div class="mb-3 form-group">
+								    <label for="factureCie" class="form-label">Facture CIE</label>
+								    <input type="file" id="factureCie" name="factureCie" class="form-control">
+		
+								    <!-- 🔹 Aperçu du fichier déjà enregistré -->
+								    <div th:if="${factureCieUrl != null}" class="mt-3 border rounded p-2">
+								        <p class="fw-bold">Document actuel :</p>
+		
+								        <!-- Si c’est une image -->
+								        <img th:if="${#strings.endsWith(factureCieUrl, '.jpg') 
+								                    or #strings.endsWith(factureCieUrl, '.jpeg') 
+								                    or #strings.endsWith(factureCieUrl, '.png')}"
+								             th:src="@{${factureCieUrl}}"
+								             alt="Facture CIE"
+								             style="max-width: 200px; border-radius: 5px;">
+		
+								        <!-- Si c’est un PDF -->
+								        <div th:if="${#strings.endsWith(factureCieUrl, '.pdf')}">
+								            <a th:href="@{${factureCieUrl}}" target="_blank" class="btn btn-outline-primary btn-sm">
+								                📄 Ouvrir le document PDF
+								            </a>
+								        </div>
+								    </div>
+								</div>
+								<div id="previewFacture" class="mt-2"></div>
+							</div>						
+							
+                        </div>
+                    
+					<hr>
+                    <!-- Boutons -->
+                    <div class="row g-2 mt-3">
+                        <div class="col-12 col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+                            </button>
+                        </div>
+                        <div class="col-12 col-md-2">
+                            <a th:href="@{/bailleurs}" class="btn btn-danger w-100">Retour à la liste</a>
+                        </div>
+                    </div>
+                    <!--</fieldset>-->
+                </form>
+            </div>
+        </div>	    
+	
+	    <!-- Scripts de capitalisation -->
+	    <script>
+	        function capitalizeWords(input) {
+	            input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+	                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+	            });
+	        }
+	        function uppercaseWords(input){
+	            input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+	                return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
+	            });
+	        }
+	    </script>
+		
+		<!-- ✅ SweetAlert2 -->
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+	    <!-- ⚠️ Boîte de confirmation avant envoi -->
+	    <script>
+	        document.getElementById('bailleurForm').addEventListener('submit', function (e) {
+	            e.preventDefault(); // Bloque l’envoi automatique
+	            const form = this;
+	            //const isEdit = form.querySelector('input[name="id"]').value !== "";
+				const idField = form.querySelector('input[name="id"]');
+				const idValue = idField ? idField.value.trim() : "";
+				console.log("ID trouvé :", idValue);
+	        // ✅ Création si id vide ou null
+		        const isEdit = idValue !== null && idValue !== "" && idValue !== "0";
+		        console.log("isEdit =", isEdit);
+
+	            Swal.fire({
+	                title: isEdit ? 'Confirmation' : 'Confirmation',
+	                text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
+	                icon: 'question',
+	                showCancelButton: true,
+	                confirmButtonText: 'Oui',
+	                cancelButtonText: 'Non',
+	                reverseButtons: true
+	            }).then((result) => {
+	                if (result.isConfirmed) {
+	                    form.submit(); // Si confirmé → on envoie le formulaire
+	                }
+	            });
+			
+			// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+			    const successDiv = document.getElementById('successMessage');
+			    if (successDiv && successDiv.textContent.trim() !== '') {
+			        const msg = successDiv.textContent.trim();
+			        Swal.fire({
+			            icon: 'success',
+			            title: 'Succès !',
+			            text: msg,
+			            confirmButtonText: 'OK'
+			        });
+			    }
+			});
+	    </script>
+		
+		<script>
+		function setupPreview(inputId, previewId) {
+		    const input = document.getElementById(inputId);
+		    const previewContainer = document.getElementById(previewId);
+
+		    input.addEventListener('change', function (event) {
+		        previewContainer.innerHTML = ''; // Vide le contenu précédent
+		        const file = event.target.files[0];
+		        if (!file) return;
+
+		        // Vérification du type de fichier
+		        if (file.type.startsWith('image/')) {
+		            const img = document.createElement('img');
+		            img.src = URL.createObjectURL(file);
+		            img.style.maxWidth = '200px';
+		            img.style.borderRadius = '5px';
+		            img.style.marginTop = '5px';
+		            previewContainer.appendChild(img);
+		        } else if (file.type === 'application/pdf') {
+		            const pdfLink = document.createElement('a');
+		            pdfLink.href = URL.createObjectURL(file);
+		            pdfLink.textContent = "📄 Prévisualiser le PDF";
+		            pdfLink.target = "_blank";
+		            pdfLink.style.display = 'block';
+		            pdfLink.style.marginTop = '5px';
+		            previewContainer.appendChild(pdfLink);
+		        } else {
+		            const msg = document.createElement('p');
+		            msg.textContent = "⚠️ Format non pris en charge";
+		            msg.style.color = 'red';
+		            previewContainer.appendChild(msg);
+		        }
+		    });
+		}
+
+		// Initialisation
+		document.addEventListener('DOMContentLoaded', function () {
+		    setupPreview('carteIdentite', 'previewLive');
+		    setupPreview('factureCie', 'previewFacture');
+		});
+		</script>
+
+		<!-- ==== Scripts utilitaires ==== -->
+		<script>
+		    function capitalizeWords(input) {
+		        input.value = input.value.replace(/\b[\p{L}']+/gu, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+		    }
+		    function uppercaseWords(input){
+		        input.value = input.value.replace(/\b[\p{L}']+/gu, w => w.charAt(0).toUpperCase() + w.slice(1).toUpperCase());
+		    }
+		    document.addEventListener("DOMContentLoaded", () => {
+		        document.querySelectorAll('.phone_ci').forEach(input => {
+		            input.addEventListener('input', (e) => {
+		                let v = e.target.value.replace(/\D/g, '').substring(0,10);
+		                e.target.value = v.match(/.{1,2}/g)?.join(' ') ?? v;
+		            });
+		        });
+		    });
+		</script>
+		
+	</section>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+	<!-- Fragment spécifique à cette page -->
+	 <section layout:fragment="content">
+		<div class="container my-2">
+			<div class="d-flex justify-content-between align-items-center mb-3">
+			        <h2>Liste des carnets</h2>
+			        <!--<a th:href="@{/carnets/create}" class="btn btn-primary">➕ Ajouter un carnet</a>-->
+					<a th:if="${#sets.contains(userRoles, 'DIREC')}" 
+					   th:href="@{/carnets/create}" 
+					   class="btn btn-primary">
+					   Nouveau
+					</a>
+			    </div>
+
+				<hr style="border: 1px solid rgb(192, 192, 192);">
+										
+			<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+				<h5>Liste des carnets</h5> <br /> 
+			    <table class="table">
+			        <thead class="table-success">
+			        <tr>
+						<th style="width: 50%;">Agent</th>
+			            <th style="width: 20%;">N° début</th>
+			            <th style="width: 20%;">N° fin</th>					            
+						<th style="width: 10%;">Action</th>
+			        </tr>
+			        </thead>
+			        <tbody>
+			        <tr th:each="carnet : ${carnetsPage}">
+						<td th:text="${carnet.utilisateur?.nom +' '+carnet.utilisateur?.prenoms}" style="width: 50%;">1</td>
+			            <td th:text="${carnet.carNumDeb}" style="width: 20%;">1</td>
+			            <td th:text="${carnet.carNumFin}" style="width: 20%;">1</td>								
+						<td>
+						    <div class="d-flex justify-content-center">
+						        <div class="dropdown">
+						            <button class="btn" type="button" id="dropdownMenuButton"
+						                    data-bs-toggle="dropdown" aria-expanded="false">
+						                <i class="bi bi-three-dots-vertical"></i>
+						            </button>
+
+						            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+										<!--<li>
+											<a class="dropdown-item" th:if="${#sets.contains(userRoles, 'DIREC')}" 
+												th:href="@{'/carnets/edit/' + ${carnet.id}}">
+												<i class="bi bi-pencil me-2"></i>Modifier
+											</a>
+	                                    </li>-->
+										
+										<!-- Modifier -->
+							            <li>
+							                <a class="dropdown-item" th:if="${#sets.contains(userRoles, 'DIREC')}"
+							                   th:classappend="${carnet.carActive} ? ' disabled' : ''"
+							                   th:href="@{'/carnets/edit/' + ${carnet.id}}"
+							                   th:attr="aria-disabled=${carnet.carActive}">
+							                    <i class="bi bi-pencil me-2"></i>Modifier
+							                </a>
+							            </li>
+										
+										<!-- Supprimer -->
+							            <li>
+							                <a class="dropdown-item del-btn" th:if="${#sets.contains(userRoles, 'DIREC')}"
+							                   th:classappend="${carnet.carActive} ? ' disabled' : ''"
+							                   th:href="@{'/carnets/delete/' + ${carnet.id}}"
+							                   th:attr="aria-disabled=${carnet.carActive}">
+							                    <i class="bi bi-trash me-2"></i>Supprimer
+							                </a>
+							            </li>
+										
+										<!-- Activer -->
+							            <li>
+							                <a class="dropdown-item"
+							                   th:classappend="${carnet.carActive} ? ' disabled' : ''"
+							                   th:href="@{'/carnets/active/' + ${carnet.id}}"
+							                   th:attr="aria-disabled=${carnet.carActive}">
+							                    <i class="bi bi-check me-2"></i>Activer
+							                </a>
+							            </li>
+										
+						            </ul>
+						        </div>
+						    </div>
+						</td>
+			        </tr>
+					<tr th:if="${#lists.isEmpty(carnetsPage.content)}">
+				        <td colspan="4" class="text-center">Aucun carnet trouvé.</td>
+				    </tr>
+			        </tbody>
+			    </table>
+				<!-- Pagination -->
+				<div class="d-flex justify-content-center mt-3" th:if="${carnetsPage.totalElements > 0}">
+				    <ul class="pagination">
+
+				        <!-- Précédent -->
+				        <li class="page-item"
+				            th:classappend="${carnetsPage.first} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/carnets(page=${carnetsPage.number - 1})}">
+				                &laquo;
+				            </a>
+				        </li>
+
+				        <!-- Première page -->
+				        <li class="page-item"
+				            th:if="${carnetsPage.number > 2}">
+				            <a class="page-link"
+				               th:href="@{/carnets(page=0)}">1</a>
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${carnetsPage.number > 3}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Pages autour -->
+				        <li class="page-item"
+				            th:each="i : ${#numbers.sequence(
+				                T(java.lang.Math).max(0, carnetsPage.number - 2),
+				                T(java.lang.Math).min(carnetsPage.totalPages - 1, carnetsPage.number + 2)
+				            )}"
+				            th:classappend="${i == carnetsPage.number} ? 'active'">
+
+				            <a class="page-link"
+				               th:text="${i + 1}"
+				               th:href="@{/carnets(page=${i})}">
+				            </a>
+
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${carnetsPage.number < carnetsPage.totalPages - 4}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Dernière page -->
+				        <li class="page-item"
+				            th:if="${carnetsPage.number < carnetsPage.totalPages - 3}">
+				            <a class="page-link"
+				               th:href="@{/carnets(page=${carnetsPage.totalPages - 1})}"
+				               th:text="${carnetsPage.totalPages}">
+				            </a>
+				        </li>
+
+				        <!-- Suivant -->
+				        <li class="page-item"
+				            th:classappend="${carnetsPage.last} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/carnets(page=${carnetsPage.number + 1})}">
+				                &raquo;
+				            </a>
+				        </li>
+
+				    </ul>
+				</div>
+
+				  
+			</fieldset> 
+			</div>
+			<!-- SweetAlert2 -->
+		    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+			
+			<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+					
+			<script>
+			document.addEventListener('DOMContentLoaded', function() {
+			    // Sélectionner tous les boutons réinitialiser
+			    document.querySelectorAll('.del-btn').forEach(btn => {
+			        btn.addEventListener('click', function(e) {
+			            e.preventDefault(); // empêcher le href="#"
+
+			            const href = this.href;
+
+			            Swal.fire({
+			                title: 'Confirmation',
+			                text: "Voulez-vous supprimer ?",
+			                icon: 'warning',
+			                showCancelButton: true,
+			                confirmButtonText: 'Oui',
+			                cancelButtonText: 'Non'
+			            }).then((result) => {
+			                if (result.isConfirmed) {
+			                    // Redirection vers le controller
+			                    window.location.href = href;
+			                }
+			            });
+			        });
+				
+				// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+				    const successDiv = document.getElementById('successMessage');
+				    if (successDiv && successDiv.textContent.trim() !== '') {
+				        const msg = successDiv.textContent.trim();
+				        Swal.fire({
+				            icon: 'success',
+				            title: 'Succès !',
+				            text: msg,
+				            confirmButtonText: 'OK'
+				        });
+				    }
+				});
+			});
+			</script>
+			
+	 </section>
+
+</body>
+</html>

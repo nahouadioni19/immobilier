@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+<section layout:fragment="content">
+    <div class="container my-2">
+        <div class="container mt-4">
+            <h2>Gestion des banques</h2>
+
+            <form th:action="@{/banques/save}" th:object="${banque}" method="post" class="border p-4 rounded shadow-sm bg-white" id="banqueForm">
+            <input type="hidden" th:field="*{bancode}"/>
+                <div class="mb-3">
+                    <label for="bansigle" class="form-label">Sigle</label>
+                    <input type="text" th:field="*{bansigle}" class="form-control" placeholder="Ex: BICICI" required oninput="uppercaseWords(this)">
+                </div>
+
+                <div class="mb-3">
+                    <label for="banlibelle" class="form-label">Désignation</label>
+                    <input type="text" th:field="*{banlibelle}" class="form-control" placeholder="Nom complet de la banque" required oninput="capitalizeWords(this)">
+                </div>
+
+                <hr>
+
+                <div class="mt-3 row g-2">
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <span th:text="*{bancode} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+                        </button>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <a th:href="@{/banques}" class="btn btn-danger w-100">Retour à la liste</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JS pour majuscules / capitalisation -->
+    <script>
+        function capitalizeWords(input) {
+            input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            });
+        }
+
+        function uppercaseWords(input){
+            input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+                return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
+            });
+        }
+    </script>
+	
+	<!-- ✅ SweetAlert2 -->
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+		
+	    <!-- ⚠️ Boîte de confirmation avant envoi -->
+	    <script>
+	        document.getElementById('banqueForm').addEventListener('submit', function (e) {
+	            e.preventDefault(); // Bloque l’envoi automatique
+	            const form = this;
+	           // const isEdit = form.querySelector('input[name="bancode"]').value !== "";
+			   const idField = form.querySelector('input[name="id"]');
+   				const idValue = idField ? idField.value.trim() : "";
+   				console.log("ID trouvé :", idValue);
+   	        // ✅ Création si id vide ou null
+   		        const isEdit = idValue !== null && idValue !== "" && idValue !== "0";
+   		        console.log("isEdit =", isEdit);
+
+	            Swal.fire({
+	                title: isEdit ? 'Confirmation' : 'Confirmation',
+	                text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
+	                icon: 'question',
+	                showCancelButton: true,
+	                confirmButtonText: 'Oui',
+	                cancelButtonText: 'Non',
+	                reverseButtons: true
+	            }).then((result) => {
+	                if (result.isConfirmed) {
+	                    form.submit(); // Si confirmé → on envoie le formulaire
+	                }
+	            });
+			
+			// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+			    const successDiv = document.getElementById('successMessage');
+			    if (successDiv && successDiv.textContent.trim() !== '') {
+			        const msg = successDiv.textContent.trim();
+			        Swal.fire({
+			            icon: 'success',
+			            title: 'Succès !',
+			            text: msg,
+			            confirmButtonText: 'OK'
+			        });
+			    }
+			});
+	    </script>
+		
+	</section>
+</body>
+</html>
+
+
+
+<!--<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+    <section layout:fragment="content">
+         Ton contenu principal ici 
+		<div class="container my-2">
+			<div class="container mt-4">
+			    <h2>Gestion des banques</h2>
+
+			    <form th:action="@{/banques/save}" th:object="${banque}" method="post">
+				<form th:action="@{/banques/save}" th:object="${banque}" method="post" class="border p-4 rounded shadow-sm bg-white">
+			        <input type="hidden" th:field="*{bancode}"/>
+					
+					<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">			
+				        <div class="mb-3">
+				            <label for="bansigle" class="form-label">Sigle</label>
+				            <input type="text" th:field="*{bansigle}" class="form-control" placeholder="Ex: BICICI" required oninput="uppercaseWords(this)">
+				        </div>
+	
+				        <div class="mb-3">
+				            <label for="banlibelle" class="form-label">Désignation</label>
+				            <input type="text" th:field="*{banlibelle}" class="form-control" placeholder="Nom complet de la banque" required oninput="capitalizeWords(this)">
+				        </div>
+									
+						<hr>
+									
+						<div class="mt-3 row g-2">
+						    <div class="col-12 col-md-2">
+						        <button type="submit" class="btn btn-primary w-100">
+						            <span th:text="*{bancode} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+						        </button>
+						    </div>
+						    <div class="col-12 col-md-2">
+						        <a th:href="@{/banques}" class="btn btn-danger w-100">
+						            Retour à la liste
+						        </a>
+						    </div>
+						</div>
+					</fieldset>
+			    </form>
+			</div>
+		 </div>
+   	
+		<script>
+			//AFFICHE LA PREMIERE LETTRE EN MAJUSCULE
+			function capitalizeWords(input) {
+			    input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+			        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+			    });
+			}
+		
+			//METTRE TOUT LE MOT EN MAJUSCULE
+			function uppercaseWords(input){
+				input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
+					return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
+				});
+			}
+		</script>
+		
+		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+		<script>
+		    document.addEventListener('DOMContentLoaded', function() {
+		        /* Thymeleaf vérifie si successMessage existe */
+		        /* Ici on utilise th:if pour injecter le script seulement si message présent */
+		        /* Ou via un champ hidden si tu préfères */
+		    });
+		</script>
+
+		 Avec Thymeleaf 
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+
+		<script th:if="${successMessage}">
+		    Swal.fire({
+		        icon: 'success',
+		        title: 'Succès !',
+		        text: [[${successMessage}]],
+		        confirmButtonText: 'OK'
+		    });
+		</script>
+
+		
+	</section>
+	
+</body>
+</html>
+-->

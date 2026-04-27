@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Loyers</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+	<style>
+	.paid {
+	    background-color: #d4edda;
+	    color: #155724;
+	    font-weight: bold;
+	    text-align: center;
+	}
+
+	.not-paid {
+	    background-color: #f8d7da;
+	    color: #721c24;
+	    text-align: center;
+	}
+
+	.not-paid:hover {
+	    background-color: #f5c6cb;
+	}
+
+	th, td {
+	    text-align: center;
+	    vertical-align: middle;
+	}
+
+	td:first-child {
+	    text-align: left;
+	    font-weight: 500;
+	}
+
+	/* ⭐ TRONCATURE */
+	td {
+	    max-width: 160px;
+	    overflow: hidden;
+	    text-overflow: ellipsis;
+	    white-space: nowrap;
+	}
+
+	/* pagination */
+	.pagination .active .page-link {
+	    background-color: #198754;
+	    border-color: #198754;
+	}
+
+	table tbody tr:hover {
+	    background-color: #f1f1f1;
+	}
+
+	tfoot {
+	    position: sticky;
+	    bottom: 0;
+	    z-index: 2;
+	}
+	
+	td.locataire {
+	    max-width: 160px;
+	    overflow: hidden;
+	    text-overflow: ellipsis;
+	    white-space: nowrap;
+	}
+	</style>
+</head>
+
+<body>
+	<section layout:fragment="content">
+		<div class="container mt-4">
+		
+		    <h2 class="mb-2 mb-md-0">Tableau de bord des loyers - Année <span id="anneeLabel" th:text="${annee}"></span></h2>
+			
+			<hr style="border: 1px solid rgb(192, 192, 192);">
+			
+			<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+				<h5>Tableau de bord</h5> <br />
+		    <!-- Filtre année -->
+		    
+			
+			<div class="row mb-3 align-items-end">
+
+			    <div class="col-md-2">
+			        <input type="number" id="anneeInput" name="annee"
+			               class="form-control"
+			               th:value="${annee}">
+			    </div>
+
+			    <div class="col-md-4">
+			        <input type="text" id="searchInput"
+			               class="form-control"
+			               placeholder="🔍 Rechercher un locataire..."
+			               th:value="${search}">
+			    </div>
+
+			    <div class="col-md-2">
+			        <a class="btn btn-danger w-100"
+			           th:href="@{/dashboards/loyers-montant/pdf(annee=${annee}, search=${search})}">
+			           📄 Exporter PDF
+			        </a>
+			    </div>
+
+			</div>
+		
+		    <div class="table-responsive">
+						
+				<table class="table">
+
+				    <thead class="table-success">
+				        <tr>
+				            <th>Locataire</th>
+				            <th>Jan</th>
+				            <th>Fév</th>
+				            <th>Mar</th>
+				            <th>Avr</th>
+				            <th>Mai</th>
+				            <th>Juin</th>
+				            <th>Juil</th>
+				            <th>Août</th>
+				            <th>Sep</th>
+				            <th>Oct</th>
+				            <th>Nov</th>
+				            <th>Déc</th>
+				            <th>Total</th>
+				        </tr>
+				    </thead>
+
+				    <!-- ✅ BODY -->
+				    <tbody id="loyannTableBody">
+				        <tr th:each="row : ${dashboard}">
+				            <!--<td th:text="${row.locataireCourt}"></td>-->
+							
+							<td data-bs-toggle="tooltip" title="${row.locataire ?? ''}">
+							    ${row.locataireCourt ?? ''}
+							</td>
+
+				            <td th:class="${row.janPaid} ? 'paid' : 'not-paid'" th:text="${row.janFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.fevPaid} ? 'paid' : 'not-paid'" th:text="${row.fevFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.marPaid} ? 'paid' : 'not-paid'" th:text="${row.marFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.avrPaid} ? 'paid' : 'not-paid'" th:text="${row.avrFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.maiPaid} ? 'paid' : 'not-paid'" th:text="${row.maiFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.juiPaid} ? 'paid' : 'not-paid'" th:text="${row.juiFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.julPaid} ? 'paid' : 'not-paid'" th:text="${row.julFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.aouPaid} ? 'paid' : 'not-paid'" th:text="${row.aouFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.sepPaid} ? 'paid' : 'not-paid'" th:text="${row.sepFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.octPaid} ? 'paid' : 'not-paid'" th:text="${row.octFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.novPaid} ? 'paid' : 'not-paid'" th:text="${row.novFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.decPaid} ? 'paid' : 'not-paid'" th:text="${row.decFormatted}" style="text-align: right;"></td>
+
+				            <td th:text="${row.totalFormatted}"
+				                style="text-align:right; font-weight:bold; background-color:#e2e3e5;">
+				            </td>
+				        </tr>
+				    </tbody>
+
+				    <!-- ✅ FOOTER (TOTALS) 
+				    <tfoot class="table-secondary">
+				        <tr>
+				            <th>Total</th>
+
+				            <th th:text="${totalJanFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalFevFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalMarFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalAvrFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalMaiFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalJuiFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalJulFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalAouFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalSepFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalOctFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalNovFormatted}" style="text-align:right"></th>
+				            <th th:text="${totalDecFormatted}" style="text-align:right"></th>
+
+				            <th th:text="${totalGlobalFormatted}"
+				                style="text-align:right; font-weight:bold; background-color:#d1d3d4;">
+				            </th>
+				        </tr>
+				    </tfoot>-->
+					<tfoot class="table-secondary">
+					    <tr>
+					        <th colspan="14" class="text-center">Chargement...</th>
+					    </tr>
+					</tfoot>
+
+				</table>
+
+				<!-- Pagination simple -->
+				<div class="d-flex justify-content-center mt-3" >
+				    <ul class="pagination" id="pagination">
+
+				        <!-- Précédent -->
+				        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/dashboards/loyers-montant(page=${currentPage-1}, annee=${annee})}">
+				                &laquo;
+				            </a>
+				        </li>
+
+				        <!-- Première page -->
+				        <li class="page-item" th:if="${currentPage > 2}">
+				            <a class="page-link"
+				               th:href="@{/dashboards/loyers-montant(page=0, annee=${annee})}">1</a>
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled" th:if="${currentPage > 3}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Pages autour -->
+				        <li class="page-item"
+				            th:each="i : ${#numbers.sequence(
+				                T(java.lang.Math).max(0, currentPage - 2),
+				                T(java.lang.Math).min(totalPages - 1, currentPage + 2)
+				            )}"
+				            th:classappend="${i == currentPage} ? 'active'">
+
+				            <a class="page-link"
+				               th:text="${i + 1}"
+				               th:href="@{/dashboards/loyers-montant(page=${i}, annee=${annee})}">
+				            </a>
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${currentPage < totalPages - 4}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Dernière page -->
+				        <li class="page-item"
+				            th:if="${currentPage < totalPages - 3}">
+				            <a class="page-link"
+				               th:text="${totalPages}"
+				               th:href="@{/dashboards/loyers-montant(page=${totalPages - 1}, annee=${annee})}">
+				            </a>
+				        </li>
+
+				        <!-- Suivant -->
+				        <li class="page-item"
+				            th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/dashboards/loyers-montant(page=${currentPage+1}, annee=${annee})}">
+				                &raquo;
+				            </a>
+				        </li>
+
+				    </ul>
+				</div>
+		
+		    </div>
+			</fieldset>
+		</div>
+		
+		<script th:inline="javascript">
+		console.log("SCRIPT CHARGÉ");
+
+		document.addEventListener("DOMContentLoaded", function () {
+
+		    const searchInput = document.getElementById("searchInput");
+		    const anneeInput = document.getElementById("anneeInput");
+		    const tbody = document.getElementById("loyannTableBody");
+		    const pagination = document.getElementById("pagination");
+		    const anneeLabel = document.getElementById("anneeLabel");
+
+		    let timeout = null;
+		    let currentPage = 0;
+
+		    // =========================
+		    // 🔥 LOAD DATA
+		    // =========================
+		    function loadData(page = 0) {
+
+		        const search = searchInput.value || "";
+		        const annee = anneeInput.value;
+
+		        if (!annee) return;
+
+		        // update label année
+		        if (anneeLabel) {
+		            anneeLabel.textContent = annee;
+		        }
+
+		        currentPage = page;
+
+		        const url = "/immobilier/dashboards/loyers-montant/search"
+		            + "?annee=" + annee
+		            + "&search=" + encodeURIComponent(search)
+		            + "&page=" + page;
+
+		        console.log("URL:", url);
+
+		        fetch(url)
+		            .then(res => res.json())
+		            .then(data => {
+
+		                tbody.innerHTML = "";
+
+		                const content = data.content || [];
+
+		                if (content.length === 0) {
+		                    tbody.innerHTML = `
+		                        <tr>
+		                            <td colspan="14" class="text-center text-danger">
+		                                Aucun résultat trouvé
+		                            </td>
+		                        </tr>`;
+		                    pagination.innerHTML = "";
+		                    return;
+		                }
+
+		                content.forEach(row => {
+
+		                    const tr = document.createElement("tr");
+
+		                    tr.innerHTML = `
+		                        <td class="locataire"
+		                            data-bs-toggle="tooltip"
+		                            title="${row.locataire ?? ''}">
+		                            ${row.locataireCourt ?? ''}
+		                        </td>
+
+		                        <td class="${row.janPaid ? 'paid' : 'not-paid'}">${row.janFormatted ?? '0'}</td>
+		                        <td class="${row.fevPaid ? 'paid' : 'not-paid'}">${row.fevFormatted ?? '0'}</td>
+		                        <td class="${row.marPaid ? 'paid' : 'not-paid'}">${row.marFormatted ?? '0'}</td>
+		                        <td class="${row.avrPaid ? 'paid' : 'not-paid'}">${row.avrFormatted ?? '0'}</td>
+		                        <td class="${row.maiPaid ? 'paid' : 'not-paid'}">${row.maiFormatted ?? '0'}</td>
+		                        <td class="${row.juiPaid ? 'paid' : 'not-paid'}">${row.juiFormatted ?? '0'}</td>
+		                        <td class="${row.julPaid ? 'paid' : 'not-paid'}">${row.julFormatted ?? '0'}</td>
+		                        <td class="${row.aouPaid ? 'paid' : 'not-paid'}">${row.aouFormatted ?? '0'}</td>
+		                        <td class="${row.sepPaid ? 'paid' : 'not-paid'}">${row.sepFormatted ?? '0'}</td>
+		                        <td class="${row.octPaid ? 'paid' : 'not-paid'}">${row.octFormatted ?? '0'}</td>
+		                        <td class="${row.novPaid ? 'paid' : 'not-paid'}">${row.novFormatted ?? '0'}</td>
+		                        <td class="${row.decPaid ? 'paid' : 'not-paid'}">${row.decFormatted ?? '0'}</td>
+
+		                        <td style="font-weight:bold">${row.totalFormatted ?? '0'}</td>
+		                    `;
+
+		                    tbody.appendChild(tr);
+		                });
+
+		                // 🔥 TOOLTIP REINIT APRÈS RENDER
+		                initTooltips();
+
+		                buildPagination(data);
+
+		                // FOOTER TOTALS
+		                const totals = data.totals;
+
+						if (totals) {
+
+						    const format = (value) => {
+						        if (value === null || value === undefined || value === '') return '0';
+
+						        let clean = value.toString().replace(/\s/g, '').replace(/,/g, '');
+						        let number = Number(clean);
+
+						        if (isNaN(number)) return '0';
+
+						        return number.toLocaleString('fr-FR');
+						    };
+
+						    document.querySelector("tfoot").innerHTML = `
+						        <tr>
+						            <th>Total</th>
+						            <th>${format(totals.m1)}</th>
+						            <th>${format(totals.m2)}</th>
+						            <th>${format(totals.m3)}</th>
+						            <th>${format(totals.m4)}</th>
+						            <th>${format(totals.m5)}</th>
+						            <th>${format(totals.m6)}</th>
+						            <th>${format(totals.m7)}</th>
+						            <th>${format(totals.m8)}</th>
+						            <th>${format(totals.m9)}</th>
+						            <th>${format(totals.m10)}</th>
+						            <th>${format(totals.m11)}</th>
+						            <th>${format(totals.m12)}</th>
+						            <th><b>${format(totals.total)}</b></th>
+						        </tr>
+						    `;
+						}
+		            })
+		            .catch(err => console.error("Erreur:", err));
+		    }
+
+		    // =========================
+		    // 🔥 TOOLTIP INIT (IMPORTANT)
+		    // =========================
+		    function initTooltips() {
+		        const tooltipTriggerList = [].slice.call(
+		            document.querySelectorAll('[data-bs-toggle="tooltip"]')
+		        );
+
+		        tooltipTriggerList.forEach(el => {
+		            new bootstrap.Tooltip(el);
+		        });
+		    }
+
+		    // =========================
+		    // 🔎 SEARCH
+		    // =========================
+		    searchInput.addEventListener("input", function () {
+		        clearTimeout(timeout);
+		        timeout = setTimeout(() => loadData(0), 500);
+		    });
+
+		    // =========================
+		    // 📅 YEAR CHANGE
+		    // =========================
+		    anneeInput.addEventListener("change", function () {
+		        loadData(0);
+		    });
+
+		    // =========================
+		    // 📄 PAGINATION
+		    // =========================
+		    function buildPagination(data) {
+
+		        pagination.innerHTML = "";
+
+		        const page = data.page ?? 0;
+		        const totalPages = data.totalPages ?? 0;
+
+		        if (totalPages <= 1) return;
+
+		        pagination.innerHTML += `
+		            <li class="page-item ${page === 0 ? 'disabled' : ''}">
+		                <a class="page-link" href="#" data-page="${page - 1}">&laquo;</a>
+		            </li>`;
+
+		        const start = Math.max(0, page - 2);
+		        const end = Math.min(totalPages - 1, page + 2);
+
+		        if (start > 0) {
+		            pagination.innerHTML += `
+		                <li class="page-item">
+		                    <a class="page-link" href="#" data-page="0">1</a>
+		                </li>`;
+		        }
+
+		        if (start > 1) {
+		            pagination.innerHTML += `
+		                <li class="page-item disabled">
+		                    <span class="page-link">...</span>
+		                </li>`;
+		        }
+
+		        for (let i = start; i <= end; i++) {
+		            pagination.innerHTML += `
+		                <li class="page-item ${i === page ? 'active' : ''}">
+		                    <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
+		                </li>`;
+		        }
+
+		        if (end < totalPages - 2) {
+		            pagination.innerHTML += `
+		                <li class="page-item disabled">
+		                    <span class="page-link">...</span>
+		                </li>`;
+		        }
+
+		        if (end < totalPages - 1) {
+		            pagination.innerHTML += `
+		                <li class="page-item">
+		                    <a class="page-link" href="#" data-page="${totalPages - 1}">
+		                        ${totalPages}
+		                    </a>
+		                </li>`;
+		        }
+
+		        pagination.innerHTML += `
+		            <li class="page-item ${page === totalPages - 1 ? 'disabled' : ''}">
+		                <a class="page-link" href="#" data-page="${page + 1}">&raquo;</a>
+		            </li>`;
+
+		        pagination.querySelectorAll("a").forEach(link => {
+		            link.addEventListener("click", function (e) {
+		                e.preventDefault();
+		                const p = parseInt(this.dataset.page);
+		                if (!isNaN(p)) loadData(p);
+		            });
+		        });
+		    }
+
+		    // =========================
+		    // 🚀 INIT
+		    // =========================
+		    loadData(0);
+
+		});
+		</script>
+
+		
+	</section>
+	
+		
+</body>
+</html>

@@ -1,0 +1,91 @@
+<div th:fragment="sidebarDesktop">
+    <nav class="sidebar bg-dark text-white d-none d-lg-block position-fixed h-100 p-3" style="width: 250px;">
+        <div th:replace="~{fragments/menu :: menu}"></div>
+    </nav>
+</div>
+
+<div th:fragment="sidebarMobile">
+    <!-- Mobile Toggle Button 
+    <button id="toggleSidebar"
+            class="btn btn-dark d-lg-none m-2"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sidebarOffcanvas"
+            aria-controls="sidebarOffcanvas">
+        ☰ SIGimmo
+    </button>-->
+
+    <!-- Mobile Sidebar Offcanvas -->
+    <div class="offcanvas offcanvas-start d-lg-none bg-dark text-white" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header bg-dark text-white">
+            <h5 id="sidebarOffcanvasLabel">SIGimmo</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
+        </div>
+        <div class="offcanvas-body bg-dark text-white p-0">
+            <div th:replace="~{fragments/menu :: menu}" class="text-white"></div>
+        </div>
+    </div>
+
+    <!-- Mobile Toggle JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButton = document.getElementById('toggleSidebar');
+            const mobileSidebarEl = document.getElementById('sidebarOffcanvas');
+            if(toggleButton && mobileSidebarEl) {
+                const mobileSidebar = new bootstrap.Offcanvas(mobileSidebarEl);
+                toggleButton.addEventListener('click', () => mobileSidebar.toggle());
+            }
+        });
+    </script>
+
+</div>
+
+<!-- Forcer le texte des liens en blanc -->
+<style>
+    #sidebarOffcanvas .offcanvas-body a {
+        color: #ffffff !important;
+    }
+</style>
+
+<!--
+<div th:fragment="sidebarDesktop">
+    <nav class="sidebar bg-dark text-white d-none d-lg-block position-fixed h-100 p-3" style="width: 250px;">
+        <div th:replace="~{fragments/menu :: menu}"></div>
+    </nav>
+</div>
+
+<div th:fragment="sidebarMobile">
+
+    <button class="btn btn-dark d-lg-none m-2"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sidebarOffcanvas"
+            aria-controls="sidebarOffcanvas">
+        ☰ SIGimmo
+    </button>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header bg-dark text-white">
+            <h5 id="sidebarOffcanvasLabel">SIGimmo</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
+        </div>
+        <div class="offcanvas-body bg-dark text-white p-0">
+            <div th:replace="~{fragments/menu :: menu}"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileSidebarEl = document.getElementById('sidebarOffcanvas');
+        if(mobileSidebarEl){
+            new bootstrap.Offcanvas(mobileSidebarEl);
+        }
+    });
+</script>
+
+<style>
+    #sidebarOffcanvas .offcanvas-body a {
+        color: #ffffff !important;
+    }
+</style>-->

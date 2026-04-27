@@ -1,0 +1,149 @@
+<!-- ================= MENU UNIQUE ================= -->
+<!-- fragments/menu.html -->
+<ul class="nav flex-column" th:fragment="menu">
+
+    <!-- Accueil -->
+    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+        <a class="nav-link" th:href="@{/}">🏠 Accueil</a>
+    </li>
+	
+	<!--<li class="nav-item" sec:authorize="hasRole('ADMIN')">
+	    <a class="nav-link" th:href="@{/}">🏠 Accueil</a>
+	</li>-->
+
+    <!-- Dashboard -->
+    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+        <a class="nav-link" data-bs-toggle="collapse" href="#dashboardMenu">
+            <i class="bi bi-speedometer2"></i> Tableau de bord ▾
+        </a>
+        <div class="collapse ps-3"
+             th:classappend="${currentUri != null and currentUri.startsWith('/dashboards')} ? ' show' : ''"
+             id="dashboardMenu">
+            <ul class="nav flex-column">
+                <li><a class="nav-link" th:href="@{/dashboards/loyers}">✔ Paiements</a></li>
+                <li><a class="nav-link" th:href="@{/dashboards/loyers-montant}">💰 Montants</a></li>
+            </ul>
+        </div>
+    </li>
+
+	<!-- Dashboard 
+    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+        <a class="nav-link"
+           th:href="@{/dashboards/loyers}"
+           th:classappend="${currentUri != null and currentUri.startsWith('/dashboards/loyers')} ? ' active' : ''">
+            ✔ Tableau des paiements
+        </a>
+    </li>
+	
+	
+	<li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+        <a class="nav-link"
+           th:href="@{/dashboards/loyers-montant}"
+           th:classappend="${currentUri != null and currentUri.startsWith('/dashboards/loyers-montant')} ? ' active' : ''">
+            💰 Tableau des montants
+        </a>
+    </li>-->
+		
+    <!-- Banque -->
+    <li class="nav-item" sec:authorize="hasRole('DIREC')">
+        <a class="nav-link"
+           th:href="@{/banques}"
+           th:classappend="${currentUri != null and currentUri.startsWith('/banques')} ? ' active' : ''">
+            🏛️ Banque
+        </a>
+    </li>
+
+    <!-- Carnet -->
+    <li class="nav-item" sec:authorize="!hasRole('ADMIN')">
+        <a class="nav-link"
+           th:href="@{/carnets}"
+           th:classappend="${currentUri != null and currentUri.startsWith('/carnets')} ? ' active' : ''">
+            🧾 Carnet
+        </a>
+    </li>
+
+    <!-- Recouvrement -->
+    <li class="nav-item" sec:authorize="!hasRole('ADMIN')">
+        <a class="nav-link"
+           th:href="@{/recouvrements}"
+           th:classappend="${currentUri != null and currentUri.startsWith('/recouvrements')} ? ' active' : ''">
+            💰 Recouvrement
+        </a>
+    </li>
+	
+	<li class="nav-item" sec:authorize="!hasRole('ADMIN')">
+        <a class="nav-link"
+           th:href="@{/encaissements}"
+           th:classappend="${currentUri != null and currentUri.startsWith('/encaissements')} ? ' active' : ''">
+            💰 Encaissement
+        </a>
+    </li>
+
+    <!-- Bailleur -->
+    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+        <a class="nav-link" data-bs-toggle="collapse" href="#bailleurMenu">
+            <i class="bi bi-building"></i> Bailleur ▾
+        </a>
+        <div class="collapse ps-3"
+             th:classappend="${currentUri != null and currentUri.startsWith('/bailleurs') or currentUri != null and currentUri.startsWith('/patrimoines')} ? ' show' : ''"
+             id="bailleurMenu">
+            <ul class="nav flex-column">
+                <li><a class="nav-link" th:href="@{/bailleurs}">Enrôlement</a></li>
+                <li><a class="nav-link" th:href="@{/patrimoines}">Patrimoine</a></li>
+            </ul>
+        </div>
+    </li>
+
+    <!-- Locataire -->
+    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+        <a class="nav-link" data-bs-toggle="collapse" href="#locataireMenu">
+            <i class="bi bi-person-vcard"></i> Locataire ▾
+        </a>
+        <div class="collapse ps-3"
+             th:classappend="${currentUri != null and currentUri.startsWith('/locataires') or currentUri != null and currentUri.startsWith('/bails')} ? ' show' : ''"
+             id="locataireMenu">
+            <ul class="nav flex-column">
+                <li><a class="nav-link" th:href="@{/locataires}">Enrôlement</a></li>
+                <li><a class="nav-link" th:href="@{/bails}">Bail</a></li>
+            </ul>
+        </div>
+    </li>
+
+    <!-- Admin -->
+    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+        <a class="nav-link" data-bs-toggle="collapse" href="#adminMenu">
+            <i class="bi bi-gear"></i> Administration ▾
+        </a>
+        <div class="collapse ps-3"
+             th:classappend="${currentUri != null and currentUri.startsWith('/roles') or currentUri != null and currentUri.startsWith('/utilisateurs')} ? ' show' : ''"
+             id="adminMenu">
+            <ul class="nav flex-column">
+                <li><a class="nav-link" th:href="@{/roles}">Rôle</a></li>
+                <li><a class="nav-link" th:href="@{/utilisateurs}">Utilisateur</a></li>
+            </ul>
+        </div>
+    </li>
+
+    <!-- Référentiel -->
+    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+        <a class="nav-link" data-bs-toggle="collapse" href="#refMenu">
+            <i class="bi bi-archive"></i> Référentiel ▾
+        </a>
+        <div class="collapse ps-3"
+             th:classappend="${currentUri != null and currentUri.startsWith('/professions')} ? ' show' : ''"
+             id="refMenu">
+            <ul class="nav flex-column">
+                <li><a class="nav-link" th:href="@{/professions}">Profession</a></li>
+            </ul>
+        </div>
+    </li>
+	
+	<li class="nav-item" sec:authorize="hasRole('ADMIN')">
+        <a class="nav-link"
+           th:href="@{/agences}"
+           th:classappend="${currentUri != null and currentUri.startsWith('/agences')} ? ' active' : ''">
+            🏛️ Agence
+        </a>
+    </li>
+	
+</ul>
