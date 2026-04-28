@@ -183,8 +183,6 @@ public class EncaisseService extends BaseService<Encaisse>{
 	        entity.setIdentification(null);
 	    }
 
-	    
-
 	    // =========================
 	    // 🔗 Utilisateur sécurisé
 	    // =========================
@@ -294,4 +292,7 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    return repo.findById(id);
 	}
 	
+	public Optional<Encaisse> findByIdRelations(Integer id) {
+	    return repo.findByIdWithRelations(id);
+	}
 }

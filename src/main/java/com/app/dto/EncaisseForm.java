@@ -1,6 +1,8 @@
 package com.app.dto;
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +18,7 @@ public class EncaisseForm {
     private Integer identificationId;
     private Integer utilisateurId;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate encDate;
 
     private Long encMontant;

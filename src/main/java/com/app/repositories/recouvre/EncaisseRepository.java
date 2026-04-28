@@ -1,6 +1,7 @@
 package com.app.repositories.recouvre;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -180,4 +181,15 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
 	//
 	//
     boolean existsByBailId(Integer bailId);
+    
+    //
+    @Query("""
+    	    SELECT e FROM Encaisse e
+    	    LEFT JOIN FETCH e.bail b
+    	    LEFT JOIN FETCH b.appartement
+    	    LEFT JOIN FETCH e.identification
+    	    LEFT JOIN FETCH e.utilisateur
+    	    WHERE e.id = :id
+    	""")
+    	Optional<Encaisse> findByIdWithRelations(@Param("id") Integer id);
 }

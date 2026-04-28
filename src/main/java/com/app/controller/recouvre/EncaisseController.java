@@ -96,90 +96,191 @@ public class EncaisseController {
 	
 	
 	@GetMapping("/create")
-	public String showCreateForm(@AuthenticationPrincipal UserPrincipal principal, 
+	public String showCreateForm(@AuthenticationPrincipal UserPrincipal principal,
 	                             Model model,
 	                             @RequestParam(value = "agentId", required = false) Long agentId,
 	                             @RequestParam(required = false) String keyword,
 	                             @RequestParam(value = "id", required = false) Integer id) {
 
-	    // ✅ utiliser UNIQUEMENT le Form
+	    // ✅ Création du DTO (formulaire uniquement)
 	    EncaisseForm form = new EncaisseForm();
 
-	    // injecter utilisateur connecté
-	    form.setUtilisateurId(principal.getUtilisateur().getId());
+	    // ✅ Injecter utilisateur connecté (SANS passer par Thymeleaf)
+	    if (principal != null && principal.getUtilisateur() != null) {
+	        form.setUtilisateurId(principal.getUtilisateur().getId());
+	    }
 
+	    // ✅ Charger les baux (logique métier)
 	    chargerBaux(principal, agentId, model, keyword, id);
 
-	    // quittances
+	    // ✅ Charger les quittances
 	    List<IdentificationProjection> identifications =
 	            identificationService.findIdentificationsNative(principal, null, agentId);
 	    model.addAttribute("identifications", identifications);
 
-	    // ✅ IMPORTANT : un seul objet
+	    // ✅ IMPORTANT : UN SEUL objet pour le form
 	    model.addAttribute("encaisse", form);
 
-	    // utilisateurs
+	    // ✅ Liste des agents recouvrement
 	    String code = "RECOUV";
 	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement(code);
 	    model.addAttribute("utilisateurs", utilisateurs);
 
+	    // ✅ Agent sélectionné (utile pour JS / select)
 	    model.addAttribute("selectedAgent", agentId);
+
+	    // ✅ (OPTIONNEL MAIS RECOMMANDÉ) ID utilisateur pour Thymeleaf
+	    model.addAttribute("currentUserId",
+	            principal != null && principal.getUtilisateur() != null
+	                    ? principal.getUtilisateur().getId()
+	                    : null);
 
 	    return "recouvrement/form";
 	}
 	
-	/*@GetMapping("/create")
-	public String showCreateForm(@AuthenticationPrincipal UserPrincipal principal, 
-											Model model,
-											@RequestParam(value = "agentId", required = false) Long agentId,
-											@RequestParam(required = false) String keyword,
-											@RequestParam(value = "id", required = false) Integer id) {
-
-	    Encaisse encaisse = new Encaisse();
-	    encaisse.setUtilisateur(principal.getUtilisateur());
-
-	    chargerBaux(principal, agentId, model, keyword,id);
-	    
-	 // Quittances disponibles
-	    List<IdentificationProjection> identifications = identificationService.findIdentificationsNative(principal,null,agentId);
-	    model.addAttribute("identifications", identifications);
-      
-	    // Ajout au model
-	    model.addAttribute("encaisse", encaisse);	
-	    model.addAttribute("encaisse", new EncaisseForm());
-	    
-	    String code = "RECOUV"; // ou autre code si nécessaire
-        List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement(code);
-        model.addAttribute("utilisateurs", utilisateurs);
-
-        // Garder les valeurs sélectionnées dans le formulaire
-        model.addAttribute("selectedAgent", agentId);
-
-
-	    return "recouvrement/form";
-	}	*/
 	
 	@GetMapping("/edit/{id}")
+	public String showEditForm(@AuthenticationPrincipal UserPrincipal principal,
+	                           @PathVariable Integer id,
+	                           Model model) {
+
+	    Encaisse encaisse = service.findByIdRelations(id)
+	            .orElseThrow(() -> new IllegalArgumentException("Encaisse introuvable")); //findById
+
+	    EncaisseForm form = new EncaisseForm();
+
+	    form.setId(encaisse.getId());
+	    form.setVersion(encaisse.getVersion());
+
+	    // 🔥 RELATIONS → ID
+	    if (encaisse.getUtilisateur() != null) {
+	        form.setUtilisateurId(encaisse.getUtilisateur().getId());
+	    }
+
+	    if (encaisse.getBail() != null) {
+	        form.setBailId(encaisse.getBail().getId());
+	    }
+
+	    if (encaisse.getIdentification() != null) {
+	        form.setIdentificationId(encaisse.getIdentification().getId());
+	    }
+
+	    // CHAMPS
+	    form.setEncDate(encaisse.getEncDate());
+	    form.setEncMontant(encaisse.getEncMontant());
+	    form.setEncloyer(encaisse.getEncloyer());
+	    form.setEncArriere(encaisse.getEncArriere());
+	    form.setEncPenalite(encaisse.getEncPenalite());
+	    form.setEnctotal(encaisse.getEnctotal());
+	    form.setEncDeb(encaisse.getEncDeb());
+	    form.setEncFin(encaisse.getEncFin());
+	    form.setEncMode(encaisse.getEncMode());
+	    form.setEncNumChq(encaisse.getEncNumChq());
+	    form.setStatut(encaisse.getStatut());
+
+	    model.addAttribute("encaisse", form);
+
+	    // 🔥 LISTE AGENTS
+	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement("RECOUV");
+	    model.addAttribute("utilisateurs", utilisateurs);
+
+	    // 🔥 AGENT SÉLECTIONNÉ (CRITIQUE)
+	    Integer selectedAgent = null;
+	    if (encaisse.getUtilisateur() != null) {
+	        selectedAgent = encaisse.getUtilisateur().getId();
+	    }
+	    model.addAttribute("selectedAgent", selectedAgent);
+
+	    // 🔥 INIT BAIL (POUR SELECT2)
+	    if (encaisse.getBail() != null) {
+	        model.addAttribute("initBailId", encaisse.getBail().getId());
+
+	        String bailText = encaisse.getBail().getLocataire().getNom() + " "
+	                + encaisse.getBail().getLocataire().getPrenom()
+	                + " | " + encaisse.getBail().getAppartement().getNumAppart();
+
+	        model.addAttribute("initBailText", bailText);
+	    }
+
+	    // 🔥 INIT QUITTANCE
+	    if (encaisse.getIdentification() != null) {
+	        model.addAttribute("initIdentId", encaisse.getIdentification().getId());
+	        model.addAttribute("initIdentText", encaisse.getIdentification().getIdeNumero());
+	    }
+
+	    return "recouvrement/form";
+	}
+	
+	/*@GetMapping("/edit/{id}")
 	public String showEditForm(@AuthenticationPrincipal UserPrincipal principal,
 	                           @PathVariable Integer id,
 	                           @RequestParam(value = "agentId", required = false) Long agentId,
 	                           @RequestParam(required = false) String keyword,
 	                           Model model) {
-		
+
+	    // 🔎 Charger entity
 	    Encaisse encaisse = service.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Encaisse introuvable"));
+	            .orElseThrow(() -> new IllegalArgumentException("Encaisse introuvable"));
 
-	    model.addAttribute("encaisse", encaisse);
+	    // 🔄 Conversion ENTITY → DTO
+	    EncaisseForm form = new EncaisseForm();
 
-	    chargerBaux(principal, agentId, model,keyword,id); // 🔥 IMPORTANT
+	    form.setId(encaisse.getId());
+	    form.setVersion(encaisse.getVersion());
 
-	    // Quittances disponibles
-	    List<IdentificationProjection> identifications = identificationService.findIdentificationsNative(principal,id, agentId);
+	    // Relations → IDs
+	    if (encaisse.getUtilisateur() != null) {
+	        form.setUtilisateurId(encaisse.getUtilisateur().getId());
+	    }
+
+	    if (encaisse.getBail() != null) {
+	        form.setBailId(encaisse.getBail().getId());
+	    }
+
+	    if (encaisse.getIdentification() != null) {
+	        form.setIdentificationId(encaisse.getIdentification().getId());
+	    }
+
+	    // Champs simples
+	    form.setEncDate(encaisse.getEncDate());
+	    form.setEncMontant(encaisse.getEncMontant());
+	    form.setEncloyer(encaisse.getEncloyer());
+	    form.setEncArriere(encaisse.getEncArriere());
+	    form.setEncPenalite(encaisse.getEncPenalite());
+	    form.setEnctotal(encaisse.getEnctotal());
+	    form.setEncDeb(encaisse.getEncDeb());
+	    form.setEncFin(encaisse.getEncFin());
+	    form.setEncMode(encaisse.getEncMode());
+	    form.setEncNumChq(encaisse.getEncNumChq());
+	    form.setStatut(encaisse.getStatut());
+
+	    //  IMPORTANT : envoyer le DTO
+	    model.addAttribute("encaisse", form);
+
+	    // 🔎 charger données métier
+	    chargerBaux(principal, agentId, model, keyword, id);
+	    
+	    
+
+	 // ✅ Liste des agents recouvrement
+	    String code = "RECOUV";
+	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement(code);
+	    model.addAttribute("utilisateurs", utilisateurs);
+
+	    // ✅ Agent sélectionné (utile pour JS / select)
+	    model.addAttribute("selectedAgent", agentId);
+	    
+	    
+	    
+	    
+	    List<IdentificationProjection> identifications =
+	            identificationService.findIdentificationsNative(principal, id, agentId);
 	    model.addAttribute("identifications", identifications);
 
 	    return "recouvrement/form";
-	}
+	}*/
 	
+		
 	//
 	private void chargerBaux(UserPrincipal principal, Long agentId, Model model, String keyword, Integer id) {
 
@@ -214,8 +315,73 @@ public class EncaisseController {
 		
 		return "redirect:/recouvrements";
 	}
-		
+	
+	
 	@PostMapping("/save")
+	public String saveEncaisse(@ModelAttribute EncaisseForm form,
+	                           @AuthenticationPrincipal UserPrincipal principal,
+	                           RedirectAttributes redirectAttributes) {
+
+	    try {
+
+	        // =========================
+	        // 🔐 rôles
+	        // =========================
+	        boolean isDirec = principal.getAuthorities().stream()
+	                .anyMatch(auth -> "ROLE_DIREC".equals(auth.getAuthority()));
+
+	        boolean isRecouv = principal.getAuthorities().stream()
+	                .anyMatch(auth -> "ROLE_RECOUV".equals(auth.getAuthority()));
+
+	        // =========================
+	        // 🔐 gestion utilisateur (CRITIQUE)
+	        // =========================
+	        if (isRecouv) {
+	            // 🔥 un agent ne peut enregistrer que pour lui-même
+	            form.setUtilisateurId(principal.getUtilisateur().getId());
+
+	        } else {
+	            // 🔥 ADMIN / DIREC → doivent choisir un agent
+	            if (form.getUtilisateurId() == null || form.getUtilisateurId() == 9999999) {
+	                throw new IllegalArgumentException("Agent de recouvrement obligatoire");
+	            }
+	        }
+
+	        // =========================
+	        // 🔐 statut automatique pour directeur
+	        // =========================
+	        if (isDirec) {
+	            form.setStatut(1);
+	        }
+
+	        // =========================
+	        // 💾 sauvegarde
+	        // =========================
+	        Encaisse saved = service.saveEncaissement(form);
+
+	        String message = messageSource.getMessage(
+	                form.getId() == null ? "success.enregistrement" : "success.modification",
+	                null,
+	                LocaleContextHolder.getLocale()
+	        );
+
+	        redirectAttributes.addFlashAttribute("successMessage", message);
+
+	    } catch (IllegalArgumentException e) {
+	        redirectAttributes.addFlashAttribute("error", e.getMessage());
+
+	    } catch (SecurityException e) {
+	        redirectAttributes.addFlashAttribute("error", "Accès refusé");
+
+	    } catch (Exception e) {
+	        redirectAttributes.addFlashAttribute("error", "Erreur inattendue");
+	        e.printStackTrace();
+	    }
+
+	    return "redirect:/recouvrements";
+	}
+	
+	/*@PostMapping("/save")
 	public String saveEncaisse(@ModelAttribute EncaisseForm form,
 	                           @AuthenticationPrincipal UserPrincipal principal,
 	                           RedirectAttributes redirectAttributes) {
@@ -262,7 +428,7 @@ public class EncaisseController {
 	    }
 
 	    return "redirect:/recouvrements";
-	}
+	}*/
 	
 	/*@PostMapping("/save")
 	public String saveEncaisse(@ModelAttribute Encaisse encaisse,
@@ -310,8 +476,7 @@ public class EncaisseController {
 
 	private void chargerListes(@AuthenticationPrincipal UserPrincipal principal, 
 								@RequestParam(required = false) String keyword, Model model) {
-	  //  Utilisateur user = principal.getUtilisateur();
-
+	  
 	    // Charger les listes pour le formulaire
 	    model.addAttribute("bails", bailService.findBailDetailsNative(principal,null,keyword,null));
 
