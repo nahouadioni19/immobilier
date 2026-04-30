@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.app.dto.BailleurDTO;
 import com.app.entities.administration.Agence;
 import com.app.entities.administration.Banque;
 import com.app.entities.recouvre.Bailleur;
@@ -182,7 +183,7 @@ public class BailleurService extends BaseService<Bailleur>{
         return repo.save(bailleur);
     }
     
-    public Page<Bailleur> search(String keyword, Pageable pageable) {
+    /*public Page<Bailleur> search(String keyword, Pageable pageable) {
     	
     	Integer agenceId = getCurrentAgenceId();
     	
@@ -190,7 +191,7 @@ public class BailleurService extends BaseService<Bailleur>{
             return repo.findByAgenceId(agenceId, pageable);
         }
         return repo.search(keyword.trim(), agenceId, pageable);
-    }
+    }*/
     
     public Page<Bailleur> searchLocataire(String keyword, Pageable pageable) {
     	
@@ -200,5 +201,35 @@ public class BailleurService extends BaseService<Bailleur>{
             return repo.findByAgenceId(agenceId, pageable);
         }
         return repo.searchBailleur(keyword.trim(), agenceId, pageable);
+    }
+    
+    public Page<BailleurDTO> search(String keyword, Pageable pageable) {
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        Page<Bailleur> page;
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            page = repo.findByAgenceId(agenceId, pageable);
+        } else {
+            page = repo.search(keyword.trim(), agenceId, pageable);
+        }
+
+        return page.map(this::toDTO);
+    }
+
+    private BailleurDTO toDTO(Bailleur b) {
+        BailleurDTO dto = new BailleurDTO();
+
+        dto.setId(b.getId());
+        dto.setNom(b.getNom());
+        dto.setPrenom(b.getPrenom());
+        dto.setCellulaire(b.getCellulaire());
+
+        if (b.getAgence() != null) {
+            dto.setAgenceId(b.getAgence().getId());
+        }
+
+        return dto;
     }
 }

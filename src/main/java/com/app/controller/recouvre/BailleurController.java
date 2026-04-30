@@ -2,16 +2,19 @@ package com.app.controller.recouvre;
 
 import com.app.controller.common.Routes;
 import com.app.entities.recouvre.Bailleur;
+import com.app.security.UserPrincipal;
 import com.app.service.common.PaginationService;
 import com.app.service.recouvre.BailleurService;
 
 import com.app.controller.common.SetupPage;
+import com.app.dto.BailleurDTO;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -35,8 +38,6 @@ import org.springframework.context.i18n.LocaleContextHolder;
 public class BailleurController {
 
     private final BailleurService service;
-    private final SetupPage setup;
-    private final PaginationService paginationService;
     
     @Value("${app.storage.directory}")
     private String storageDirectory;  // <-- injecté depuis application.properties
@@ -44,13 +45,30 @@ public class BailleurController {
     @Autowired
 	private MessageSource messageSource;
     
-    public BailleurController(BailleurService service, SetupPage setup, PaginationService paginationService) {
+    public BailleurController(BailleurService service) {
         this.service = service;
-        this.setup = setup;
-        this.paginationService = paginationService;
     }
 
     @GetMapping
+    public String listBailleurs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String keyword,
+            @AuthenticationPrincipal UserPrincipal principal,
+            Model model) {
+
+        Integer agenceId = principal.getUtilisateur().getAgence().getId();
+
+        Page<BailleurDTO> bailleursPage =
+                service.search(keyword, PageRequest.of(page, 8));
+
+        model.addAttribute("bailleursPage", bailleursPage);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("currentPage", page);
+
+        return "bailleur/enrolement/list";
+    }
+    
+    /*@GetMapping
     public String listBailleurs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) String keyword,
@@ -66,7 +84,7 @@ public class BailleurController {
         model.addAttribute("currentPage", page);
 
         return "bailleur/enrolement/list";
-    }
+    }*/
     
     // FORMULAIRE DE CREATION
     @GetMapping("/create")
@@ -157,7 +175,7 @@ public class BailleurController {
         return "redirect:" + Routes.ROUTE_BAILLEUR;
     }
     
-    @GetMapping(value = "/api/bailleurs", produces = MediaType.APPLICATION_JSON_VALUE)
+    /*@GetMapping(value = "/api/bailleurs", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> searchBailleur(@RequestParam String term) {
 
@@ -177,9 +195,33 @@ public class BailleurController {
         response.put("results", results);
 
         return response;
+    }*/
+    
+    @GetMapping(value = "/api/bailleurs", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> searchBailleur(
+            @RequestParam String term,
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+       // Integer agenceId = principal.getUtilisateur().getAgence().getId();
+
+        Page<BailleurDTO> page =
+                service.search(term, PageRequest.of(0, 50));
+
+        List<Map<String, Object>> results = page.getContent().stream()
+                .map(dto -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", dto.getId());
+                    m.put("text", dto.getNom() + " " + dto.getPrenom());
+                    m.put("cellulaire", dto.getCellulaire());
+                    return m;
+                })
+                .collect(Collectors.toList());
+
+        return Map.of("results", results);
     }
 
-    @GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    /*@GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> search(
             @RequestParam(required = false) String keyword,
@@ -197,6 +239,31 @@ public class BailleurController {
         response.put("first", page.isFirst());
 
         return response;
+    }*/
+    
+    @GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> search(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 8) Pageable pageable,
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+      //  Integer agenceId = principal.getUtilisateur().getAgence().getId();
+
+        Page<BailleurDTO> page =
+                service.search(keyword, pageable);
+        
+        System.out.println("TOTAL PAGES = " + page.getTotalPages()); // 👈 AJOUTE ÇA
+
+        return Map.of(
+                "content", page.getContent(),
+                "number", page.getNumber(),
+                "size", page.getSize(),
+                "totalElements", page.getTotalElements(),
+                "totalPages", page.getTotalPages(),
+                "last", page.isLast(),
+                "first", page.isFirst()
+        );
     }
     
 }

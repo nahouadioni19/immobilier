@@ -29,65 +29,39 @@ public class AppartementService extends BaseService<Appartement> {
 
     // CREATE
     public List<Appartement> getAvailableForCreate() {
-        return repo.findAllAvailable();
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        return repo.findAllAvailable(agenceId);
     }
 
     // EDIT
     public List<Appartement> getAvailableForEdit(Integer currentId) {
-        return repo.findAllAvailableOrCurrent(currentId);
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        return repo.findAllAvailableOrCurrent(currentId, agenceId);
     }
     
     public List<Appartement> getAppartementsLibres() {
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
         return repo.findByStatut(StatutAppartement.LIBRE);
     }
-    
-   /* public Page<Appartement> search(String term, Pageable pageable) {
-        return repo.search(term, pageable);
-    }*/
-    
+       
     public Page<Appartement> searchByLibelleOrImmeuble(String term, Pageable pageable) {
-        return repo.search(term, pageable);
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        return repo.search(term, agenceId, pageable);
     }
     
     public Page<Appartement> searchForAppartement(String term, Integer currentId, Pageable pageable) {
-        return repo.searchForAppartement(term, currentId, pageable);
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        return repo.searchForAppartement(term, currentId, agenceId, pageable);
     }
 
 }
-
-
-/*package com.app.service.recouvre;
-
-import java.util.List;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.app.entities.recouvre.Appartement;
-import com.app.repositories.recouvre.AppartementRepository;
-import com.app.service.base.BaseService;
-
-import lombok.RequiredArgsConstructor;
-
-@Service
-@Transactional
-@RequiredArgsConstructor
-public class AppartementService  extends BaseService<Appartement>{
-
-	private final AppartementRepository repo;
-	
-	
-	public AppartementService(AppartementRepository repo) {
-        this.repo = repo;
-    }
-
-    public List<Appartement> getAvailableForCreate() {
-        return repo.findAllAvailable();
-    }
-
-    public List<Appartement> getAvailableForEdit(Integer currentId) {
-        return repo.findAllAvailableOrCurrent(currentId);
-    }
-	
-}*/

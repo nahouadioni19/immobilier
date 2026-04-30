@@ -51,7 +51,6 @@ public class LocataireService extends BaseService<Locataire> {
     @Override
     public void afterUpdate(Locataire entity) {
         super.afterUpdate(entity);
-       // clearCache(TYPE_ROLE_CACHE); 
     }
 
     @Override
@@ -136,19 +135,30 @@ public class LocataireService extends BaseService<Locataire> {
     }
         
     public List<Locataire> search(String term) {
-        Page<Locataire> page = repo.search(term, PageRequest.of(0, 50));
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        Page<Locataire> page = repo.search(term, agenceId, PageRequest.of(0, 50));
+        
         return page.getContent();
     }
 
     public Page<Locataire> search(String term, Pageable pageable) {
-        return repo.search(term, pageable);
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        return repo.search(term, agenceId, pageable);
     }
 
     public Page<Locataire> searchLocataire(String keyword, Pageable pageable) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return repo.findAll(pageable);
+        
+    	Integer agenceId = getCurrentAgenceId();
+    	
+    	if (keyword == null || keyword.trim().isEmpty()) {
+            return repo.findLocataireByAgenceId(agenceId, pageable);
         }
-        return repo.searchLocataire(keyword.trim(), pageable);
+    	
+        return repo.searchLocataire(keyword.trim(), agenceId, pageable);
     }
         
 }

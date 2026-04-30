@@ -75,71 +75,8 @@
 	</div>
 	
             <!-- Pagination -->
-			<div class="d-flex justify-content-center mt-3" th:if="${bailleursPage.totalElements > 0}">
-			    <ul class="pagination">
-
-			        <!-- Précédent -->
-			        <li class="page-item"
-			            th:classappend="${bailleursPage.first} ? 'disabled'">
-			            <a class="page-link"
-			               th:href="@{/bailleurs(page=${bailleursPage.number - 1})}">
-			                &laquo;
-			            </a>
-			        </li>
-
-			        <!-- Première page -->
-			        <li class="page-item"
-			            th:if="${bailleursPage.number > 2}">
-			            <a class="page-link"
-			               th:href="@{/bailleurs(page=0)}">1</a>
-			        </li>
-
-			        <!-- ... -->
-			        <li class="page-item disabled"
-			            th:if="${bailleursPage.number > 3}">
-			            <span class="page-link">...</span>
-			        </li>
-
-			        <!-- Pages autour -->
-			        <li class="page-item"
-			            th:each="i : ${#numbers.sequence(
-			                T(java.lang.Math).max(0, bailleursPage.number - 2),
-			                T(java.lang.Math).min(bailleursPage.totalPages - 1, bailleursPage.number + 2)
-			            )}"
-			            th:classappend="${i == bailleursPage.number} ? 'active'">
-
-			            <a class="page-link"
-			               th:text="${i + 1}"
-			               th:href="@{/bailleurs(page=${i}, keyword=${keyword})}">
-			            </a>
-
-			        </li>
-
-			        <!-- ... -->
-			        <li class="page-item disabled"
-			            th:if="${bailleursPage.number < bailleursPage.totalPages - 4}">
-			            <span class="page-link">...</span>
-			        </li>
-
-			        <!-- Dernière page -->
-			        <li class="page-item"
-			            th:if="${bailleursPage.number < bailleursPage.totalPages - 3}">
-			            <a class="page-link"
-			               th:href="@{/bailleurs(page=${bailleursPage.totalPages - 1})}"
-			               th:text="${bailleursPage.totalPages}">
-			            </a>
-			        </li>
-
-			        <!-- Suivant -->
-			        <li class="page-item"
-			            th:classappend="${bailleursPage.last} ? 'disabled'">
-			            <a class="page-link"
-			               th:href="@{/bailleurs(page=${bailleursPage.number + 1})}">
-			                &raquo;
-			            </a>
-			        </li>
-
-			    </ul>
+			<div class="d-flex justify-content-center mt-3">
+			    <ul class="pagination" id="pagination"></ul>
 			</div>
 			
 			</fieldset>
@@ -193,199 +130,181 @@
 			<script th:inline="javascript">
 			document.addEventListener("DOMContentLoaded", function () {
 
-		    const input = document.getElementById("searchInput");
-		   
-			// const form = input.closest("form");
-			
-		    const tableBody = document.getElementById("bailleurTableBody");
-		    const loader = document.getElementById("loader");
-		    const paginationContainer = document.querySelector(".pagination");
-			const contextPath = /*[[@{/}]]*/ ""; // résout vers /immobilier
-			
-		    let timeout = null;
-		    let currentPage = 0;
-		    let currentKeyword = "";
+			    const input = document.getElementById("searchInput");
+			    const tableBody = document.getElementById("bailleurTableBody");
+			    const loader = document.getElementById("loader");
+			    //const paginationContainer = document.querySelector(".pagination");
+				const paginationContainer = document.getElementById("pagination");
 
-		    // Empêcher le submit classique du formulaire
-		  //  form.addEventListener("submit", function(e) {
-		    //    e.preventDefault();
-		    //});
+			    const contextPath = /*[[@{/}]]*/ "";
 
-		    // Charger les données depuis l'API
-		    function loadData(keyword, page = 0) {
-		        loader.style.display = "block";
-		        currentKeyword = keyword;
+			    let timeout = null;
+			    let currentPage = 0;
+			    let currentKeyword = "";
 
-		        const url = /*[[@{/bailleurs/api/search}]]*/ 
-		                    + "?keyword=" + encodeURIComponent(keyword) 
-		                    + "&page=" + page;
+			    // ===================== LOAD DATA =====================
+			    function loadData(keyword, page = 0) {
 
-		        fetch(url)
-		            .then(res => res.json())
-		            .then(data => {
-		                loader.style.display = "none";
-		                tableBody.innerHTML = "";
+			        console.log("LOAD PAGE =", page);
 
-		                if (!data.content || data.content.length === 0) {
-		                    tableBody.innerHTML = `
-		                        <tr>
-		                            <td colspan="4" class="text-center">
-		                                Aucun bailleur trouvé.
-		                            </td>
-		                        </tr>`;
-		                    if (paginationContainer) paginationContainer.innerHTML = "";
-		                    return;
-		                }
+			        currentPage = page;        // ✅ IMPORTANT
+			        currentKeyword = keyword;
 
-		                // 🚀 Table avec dropdown
-						data.content.forEach(b => {
-						    tableBody.innerHTML += `
-						        <tr>
-						            <td>${b.prenom ?? ''}</td>
-						            <td>${b.nom ?? ''}</td>
-						            <td>${b.cellulaire ?? ''}</td>
-						            <td>
-						                <div class="d-flex justify-content-center">
-						                    <div class="dropdown">
-						                        <button class="btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-						                            <i class="bi bi-three-dots-vertical"></i>
-						                        </button>
-						                        <ul class="dropdown-menu">
-						                            <li>
-						                                <a class="dropdown-item" href="${contextPath}bailleurs/edit/${b.id}">
-						                                    <i class="bi bi-pencil me-2"></i>Modifier
-						                                </a>
-						                            </li>
-						                            <li>
-						                                <a class="dropdown-item del-btn" href="${contextPath}bailleurs/delete/${b.id}">
-						                                    <i class="bi bi-trash me-2"></i>Supprimer
-						                                </a>
-						                            </li>
-						                        </ul>
-						                    </div>
-						                </div>
-						            </td>
-						        </tr>`;
-						});
+			        loader.style.display = "block";
 
-		                attachDeleteEvents();
-		                buildPagination(data);
-		            })
-		            .catch(err => {
-		                loader.style.display = "none";
-		                console.error("Erreur AJAX :", err);
-		            });
-		    }
+			        const url = contextPath + "bailleurs/api/search"
+			            + "?keyword=" + encodeURIComponent(keyword)
+			            + "&page=" + page;
 
-		    // 🔹 Rebind SweetAlert pour suppression
-		    function attachDeleteEvents() {
-		        document.querySelectorAll(".del-btn").forEach(btn => {
-		            btn.addEventListener("click", function(e) {
-		                e.preventDefault();
-		                const href = this.href;
+			        fetch(url)
+			            .then(res => res.json())
+			            .then(data => {
 
-		                Swal.fire({
-		                    title: 'Confirmation',
-		                    text: "Voulez-vous supprimer ce bailleur ?",
-		                    icon: 'warning',
-		                    showCancelButton: true,
-		                    confirmButtonText: 'Oui',
-		                    cancelButtonText: 'Non'
-		                }).then((result) => {
-		                    if (result.isConfirmed) {
-		                        window.location.href = href;
-		                    }
-		                });
-		            });
-		        });
-		    }
+			                loader.style.display = "none";
 
-		    // 🔹 Pagination courte avec points de suspension
-			function buildPagination(data) {
-			    if (!paginationContainer) return;
-			    paginationContainer.innerHTML = "";
+			                console.log("DATA PAGE =", data.number);
 
-			    const currentPage = data.number;         // page courante (0-index)
-			    const totalPages = data.totalPages;      // total pages
+			                tableBody.innerHTML = "";
 
-			    if (totalPages <= 1) return;
+			                if (!data.content || data.content.length === 0) {
+			                    tableBody.innerHTML = `
+			                        <tr>
+			                            <td colspan="4" class="text-center">
+			                                Aucun bailleur trouvé.
+			                            </td>
+			                        </tr>`;
+			                    paginationContainer.innerHTML = "";
+			                    return;
+			                }
 
-			    // ⬅ Précédent
-			    paginationContainer.innerHTML += `
-			        <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
-			            <a class="page-link" href="#" data-page="${currentPage - 1}">&laquo;</a>
-			        </li>`;
+			                // ===== TABLE =====
+			                data.content.forEach(b => {
+			                    tableBody.innerHTML += `
+			                        <tr>
+			                            <td>${b.prenom ?? ''}</td>
+			                            <td>${b.nom ?? ''}</td>
+			                            <td>${b.cellulaire ?? ''}</td>
+			                            <td>
+			                                <div class="dropdown">
+			                                    <button class="btn" data-bs-toggle="dropdown">
+			                                        <i class="bi bi-three-dots-vertical"></i>
+			                                    </button>
+			                                    <ul class="dropdown-menu">
+			                                        <li>
+			                                            <a class="dropdown-item"
+			                                               href="${contextPath}bailleurs/edit/${b.id}">
+			                                                Modifier
+			                                            </a>
+			                                        </li>
+			                                        <li>
+			                                            <a class="dropdown-item del-btn"
+			                                               href="${contextPath}bailleurs/delete/${b.id}">
+			                                                Supprimer
+			                                            </a>
+			                                        </li>
+			                                    </ul>
+			                                </div>
+			                            </td>
+			                        </tr>`;
+			                });
 
-			    // Première page
-			    if (currentPage > 3) {
-			        paginationContainer.innerHTML += `
-			            <li class="page-item">
-			                <a class="page-link" href="#" data-page="0">1</a>
-			            </li>`;
+			                attachDeleteEvents();
+			                buildPagination(data);
+			            })
+			            .catch(err => {
+			                loader.style.display = "none";
+			                console.error("Erreur AJAX :", err);
+			            });
 			    }
 
-			    // Pointillés avant
-			    if (currentPage > 4) {
-			        paginationContainer.innerHTML += `
-			            <li class="page-item disabled"><span class="page-link">...</span></li>`;
-			    }
+			    // ===================== DELETE =====================
+			    function attachDeleteEvents() {
+			        document.querySelectorAll(".del-btn").forEach(btn => {
+			            btn.onclick = function(e) {
+			                e.preventDefault();
+			                const href = this.href;
 
-			    // Pages autour de la page courante (±2)
-			    const start = Math.max(0, currentPage - 2);
-			    const end = Math.min(totalPages - 1, currentPage + 2);
-			    for (let i = start; i <= end; i++) {
-			        paginationContainer.innerHTML += `
-			            <li class="page-item ${i === currentPage ? 'active' : ''}">
-			                <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
-			            </li>`;
-			    }
-
-			    // Pointillés après
-			    if (currentPage < totalPages - 5) {
-			        paginationContainer.innerHTML += `
-			            <li class="page-item disabled"><span class="page-link">...</span></li>`;
-			    }
-
-			    // Dernière page
-			    if (currentPage < totalPages - 4) {
-			        paginationContainer.innerHTML += `
-			            <li class="page-item">
-			                <a class="page-link" href="#" data-page="${totalPages - 1}">${totalPages}</a>
-			            </li>`;
-			    }
-
-			    // ➡ Suivant
-			    paginationContainer.innerHTML += `
-			        <li class="page-item ${currentPage === totalPages - 1 ? 'disabled' : ''}">
-			            <a class="page-link" href="#" data-page="${currentPage + 1}">&raquo;</a>
-			        </li>`;
-
-			    // Rebind click events
-			    paginationContainer.querySelectorAll(".page-link").forEach(link => {
-			        link.addEventListener("click", function(e) {
-			            e.preventDefault();
-			            const page = parseInt(this.dataset.page);
-			            if (!isNaN(page) && page >= 0 && page < totalPages) {
-			                loadData(currentKeyword, page);
-			            }
+			                Swal.fire({
+			                    title: 'Confirmation',
+			                    text: "Voulez-vous supprimer ce bailleur ?",
+			                    icon: 'warning',
+			                    showCancelButton: true,
+			                    confirmButtonText: 'Oui',
+			                    cancelButtonText: 'Non'
+			                }).then(result => {
+			                    if (result.isConfirmed) {
+			                        window.location.href = href;
+			                    }
+			                });
+			            };
 			        });
+			    }
+
+			    // ===================== PAGINATION =====================
+				function buildPagination(data) {
+
+				    paginationContainer.innerHTML = "";
+
+				    const totalPages = data.totalPages;
+				    const page = data.number;
+
+				    if (!totalPages || totalPages <= 1) return;
+
+				    // ⬅ PREVIOUS
+				    paginationContainer.innerHTML += `
+				        <li class="page-item ${page === 0 ? 'disabled' : ''}">
+				            <a class="page-link" href="#" data-page="${page - 1}">&laquo;</a>
+				        </li>`;
+
+				    let start = Math.max(0, page - 2);
+				    let end = Math.min(totalPages - 1, page + 2);
+
+				    for (let i = start; i <= end; i++) {
+				        paginationContainer.innerHTML += `
+				            <li class="page-item ${i === page ? 'active' : ''}">
+				                <a class="page-link" href="#" data-page="${i}">
+				                    ${i + 1}
+				                </a>
+				            </li>`;
+				    }
+
+				    // ➡ NEXT
+				    paginationContainer.innerHTML += `
+				        <li class="page-item ${page === totalPages - 1 ? 'disabled' : ''}">
+				            <a class="page-link" href="#" data-page="${page + 1}">&raquo;</a>
+				        </li>`;
+
+				    // EVENTS
+				    paginationContainer.querySelectorAll(".page-link").forEach(link => {
+				        link.onclick = function(e) {
+				            e.preventDefault();
+
+				            const targetPage = parseInt(this.dataset.page);
+
+				            if (!isNaN(targetPage) &&
+				                targetPage >= 0 &&
+				                targetPage < totalPages) {
+
+				                loadData(currentKeyword, targetPage);
+				            }
+				        };
+				    });
+				}
+
+			    // ===================== SEARCH =====================
+			    input.addEventListener("input", function () {
+			        clearTimeout(timeout);
+
+			        timeout = setTimeout(() => {
+			            loadData(input.value, 0);
+			        }, 400);
 			    });
-			}
 
-		    // 🔎 Recherche automatique avec debounce
-		    input.addEventListener("input", function () {
-		        clearTimeout(timeout);
-		        timeout = setTimeout(() => {
-		            currentPage = 0;
-		            loadData(input.value, currentPage);
-		        }, 400);
-		    });
+			    // ===================== INIT =====================
+			    loadData("", 0);
 
-		    // ⚡ Chargement initial
-		    loadData(input.value, currentPage);
-
-		});
-	</script>
+			});
+			</script>
 		
     </section>
 

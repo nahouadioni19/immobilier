@@ -18,7 +18,6 @@ import com.app.repositories.BailSelectProjection;
 
 @Repository
 public interface BailRepository extends JpaRepository<Bail, Integer> {
-
     /* ===== Version Liste simple ===== */
     @Query(value = """
         SELECT  t.idt AS id,
@@ -229,17 +228,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
     
     //
     List<Bail> findByStatut(StatutBail statut);
-    
-    //
-	/*
-	 * @Query(""" SELECT b FROM Bail b JOIN FETCH b.locataire WHERE b.statut =
-	 * 'ACTIF' AND ( :search IS NULL OR :search = '' OR
-	 * LOWER(CONCAT(b.locataire.nom, ' ', b.locataire.prenom)) LIKE
-	 * LOWER(CONCAT('%', :search, '%')) ) """) Page<Bail>
-	 * searchBaux(@Param("search") String search, Pageable pageable);
-	 */
-    		
-    
+     
     @Query("""
     	    SELECT b
     	    FROM Bail b
@@ -249,13 +238,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
     	           l.prenom ILIKE CONCAT('%', :search, '%'))
     	""")
     	Page<Bail> searchBaux(@Param("search") String search, Pageable pageable);
-    
-    //
-	/*
-	 * @Query(""" SELECT b FROM Bail b JOIN b.locataire l WHERE (:search IS NULL OR
-	 * LOWER(l.nom) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(l.prenom) LIKE
-	 * LOWER(CONCAT('%', :search, '%'))) """)
-	 */
+
     
     @Query("""
     	    SELECT b

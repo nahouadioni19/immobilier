@@ -16,31 +16,40 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BailleurRepository extends JpaRepository<Bailleur, Integer>{
 	
+//
+	
 	@Query("""
 		    SELECT b FROM Bailleur b
-		    WHERE 
-		        LOWER(b.prenom) LIKE LOWER(CONCAT('%', :keyword, '%'))
-		        OR LOWER(b.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
-		        OR LOWER(b.cellulaire) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		    WHERE (
+		        :keyword IS NULL OR :keyword = '' OR
+		        LOWER(b.prenom) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+		        LOWER(b.nom) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+		        LOWER(b.cellulaire) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		    )
 		    AND b.agence.id = :agenceId
 		    ORDER BY b.nom ASC
 		""")
 		Page<Bailleur> search(@Param("keyword") String keyword,
-							  @Param("agenceId") Integer agenceId,
-							  Pageable pageable);
-	//************************/
+		                      @Param("agenceId") Integer agenceId,
+		                      Pageable pageable);	
+	//
+	
 	@Query("""
 		    SELECT b FROM Bailleur b
-		    WHERE 
-		        LOWER(b.prenom) LIKE LOWER(CONCAT('%', :keyword, '%'))
-		        OR LOWER(b.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
-		        OR LOWER(b.cellulaire) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		    WHERE (
+		        :keyword IS NULL OR :keyword = '' OR
+		        LOWER(b.prenom) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+		        LOWER(b.nom) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+		        LOWER(b.cellulaire) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		    )
 		    AND b.agence.id = :agenceId
 		    ORDER BY b.nom ASC
 		""")
-		Page<Bailleur> searchBailleur(@Param("keyword") String keyword, 
-									  @Param("agenceId") Integer agenceId,
-									  Pageable pageable);
+		Page<Bailleur> searchBailleur(
+		        @Param("keyword") String keyword,
+		        @Param("agenceId") Integer agenceId,
+		        Pageable pageable
+		);
 	
 	//
 	Optional<Bailleur> findByIdAndAgenceId(Integer id, Integer agenceId);

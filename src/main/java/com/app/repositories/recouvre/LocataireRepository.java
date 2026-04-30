@@ -14,24 +14,40 @@ import com.app.entities.recouvre.Locataire;
 @Repository
 public interface LocataireRepository extends JpaRepository<Locataire, Integer>{
 
-	@Query("""
-		   SELECT l FROM Locataire l
-		   WHERE LOWER(l.nom) LIKE LOWER(CONCAT('%', :term, '%'))
-		   OR LOWER(l.prenom) LIKE LOWER(CONCAT('%', :term, '%'))
-		   ORDER BY l.nom ASC
-	 """)
-	 Page<Locataire> search(@Param("term") String term, Pageable pageable);
+		@Query("""
+			   SELECT l FROM Locataire l
+			   WHERE l.agence.id = :agenceId
+			   AND (
+			        LOWER(l.nom) LIKE LOWER(CONCAT('%', :term, '%'))
+			        OR LOWER(l.prenom) LIKE LOWER(CONCAT('%', :term, '%'))
+			   )
+			   ORDER BY l.nom ASC
+			""")
+			Page<Locataire> search(
+			    @Param("term") String term,
+			    @Param("agenceId") Integer agenceId,
+			    Pageable pageable
+			);
 	
 	/*recherche du locataire*/
 	
-	@Query("""
-		    SELECT b FROM Locataire b
-		    WHERE 
-		        LOWER(b.prenom) LIKE LOWER(CONCAT('%', :keyword, '%'))
-		        OR LOWER(b.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
-		        OR LOWER(b.telephone) LIKE LOWER(CONCAT('%', :keyword, '%'))
-		    ORDER BY b.nom ASC
-		""")
-		Page<Locataire> searchLocataire(@Param("keyword") String keyword, Pageable pageable);
+		@Query("""
+			    SELECT l FROM Locataire l
+			    WHERE l.agence.id = :agenceId
+			    AND (
+			        LOWER(l.prenom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			        OR LOWER(l.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			        OR LOWER(l.telephone) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			    )
+			    ORDER BY l.nom ASC
+			""")
+			Page<Locataire> searchLocataire(
+			    @Param("keyword") String keyword,
+			    @Param("agenceId") Integer agenceId,
+			    Pageable pageable
+			);
+		
+		//
+		Page<Locataire> findLocataireByAgenceId(Integer agenceId, Pageable pageable);
 
 }

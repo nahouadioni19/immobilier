@@ -36,14 +36,15 @@ public class ImmeubleService extends BaseService<Immeuble> {
         return repo;
     }
 	
-	public Optional<Immeuble> findByIdWithAppartements(int id) {
-        return repo.findByIdWithAppartements(id);
+	public Optional<Immeuble> findByIdWithAppartements(Integer id) {
+		Integer agenceId = getCurrentAgenceId();
+		
+        return repo.findByIdWithAppartements(id, agenceId);
     }
     
     @Override
     public void afterUpdate(Immeuble entity) {
         super.afterUpdate(entity);
-       // clearCache(TYPE_ROLE_CACHE); 
     }
 
     @Override
@@ -190,20 +191,23 @@ public class ImmeubleService extends BaseService<Immeuble> {
     //
    public Page<Immeuble> searchPatrimoine(String keyword, Pageable pageable) {
 
+	   Integer agenceId = getCurrentAgenceId();
+	   
 	    if (keyword == null || keyword.trim().isEmpty()) {
-	        return repo.findAll(pageable);
+	        return repo.findByAgenceId(agenceId, pageable);
 	    }
 
-	    return repo.search(keyword.toLowerCase(), pageable);
+	    return repo.search(keyword.toLowerCase(), agenceId, pageable);
 	}
    
    public Page<ImmeubleDTO> searchDTO(String keyword, Pageable pageable) {
-
+	   
+	   Integer agenceId = getCurrentAgenceId();
+	   
 	    if (keyword == null || keyword.trim().isEmpty()) {
-	        // ⚠️ Ici il faut aussi retourner des DTO, pas l'entité entière
-	        return repo.findAllDTO(pageable);
+	        return repo.findAllDTO(agenceId, pageable);
 	    }
 
-	    return repo.searchDTO(keyword.toLowerCase(), pageable);
+	    return repo.searchDTO(keyword.toLowerCase(), agenceId, pageable);
 	}
 }

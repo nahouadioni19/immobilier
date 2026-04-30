@@ -146,34 +146,7 @@ public class BailService extends BaseService<Bail>{
         bail.getAppartement().setStatut(StatutAppartement.LIBRE);
         repo.save(bail);
     }
-    
-   /* public List<BailSelectProjection> findBailDetailsNative(UserPrincipal principal, Long agentId, String keyword) {
-
-        boolean isAgentRecouv = principal.getAuthorities().stream()
-                .anyMatch(auth -> "ROLE_RECOUV".equals(auth.getAuthority()));
-
-        // Agent recouvrement → uniquement ses contrats
-        if (isAgentRecouv) {
-        	
-        	if (keyword != null && keyword.trim().isEmpty()) {
-                keyword = null;
-            }
-        	
-            return repo.findBailDetailsByUtilisateur(principal.getUtilisateur().getId(),keyword);
-        }
-
-        // Admin → tous ou filtré
-        if (agentId != null && agentId <= 0) {
-            agentId = null;
-        }
-
-        if (keyword != null && keyword.trim().isEmpty()) {
-            keyword = null;
-        }
-        
-        return repo.findBailDetailsAdmin(agentId,keyword);
-    }*/
-    
+      
 	public Page<BailSelectProjection> findBailDetails(UserPrincipal principal, Pageable pageable) {
 	    boolean isAdmin = principal.getAuthorities().stream()
 	            .anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority()));
@@ -279,12 +252,12 @@ public class BailService extends BaseService<Bail>{
 
         if (encaisseRepository.existsByBailId(id)) {
 
-            // 🔴 cas critique : encaissements existants
+            // cas critique : encaissements existants
             bail.setActif(false);
             bail.setDeleted(true);
 
         } else {
-            // 🟢 suppression physique autorisée
+            // suppression physique autorisée
             repo.delete(bail);
             return;
         }
