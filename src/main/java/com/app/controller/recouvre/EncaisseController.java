@@ -102,12 +102,17 @@ public class EncaisseController {
 	                             @RequestParam(required = false) String keyword,
 	                             @RequestParam(value = "id", required = false) Integer id) {
 
+		Integer agenceId = principal.getUtilisateur().getAgence().getId();
 	    // ✅ Création du DTO (formulaire uniquement)
 	    EncaisseForm form = new EncaisseForm();
 
 	    // ✅ Injecter utilisateur connecté (SANS passer par Thymeleaf)
 	    if (principal != null && principal.getUtilisateur() != null) {
-	        form.setUtilisateurId(principal.getUtilisateur().getId());
+	    	Integer userId = principal.getUtilisateur().getId();
+	        form.setUtilisateurId(userId);
+	        
+	        form.setFiltreAgentId(userId);
+	        
 	    }
 
 	    // ✅ Charger les baux (logique métier)
@@ -115,7 +120,7 @@ public class EncaisseController {
 
 	    // ✅ Charger les quittances
 	    List<IdentificationProjection> identifications =
-	            identificationService.findIdentificationsNative(principal, null, agentId);
+	            identificationService.findIdentificationsNative(principal, null, agentId,agenceId);
 	    model.addAttribute("identifications", identifications);
 
 	    // ✅ IMPORTANT : UN SEUL objet pour le form
@@ -189,6 +194,9 @@ public class EncaisseController {
 	    if (encaisse.getUtilisateur() != null) {
 	        selectedAgent = encaisse.getUtilisateur().getId();
 	    }
+	    
+	    form.setFiltreAgentId(selectedAgent);
+	    
 	    model.addAttribute("selectedAgent", selectedAgent);
 
 	    // 🔥 INIT BAIL (POUR SELECT2)
@@ -336,23 +344,26 @@ public class EncaisseController {
 	        // =========================
 	        // 🔐 gestion utilisateur (CRITIQUE)
 	        // =========================
-	        if (isRecouv) {
+	       // if (isRecouv) {
 	            // 🔥 un agent ne peut enregistrer que pour lui-même
 	            form.setUtilisateurId(principal.getUtilisateur().getId());
 
-	        } else {
+	       /* } else {
 	            // 🔥 ADMIN / DIREC → doivent choisir un agent
 	            if (form.getUtilisateurId() == null || form.getUtilisateurId() == 9999999) {
 	                throw new IllegalArgumentException("Agent de recouvrement obligatoire");
 	            }
-	        }
+	        }*/
 
 	        // =========================
 	        // 🔐 statut automatique pour directeur
 	        // =========================
-	        if (isDirec) {
-	            form.setStatut(1);
-	        }
+	         // 🔐 statut
+	         if (isDirec) {
+	              form.setStatut(1);
+	          } else {
+	              form.setStatut(0);
+	          }
 
 	        // =========================
 	        // 💾 sauvegarde

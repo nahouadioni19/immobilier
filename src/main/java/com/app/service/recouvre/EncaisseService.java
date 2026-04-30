@@ -226,11 +226,18 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    entity.setEncDeb(form.getEncDeb());
 	    entity.setEncFin(form.getEncFin());
 	    entity.setEncNumChq(form.getEncNumChq());
-
-	    entity.setStatut(0); // par défaut en attente
+	    
+	    entity.setFiltreAgentId(form.getFiltreAgentId());
+	    
+	   //respecter le statut venant du form
+	    if (form.getStatut() != null) {
+	        entity.setStatut(form.getStatut());
+	    } else if (entity.getStatut() == null) {
+	        entity.setStatut(0); // uniquement si nouveau et non défini
+	    }
 
 	    // =========================
-	    // 🔐 agence auto (important SaaS)
+	    //agence auto (important SaaS)
 	    // =========================
 	    entity.setAgence(currentAgence);
 

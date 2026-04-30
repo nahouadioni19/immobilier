@@ -29,24 +29,24 @@ public class IdentificationService {
         repo.saveAll(identifications);
     }
     
-    public List<IdentificationProjection> findIdentificationsNative(UserPrincipal principal, Integer encaisseId, Long agentId) {
+    public List<IdentificationProjection> findIdentificationsNative(UserPrincipal principal, Integer encaisseId, Long agentId, Integer agenceId) {
     	boolean isAgentRecouv = principal.getAuthorities().stream()
     			.peek(auth -> System.out.println("Role détecté: " + auth.getAuthority()))
     	        .anyMatch(auth -> "ROLE_RECOUV".equals(auth.getAuthority()));
     	
 		if (isAgentRecouv) {
-			return repo.findAvailableIdentifications(principal.getUsername(), encaisseId); // Les autres voient seulement les leurs
+			return repo.findAvailableIdentifications(principal.getId(), encaisseId, agenceId);
 			
 		} 
 			// Admin → tous ou filtré
 	        if (agentId != null && agentId <= 0) {
 	            agentId = null;
 	        }
-			return repo.findBailDetailsByAdmin(agentId,encaisseId); // Admin voit tous
+			return repo.findBailDetailsByAdmin(agenceId,agentId,encaisseId); // Admin voit tous
 				
     }
     
-    public List<IdentificationProjection> findAvailableIdentificationsByUtilisateur(UserPrincipal principal) {
-    	return repo.findAvailableIdentificationsByUtilisateur(principal.getUsername()); // Les autres voient seulement les leurs
+    public List<IdentificationProjection> findAvailableIdentificationsByUtilisateur(UserPrincipal principal, Integer agenceId) {
+    	return repo.findAvailableIdentificationsByUtilisateur(principal.getId(), agenceId);
     }
 }

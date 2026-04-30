@@ -52,5 +52,11 @@ ALTER TABLE t_encaisse ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENC
 ALTER TABLE t_loyann ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
 ALTER TABLE t_utilisateur ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
 ALTER TABLE t_immeuble ADD CONSTRAINT fk_agence FOREIGN KEY (agence_id) REFERENCES t_agence(idt);
+//
+alter table t_encaisse_aud 
+add filtre_agent_id int4;
+
+alter table t_encaisse
+add filtre_agent_id int4;
 
 07 68 12 12 06

@@ -2,11 +2,8 @@ package com.app.controller.recouvre;
 
 import com.app.controller.common.Routes;
 import com.app.entities.recouvre.Bailleur;
-import com.app.entities.recouvre.Locataire;
 import com.app.service.common.PaginationService;
 import com.app.service.recouvre.BailleurService;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 import com.app.controller.common.SetupPage;
 
@@ -121,7 +118,8 @@ public class BailleurController {
 
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable("id") int id, Model model) {
-    	Bailleur bailleur = service.findById(id)
+    	
+    	Bailleur bailleur = service.findByIdAgence(id)
                 .orElseThrow(() -> new IllegalArgumentException("Bailleur introuvable : " + id));
 
     	model.addAttribute("bailleur", bailleur);
@@ -201,12 +199,4 @@ public class BailleurController {
         return response;
     }
     
-   /* @GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public Page<Bailleur> search(
-            @RequestParam(required = false) String keyword,
-            @PageableDefault(size = 8) Pageable pageable) {
-
-        return service.search(keyword, pageable);
-    }*/
 }

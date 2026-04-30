@@ -1,0 +1,138 @@
+package com.app.config;
+
+import java.util.Properties;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl; 
+
+@Configuration
+public class MailConfig  {
+	
+	@Value("${spring.mail.host}")
+	private String host;
+	@Value("${spring.mail.port}")
+	private String port;
+	@Value("${spring.mail.username}")
+	private String username;
+    @Value("${spring.mail.password}")
+	private String password;
+    
+    
+    @Bean
+    public JavaMailSender getJavaMailSender() {
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        mailSender.setHost(host);
+        
+        mailSender.setPort(Integer.parseInt(port)); 
+        
+        mailSender.setUsername(username);
+        mailSender.setPassword(password);
+        
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+        props.put("mail.debug", "true"); 
+        
+        return mailSender;
+    }
+
+}
+
+
+//
+
+@Service
+public class UserService {
+
+    @Autowired private UserRepository userRepository;
+    @Autowired private BCryptPasswordEncoder passwordEncoder;
+    @Autowired private EmailService emailService;
+
+    public void save(UserForm userForm) {
+        Utilisateur user = new Utilisateur();
+        user.setNom(userForm.getNom());
+        user.setPrenoms(userForm.getPrenoms());
+        user.setEmail(userForm.getEmail());
+
+        // 🔐 Générer un nom d’utilisateur unique
+        String generatedUsername = genererNomUtilisateur(userForm.getPrenoms(), userForm.getNom());
+        user.setUsername(generatedUsername);
+
+        // 🔐 Encoder le mot de passe
+        user.setPassword(passwordEncoder.encode(userForm.getPassword()));
+        user.setTelephone(userForm.getTelephone());
+
+        // 💾 Enregistrement
+        userRepository.save(user);
+
+        // 📧 Envoi de mail de confirmation
+        try {
+        	emailService.envoyerMailDeConfirmation(user.getEmail(), generatedUsername);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    }
+
+    public String genererNomUtilisateur(String prenoms, String nom) {
+        String base = (prenoms.charAt(0) + nom).toLowerCase().replaceAll("\\s+", "");
+        String candidat = base;
+        int compteur = 1;
+
+        while (userRepository.existsByUsername(candidat)) {
+            candidat = base + compteur;
+            compteur++;
+        }
+        return candidat;
+    }
+}
+
+//
+
+@Controller
+public class AuthController {
+
+    private final UserService userService;
+
+    public AuthController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping({"/", "/login"})
+    public String loginAndRegister(Model model) {
+        model.addAttribute("userForm", new UserForm());
+        return "login";
+    }
+
+    @GetMapping("/register")
+    public String showRegisterForm(Model model) {
+        model.addAttribute("userForm", new UserForm());
+        return "register";
+    }
+
+    @GetMapping("/forgot-password")
+    public String showForgotPasswordForm(Model model) {
+        model.addAttribute("email", "");
+        return "forgot-password";
+    }
+
+    @PostMapping("/register")
+    public String registerUser(@ModelAttribute("userForm") UserForm userForm,
+                               @RequestParam("confirmPassword") String confirmPassword,
+                               Model model) {
+
+        if (!userForm.getPassword().equals(confirmPassword)) {
+            model.addAttribute("error", "Les mots de passe ne correspondent pas.");
+            return "register"; // retourne à la page d'inscription
+        }
+
+        userService.save(userForm); // ➜ Génère username, encode password, envoie e-mail
+        model.addAttribute("message", "Inscription réussie ! Vérifiez votre email.");
+        return "redirect:/?success";
+    }
+
+}

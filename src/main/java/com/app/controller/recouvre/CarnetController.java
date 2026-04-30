@@ -186,8 +186,10 @@ public class CarnetController {
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) Integer encaisseId,
             @RequestParam(required = false) Long agentId) {
-
-        return identificationService.findIdentificationsNative(principal, encaisseId,agentId);
+    	
+    	Integer agenceId = principal.getUtilisateur().getAgence().getId();
+    	
+        return identificationService.findIdentificationsNative(principal, encaisseId,agentId,agenceId);
     }
 
 }

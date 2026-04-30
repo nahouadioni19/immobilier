@@ -77,7 +77,7 @@ public class BailleurService extends BaseService<Bailleur>{
             entity.setAgence(agence);
 
         } else {
-            entity = repo.findById(bailleur.getId())
+            entity = repo.findByIdAndAgenceId(bailleur.getId(), getCurrentAgenceId())
                     .orElseThrow(() -> new IllegalArgumentException("Bailleur introuvable"));
 
             Integer agenceEntityId = entity.getAgence() != null ? entity.getAgence().getId() : null;
@@ -174,9 +174,8 @@ public class BailleurService extends BaseService<Bailleur>{
         return filePath.toString();
     }
 
-
-    public Optional<Bailleur> findById(int id) {
-        return repo.findById(id);
+    public Optional<Bailleur> findByIdAgence(Integer id) {
+        return repo.findByIdAndAgenceId(id, getCurrentAgenceId());
     }
 
     public Bailleur saved(Bailleur bailleur) {
@@ -184,16 +183,22 @@ public class BailleurService extends BaseService<Bailleur>{
     }
     
     public Page<Bailleur> search(String keyword, Pageable pageable) {
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
         if (keyword == null || keyword.trim().isEmpty()) {
-            return repo.findAll(pageable);
+            return repo.findByAgenceId(agenceId, pageable);
         }
-        return repo.search(keyword.trim(), pageable);
+        return repo.search(keyword.trim(), agenceId, pageable);
     }
     
     public Page<Bailleur> searchLocataire(String keyword, Pageable pageable) {
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
         if (keyword == null || keyword.trim().isEmpty()) {
-            return repo.findAll(pageable);
+            return repo.findByAgenceId(agenceId, pageable);
         }
-        return repo.searchBailleur(keyword.trim(), pageable);
+        return repo.searchBailleur(keyword.trim(), agenceId, pageable);
     }
 }

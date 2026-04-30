@@ -129,5 +129,7 @@ public class Encaisse extends BaseEntity{
 	
 	@Column(name = "statut")
 	private Integer statut = 0; // 0 = en attente, 1 = transmis
+	
+	private Integer filtreAgentId;
 
 }

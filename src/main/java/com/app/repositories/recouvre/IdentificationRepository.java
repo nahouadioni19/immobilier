@@ -12,98 +12,140 @@ import com.app.entities.recouvre.Identification;
 
 @Repository
 public interface IdentificationRepository extends JpaRepository<Identification, Integer>{
-//
+//	
 	@Query(value = """
 		    SELECT i.idt AS id, 
-		    i.ide_numero AS numero
+		           i.ide_numero AS numero
 		    FROM t_identification i
 		    JOIN t_utilisateur u ON u.idt = i.utilisateur_id
-		    WHERE i.idt NOT IN (
-		            SELECT e.identification_id
+		    WHERE u.agence_id = :agenceId
+		      AND (:agentId IS NULL OR u.idt = :agentId)
+		      AND NOT EXISTS (
+		            SELECT 1
 		            FROM t_encaisse e
+		            WHERE e.identification_id = i.idt
+		              AND e.agence_id = :agenceId
+		              AND (:encaisseId IS NULL OR e.idt <> :encaisseId)
 		      )
-		     AND (:agentId IS NULL OR u.idt = :agentId)
-		    """, nativeQuery = true)
-		List<IdentificationProjection> findBailDetailsByAdminancien(@Param("agentId") Long agentId);	
+		    ORDER BY i.ide_numero
+		""", nativeQuery = true)
+		List<IdentificationProjection> findBailDetailsByAdmin(
+		        @Param("agentId") Long agentId,
+		        @Param("agenceId") Long agenceId,
+		        @Param("encaisseId") Integer encaisseId
+		);
 	
 	//
+	
 	@Query(value = """
-			SELECT i.idt AS id,
-		    i.ide_numero AS numero
-		FROM t_identification i
-		JOIN t_utilisateur u ON u.idt = i.utilisateur_id
-		WHERE u.idt = :agentId
-		AND NOT EXISTS (
-		     SELECT 1
-		     FROM t_encaisse e
-		     WHERE e.identification_id = i.idt
-		     AND (:encaisseId IS NULL OR e.idt <> :encaisseId)
-		     )
+		    SELECT i.idt AS id,
+		           i.ide_numero AS numero
+		    FROM t_identification i
+		    JOIN t_utilisateur u ON u.idt = i.utilisateur_id
+		    WHERE u.agence_id = :agenceId
+		      AND i.agence_id = :agenceId
+		      AND (:agentId IS NULL OR u.idt = :agentId)
+		      AND NOT EXISTS (
+		           SELECT 1
+		           FROM t_encaisse e
+		           WHERE e.identification_id = i.idt
+		           AND (:encaisseId IS NULL OR e.idt <> :encaisseId)
+		      )
+		    ORDER BY i.ide_numero
 		""", nativeQuery = true)
-	List<IdentificationProjection> findBailDetailsByAdmin(@Param("agentId") Long agentId,
-														  @Param("encaisseId") Integer encaisseId);
+		List<IdentificationProjection> findBailDetailsByAdmin(
+		        @Param("agenceId") Integer agenceId,
+		        @Param("agentId") Long agentId,
+		        @Param("encaisseId") Integer encaisseId
+		);
 	
 	///
 	@Query(value = """
 		    SELECT i.idt AS id, i.ide_numero AS numero
 		    FROM t_identification i
 		    JOIN t_utilisateur u ON u.idt = i.utilisateur_id
-		    WHERE u.nom_utilisateur = :username
+		    WHERE u.idt = :utilisateurId
+		    	AND i.agence_id = :agenceId
+		    	AND u.agence_id = :agenceId
 		    	AND i.idt NOT IN (
 		            SELECT e.identification_id
 		            FROM t_encaisse e
+		            WHERE e.identification_id = i.idt
+		              AND e.agence_id = :agenceId 
 		      )
 		    """, nativeQuery = true)
-		List<IdentificationProjection> findBailDetailsByUtilisateur(@Param("username") String username);
-	
-	//
-	
+		List<IdentificationProjection> findBailDetailsByUtilisateur(
+				@Param("utilisateurId") Integer utilisateurId,
+				@Param("agenceId") Integer agenceId);	
+	//	
 	@Query(value = """
 			SELECT i.idt AS id, 
 		    i.ide_numero AS numero
 		FROM t_identification i
 		JOIN t_utilisateur u ON u.idt = i.utilisateur_id
-		WHERE u.nom_utilisateur = :username
+		WHERE u.idt = :utilisateurId
+		AND i.agence_id = :agenceId
+		AND u.agence_id = :agenceId
 		AND NOT EXISTS (
 		     SELECT 1
 		     FROM t_encaisse e
 		     WHERE e.identification_id = i.idt
+		     AND e.agence_id = :agenceId
 		)
 		""", nativeQuery = true)
-	List<IdentificationProjection> findBailDetailsByUtilisateurNouveau(@Param("username") String username);
+	List<IdentificationProjection> findBailDetailsByUtilisateurNouveau(
+			@Param("utilisateurId") Integer utilisateurId,
+			@Param("agenceId") Integer agenceId);
 	
 	///
 	@Query("""
 		    SELECT i.id AS id, i.ideNumero AS numero
 		    FROM Identification i
-		    WHERE i.utilisateur.username = :username
-		      AND i.id NOT IN (SELECT e.identification.id FROM Encaisse e)
+		    WHERE i.utilisateur.id = :utilisateurId
+			  AND i.agence.id = :agenceId
+		      AND i.id NOT IN (
+			      SELECT e.identification.id FROM Encaisse e
+			      WHERE e.identification.id = i.id
+			      AND e.agence.id = :agenceId
+			      
+			      )
 		""")
-		List<IdentificationProjection> findAvailableIdentificationsByUtilisateur(@Param("username") String username);
+		List<IdentificationProjection> findAvailableIdentificationsByUtilisateur(
+				@Param("utilisateurId") Integer utilisateurId,
+				@Param("agenceId") Integer agenceId);
 	//
 	@Query(value = """
-		    SELECT i.idt AS id, i.ide_numero AS numero
+		    SELECT i.idt AS id,
+		           i.ide_numero AS numero
 		    FROM t_identification i
 		    JOIN t_utilisateur u ON u.idt = i.utilisateur_id
-		    WHERE u.nom_utilisateur = :username
-		      AND (
-		            i.idt NOT IN (
-		                SELECT e.identification_id
-		                FROM t_encaisse e
-		                WHERE (:encaisseId IS NULL OR e.idt <> :encaisseId)
-		            )
-		          )
-		    """, nativeQuery = true)
+		    WHERE u.agence_id = :agenceId
+		      AND i.agence_id = :agenceId
+		      AND (:agentId IS NULL OR u.idt = :agentId)
+		      AND NOT EXISTS (
+		            SELECT 1
+		            FROM t_encaisse e
+		            WHERE e.identification_id = i.idt
+		              AND e.agence_id = :agenceId
+		              AND (:encaisseId IS NULL OR e.idt <> :encaisseId)
+		      )
+		    ORDER BY i.ide_numero
+		""", nativeQuery = true)
 		List<IdentificationProjection> findIdentificationsDisponibles(
-		        @Param("username") String username,
-		        @Param("encaisseId") Integer encaisseId);
+		        @Param("agenceId") Long agenceId,
+		        @Param("agentId") Long agentId,
+		        @Param("encaisseId") Integer encaisseId
+		);
 	
 	//
-	@Query(value = """
-		    SELECT i.idt AS id, i.ide_numero AS numero
+		
+		@Query(value = """
+		    SELECT i.idt AS id,
+		           i.ide_numero AS numero
 		    FROM t_identification i
 		    JOIN t_utilisateur u ON u.idt = i.utilisateur_id
-		    WHERE u.nom_utilisateur = :username
+		    WHERE u.agence_id = :agenceId
+		      AND u.idt = :utilisateurId
 		      AND NOT EXISTS (
 		          SELECT 1
 		          FROM t_encaisse e
@@ -112,28 +154,9 @@ public interface IdentificationRepository extends JpaRepository<Identification, 
 		      )
 		""", nativeQuery = true)
 		List<IdentificationProjection> findAvailableIdentifications(
-		    @Param("username") String username,
-		    @Param("encaisseId") Integer encaisseId);
-	
-	/*@Query(value = """
-		    SELECT i.idt AS id, i.ide_numero AS numero
-		    FROM t_identification i
-		    JOIN t_utilisateur u ON u.idt = i.utilisateur_id
-		    LEFT JOIN t_encaisse e ON e.identification_id = i.idt
-		    WHERE u.nom_utilisateur = :username
-		      AND (
-		            e.idt IS NULL           -- identifications non utilisées
-		            OR i.idt = (
-		                SELECT e2.identification_id
-		                FROM t_encaisse e2
-		                WHERE e2.idt = :encaisseId
-		            )
-		          )
-		    ORDER BY i.ide_numero
-		    """, nativeQuery = true)
-		List<IdentificationProjection> findAvailableIdentifications(
-		        @Param("username") String username,
-		        @Param("encaisseId") Integer encaisseId  // null si create
-		);*/
-	
+		    @Param("agenceId") Integer agenceId,
+		    @Param("utilisateurId") Integer utilisateurId,
+		    @Param("encaisseId") Integer encaisseId
+		);
+
 }
