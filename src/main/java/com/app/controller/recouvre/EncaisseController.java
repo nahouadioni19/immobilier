@@ -19,21 +19,21 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.app.dto.EncaisseForm;
 import com.app.dto.IdentificationProjection;
 import com.app.entities.administration.Utilisateur;
-import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Encaisse;
 import com.app.repositories.BailSelectProjection;
 import com.app.repositories.EncaisseListDto;
 import com.app.security.UserPrincipal;
+import com.app.service.FileStorageService;
 import com.app.service.administration.UtilisateurService;
 import com.app.service.recouvre.BailService;
 import com.app.service.recouvre.EncaisseService;
 import com.app.service.recouvre.IdentificationService;
-import com.app.service.recouvre.LoyannService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -43,22 +43,23 @@ public class EncaisseController {
 	
 	private final EncaisseService service;
 	private final BailService bailService;
-	private final LoyannService loyannService;
+	//private final LoyannService loyannService;
 	private final UtilisateurService utilisateurService;
 	private final IdentificationService identificationService;
+	private final FileStorageService fileStorageService;
 	
 	@Autowired
 	private MessageSource messageSource;
 	
-	public EncaisseController(EncaisseService service, /*LocataireService locataireService,*/
-				BailService bailService, LoyannService loyannService, UtilisateurService utilisateurService, 
-				IdentificationService identificationService) {
+	public EncaisseController(EncaisseService service,
+				BailService bailService, UtilisateurService utilisateurService, 
+				IdentificationService identificationService, FileStorageService fileStorageService) {
 		
 		this.service = service;
 		this.bailService = bailService;
-		this.loyannService = loyannService;
 		this.utilisateurService = utilisateurService;
 		this.identificationService = identificationService;
+		this.fileStorageService = fileStorageService;
 	}
 	
 	@GetMapping
@@ -143,21 +144,26 @@ public class EncaisseController {
 	    return "recouvrement/form";
 	}
 	
-	
+		
 	@GetMapping("/edit/{id}")
 	public String showEditForm(@AuthenticationPrincipal UserPrincipal principal,
 	                           @PathVariable Integer id,
 	                           Model model) {
 
 	    Encaisse encaisse = service.findByIdRelations(id)
-	            .orElseThrow(() -> new IllegalArgumentException("Encaisse introuvable")); //findById
+	            .orElseThrow(() -> new IllegalArgumentException("Encaisse introuvable"));
 
 	    EncaisseForm form = new EncaisseForm();
 
+	    // =========================
+	    // 🔑 IDENTIFIANTS
+	    // =========================
 	    form.setId(encaisse.getId());
 	    form.setVersion(encaisse.getVersion());
 
-	    // 🔥 RELATIONS → ID
+	    // =========================
+	    // 🔗 RELATIONS → ID
+	    // =========================
 	    if (encaisse.getUtilisateur() != null) {
 	        form.setUtilisateurId(encaisse.getUtilisateur().getId());
 	    }
@@ -170,7 +176,9 @@ public class EncaisseController {
 	        form.setIdentificationId(encaisse.getIdentification().getId());
 	    }
 
-	    // CHAMPS
+	    // =========================
+	    // 🧾 CHAMPS MÉTIER
+	    // =========================
 	    form.setEncDate(encaisse.getEncDate());
 	    form.setEncMontant(encaisse.getEncMontant());
 	    form.setEncloyer(encaisse.getEncloyer());
@@ -183,24 +191,32 @@ public class EncaisseController {
 	    form.setEncNumChq(encaisse.getEncNumChq());
 	    form.setStatut(encaisse.getStatut());
 
+	    // 🔥 IMPORTANT (garder le fichier existant)
+	    form.setChequePath(encaisse.getChequePath());
+
 	    model.addAttribute("encaisse", form);
 
-	    // 🔥 LISTE AGENTS
+	    // =========================
+	    // 👥 LISTE AGENTS
+	    // =========================
 	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement("RECOUV");
 	    model.addAttribute("utilisateurs", utilisateurs);
 
-	    // 🔥 AGENT SÉLECTIONNÉ (CRITIQUE)
-	    Integer selectedAgent = null;
-	    if (encaisse.getUtilisateur() != null) {
-	        selectedAgent = encaisse.getUtilisateur().getId();
-	    }
-	    
+	    // =========================
+	    // 🎯 AGENT SÉLECTIONNÉ
+	    // =========================
+	    Integer selectedAgent = (encaisse.getUtilisateur() != null)
+	            ? encaisse.getUtilisateur().getId()
+	            : null;
+
 	    form.setFiltreAgentId(selectedAgent);
-	    
 	    model.addAttribute("selectedAgent", selectedAgent);
 
-	    // 🔥 INIT BAIL (POUR SELECT2)
+	    // =========================
+	    // 🏠 INIT BAIL (Select2)
+	    // =========================
 	    if (encaisse.getBail() != null) {
+
 	        model.addAttribute("initBailId", encaisse.getBail().getId());
 
 	        String bailText = encaisse.getBail().getLocataire().getNom() + " "
@@ -210,83 +226,27 @@ public class EncaisseController {
 	        model.addAttribute("initBailText", bailText);
 	    }
 
-	    // 🔥 INIT QUITTANCE
+	    // =========================
+	    // 📄 INIT QUITTANCE
+	    // =========================
 	    if (encaisse.getIdentification() != null) {
 	        model.addAttribute("initIdentId", encaisse.getIdentification().getId());
 	        model.addAttribute("initIdentText", encaisse.getIdentification().getIdeNumero());
 	    }
 
+	    // =========================
+	    // 📎 CHEQUE (AFFICHAGE)
+	    // =========================
+	    String chequePath = encaisse.getChequePath();
+
+	    model.addAttribute("chequeUrl",
+	            (chequePath != null && !chequePath.isBlank())
+	                    ? "/files/cheque/" + chequePath
+	                    : null
+	    );
+
 	    return "recouvrement/form";
 	}
-	
-	/*@GetMapping("/edit/{id}")
-	public String showEditForm(@AuthenticationPrincipal UserPrincipal principal,
-	                           @PathVariable Integer id,
-	                           @RequestParam(value = "agentId", required = false) Long agentId,
-	                           @RequestParam(required = false) String keyword,
-	                           Model model) {
-
-	    // 🔎 Charger entity
-	    Encaisse encaisse = service.findById(id)
-	            .orElseThrow(() -> new IllegalArgumentException("Encaisse introuvable"));
-
-	    // 🔄 Conversion ENTITY → DTO
-	    EncaisseForm form = new EncaisseForm();
-
-	    form.setId(encaisse.getId());
-	    form.setVersion(encaisse.getVersion());
-
-	    // Relations → IDs
-	    if (encaisse.getUtilisateur() != null) {
-	        form.setUtilisateurId(encaisse.getUtilisateur().getId());
-	    }
-
-	    if (encaisse.getBail() != null) {
-	        form.setBailId(encaisse.getBail().getId());
-	    }
-
-	    if (encaisse.getIdentification() != null) {
-	        form.setIdentificationId(encaisse.getIdentification().getId());
-	    }
-
-	    // Champs simples
-	    form.setEncDate(encaisse.getEncDate());
-	    form.setEncMontant(encaisse.getEncMontant());
-	    form.setEncloyer(encaisse.getEncloyer());
-	    form.setEncArriere(encaisse.getEncArriere());
-	    form.setEncPenalite(encaisse.getEncPenalite());
-	    form.setEnctotal(encaisse.getEnctotal());
-	    form.setEncDeb(encaisse.getEncDeb());
-	    form.setEncFin(encaisse.getEncFin());
-	    form.setEncMode(encaisse.getEncMode());
-	    form.setEncNumChq(encaisse.getEncNumChq());
-	    form.setStatut(encaisse.getStatut());
-
-	    //  IMPORTANT : envoyer le DTO
-	    model.addAttribute("encaisse", form);
-
-	    // 🔎 charger données métier
-	    chargerBaux(principal, agentId, model, keyword, id);
-	    
-	    
-
-	 // ✅ Liste des agents recouvrement
-	    String code = "RECOUV";
-	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement(code);
-	    model.addAttribute("utilisateurs", utilisateurs);
-
-	    // ✅ Agent sélectionné (utile pour JS / select)
-	    model.addAttribute("selectedAgent", agentId);
-	    
-	    
-	    
-	    
-	    List<IdentificationProjection> identifications =
-	            identificationService.findIdentificationsNative(principal, id, agentId);
-	    model.addAttribute("identifications", identifications);
-
-	    return "recouvrement/form";
-	}*/
 	
 		
 	//
@@ -326,9 +286,12 @@ public class EncaisseController {
 	
 	
 	@PostMapping("/save")
-	public String saveEncaisse(@ModelAttribute EncaisseForm form,
-	                           @AuthenticationPrincipal UserPrincipal principal,
-	                           RedirectAttributes redirectAttributes) {
+	public String saveEncaisse(
+	        @ModelAttribute EncaisseForm form,
+	        @RequestParam(value = "chequeFile", required = false) MultipartFile chequeFile,
+	        @RequestParam(value = "removeCheque", required = false) String removeCheque,
+	        @AuthenticationPrincipal UserPrincipal principal,
+	        RedirectAttributes redirectAttributes) {
 
 	    try {
 
@@ -342,33 +305,46 @@ public class EncaisseController {
 	                .anyMatch(auth -> "ROLE_RECOUV".equals(auth.getAuthority()));
 
 	        // =========================
-	        // 🔐 gestion utilisateur (CRITIQUE)
+	        // 🔐 utilisateur (agent connecté)
 	        // =========================
-	       // if (isRecouv) {
-	            // 🔥 un agent ne peut enregistrer que pour lui-même
-	            form.setUtilisateurId(principal.getUtilisateur().getId());
+	        form.setUtilisateurId(principal.getUtilisateur().getId());
+	        
+	        if(isRecouv) {
+	        	form.setFiltreAgentId(principal.getUtilisateur().getId());
+	        }
+	        // =========================
+	        // 🔐 statut automatique
+	        // =========================
+	        form.setStatut(isDirec ? 1 : 0);
 
-	       /* } else {
-	            // 🔥 ADMIN / DIREC → doivent choisir un agent
-	            if (form.getUtilisateurId() == null || form.getUtilisateurId() == 9999999) {
-	                throw new IllegalArgumentException("Agent de recouvrement obligatoire");
-	            }
-	        }*/
+	        // =========================
+	        // 📁 GESTION FICHIER CHEQUE
+	        // =========================
+	        
+	        if ("true".equals(removeCheque)) {
+	            form.setChequePath(null);
+	        }
+	        
+	        if (chequeFile != null && !chequeFile.isEmpty()) {
 
-	        // =========================
-	        // 🔐 statut automatique pour directeur
-	        // =========================
-	         // 🔐 statut
-	         if (isDirec) {
-	              form.setStatut(1);
-	          } else {
-	              form.setStatut(0);
-	          }
+	            // 🔒 validation + sauvegarde
+	            String fileName = fileStorageService.saveFile(chequeFile);
+
+	            // 🔥 on injecte dans le form
+	            form.setChequePath(fileName);
+
+	        } else {
+	            // 🔁 CAS UPDATE : garder ancien fichier
+	        	if (form.getId() != null && (chequeFile == null || chequeFile.isEmpty())) {
+	        	    service.findById(form.getId())
+	        	            .ifPresent(existing -> form.setChequePath(existing.getChequePath()));
+	        	}
+	        }
 
 	        // =========================
 	        // 💾 sauvegarde
 	        // =========================
-	        Encaisse saved = service.saveEncaissement(form);
+	        service.saveEncaissement(form);
 
 	        String message = messageSource.getMessage(
 	                form.getId() == null ? "success.enregistrement" : "success.modification",
@@ -389,102 +365,14 @@ public class EncaisseController {
 	        e.printStackTrace();
 	    }
 
+	    System.out.println("FILE = " + chequeFile);
+	    System.out.println("IS EMPTY = " + (chequeFile == null ? "null" : chequeFile.isEmpty()));
+	    System.out.println("CHEQUE PATH AVANT SAVE = " + form.getChequePath());
+	    
 	    return "redirect:/recouvrements";
 	}
 	
-	/*@PostMapping("/save")
-	public String saveEncaisse(@ModelAttribute EncaisseForm form,
-	                           @AuthenticationPrincipal UserPrincipal principal,
-	                           RedirectAttributes redirectAttributes) {
-
-	    try {
-
-	        // =========================
-	        // 🔐 rôle directeur
-	        // =========================
-	        boolean isDirec = principal.getAuthorities().stream()
-	                .anyMatch(auth -> "ROLE_DIREC".equals(auth.getAuthority()));
-
-	        // =========================
-	        // 🔐 statut injecté dans le form (propre)
-	        // =========================
-	        if (isDirec) {
-	            form.setStatut(1);
-	        }
-
-	        // =========================
-	        // 🔐 utilisateur connecté injecté
-	        // =========================
-	        form.setUtilisateurId(principal.getUtilisateur().getId());
-
-	        // =========================
-	        // 💾 appel service (TOUT est ici)
-	        // =========================
-	        Encaisse saved = service.saveEncaissement(form);
-
-	        String message = messageSource.getMessage(
-	                form.getId() == null ? "success.enregistrement" : "success.modification",
-	                null,
-	                LocaleContextHolder.getLocale()
-	        );
-
-	        redirectAttributes.addFlashAttribute("successMessage", message);
-
-	    } catch (SecurityException e) {
-	        redirectAttributes.addFlashAttribute("error", "Accès refusé");
-
-	    } catch (Exception e) {
-	        redirectAttributes.addFlashAttribute("error", "Erreur inattendue");
-	        e.printStackTrace();
-	    }
-
-	    return "redirect:/recouvrements";
-	}*/
 	
-	/*@PostMapping("/save")
-	public String saveEncaisse(@ModelAttribute Encaisse encaisse,
-	                           @AuthenticationPrincipal UserPrincipal principal,
-	                           Model model, RedirectAttributes redirectAttributes) {
-		
-		boolean isDirec = principal.getAuthorities().stream()
-		        .anyMatch(auth -> "ROLE_DIREC".equals(auth.getAuthority()));
-		
-	    Utilisateur user = principal.getUtilisateur();
-	    encaisse.setUtilisateur(user);
-
-	    // 🔹 Hydrate le Bail si ID fourni
-	    if (encaisse.getBail() != null && encaisse.getBail().getId() != null) {
-	        Bail bail = bailService.findById(encaisse.getBail().getId())
-	                .orElseThrow(() -> new RuntimeException("Bail introuvable"));
-	        encaisse.setBail(bail);
-	    } else {
-	        encaisse.setBail(null); // ou lever exception si obligatoire
-	    }
-
-	    // 🔹 Initialisation sécurité pour Longs
-	    encaisse.setEncMontant(encaisse.getEncMontant() != null ? encaisse.getEncMontant() : 0L);
-	    encaisse.setEncPerdeb(encaisse.getEncPerdeb() != null ? encaisse.getEncPerdeb() : 0L);
-	    encaisse.setEncAndeb(encaisse.getEncAndeb() != null ? encaisse.getEncAndeb() : 0L);
-	    encaisse.setEnctotal(encaisse.getEnctotal() != null ? encaisse.getEnctotal() : 0L);
-	    encaisse.setEncloyer(encaisse.getEncloyer() != null ? encaisse.getEncloyer() : 0L);
-	    
-	    if(isDirec) {
-	    	encaisse.setStatut(1); // mettre le statut à 1
-	    }
-	    // 🔹 Sauvegarde
-	    service.saveEncaissement(encaisse);
-
-	    String successMessage = messageSource.getMessage(
-	            encaisse.getId() == null ? "success.enregistrement" : "success.modification",
-	            null,
-	            LocaleContextHolder.getLocale()
-	    );
-	    redirectAttributes.addFlashAttribute("successMessage", successMessage);
-
-	    return "redirect:/recouvrements";
-	}*/
-	
-
 	private void chargerListes(@AuthenticationPrincipal UserPrincipal principal, 
 								@RequestParam(required = false) String keyword, Model model) {
 	  
@@ -528,41 +416,8 @@ public class EncaisseController {
 
 	    return "redirect:/recouvrements";
 	}
-	
-	/*@PostMapping("/transmettre/{id}")
-	public String transmettreEncaisse(@ModelAttribute EncaisseForm form,@PathVariable Integer id) {
-	    Encaisse encaisse = service.findById(id);
-	    encaisse.setStatut(1); // mettre le statut à 1
-	    service.saveEncaissement(encaisse);
 
-	    return "redirect:/recouvrements"; // retour à la liste
-	}*/
-	
-	/*@PostMapping("/valider/{id}")
-    public String validerPaiement(@PathVariable("id") Integer id) {
-        // 1. Récupérer l’encaissement
-        Encaisse encaisse = service.findById(id);
-        if (encaisse == null) {
-            return "redirect:/recouvrements?error=notfound";
-        }
-
-        // 2. Récupérer les infos du bail et du montant payé
-        Bail bail = encaisse.getBail();
-        long montantPaye = encaisse.getEncMontant();
-        long loyerMensuel = bail.getMontantLoyer();
-        LocalDate dateDebut = bail.getDateFin();
-
-        // 3. Répartir le paiement
-        loyannService.repartirLoyer(bail, montantPaye, loyerMensuel, dateDebut);
-
-        // 4. Mettre à jour l’encaissement (statut = validé)
-        encaisse.setEncvalide(true);
-        encaisse.setStatut(2);
-        service.saveEncaissement(encaisse);
-
-        return "redirect:/recouvrements"; // revenir à la liste
-    }*/
-	
+		
 	@PostMapping("/valider/{id}")
 	public String validerPaiement(@PathVariable Integer id,
 	                              @AuthenticationPrincipal UserPrincipal principal,

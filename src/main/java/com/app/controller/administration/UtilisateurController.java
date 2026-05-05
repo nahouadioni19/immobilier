@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,12 +24,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.app.controller.common.Routes;
 import com.app.controller.common.SetupPage;
 import com.app.dto.AssignationDTO;
+import com.app.dto.BailleurDTO;
 import com.app.dto.PasswordForm;
 import com.app.dto.UtilisateurDTO;
 import com.app.entities.administration.Assignation;
 import com.app.entities.administration.Utilisateur;
 import com.app.enums.Titre;
 import com.app.mapper.UtilisateurMapper;
+import com.app.security.UserPrincipal;
 import com.app.service.administration.RoleService;
 import com.app.service.administration.UtilisateurService;
 import com.app.service.common.PaginationService;
@@ -55,16 +59,24 @@ public class UtilisateurController {
     // LISTE
     // -----------------------
     @GetMapping
-    public String listUtilisateurs(Model model, 
-                                   @RequestParam(defaultValue = "0") int page, 
-                                   HttpServletRequest request) {
-        Page<Utilisateur> utilisateursPage = paginationService.getPage(service::findAll, page, 8);
+    public String listUtilisateurs(@RequestParam(defaultValue = "0") int page, 
+                                   @RequestParam(required = false) String keyword,
+                                   @AuthenticationPrincipal UserPrincipal principal,
+                                   Model model) {
+     //   Page<Utilisateur> utilisateursPage = paginationService.getPage(service::findAll, page, 8);
         
-        model.addAttribute("currentUri", request.getRequestURI());
+        Page<UtilisateurDTO> utilisateursPage =
+                service.search(keyword, PageRequest.of(page, 8));
+        
+        /*model.addAttribute("currentUri", request.getRequestURI());
         model.addAttribute("utilisateursPage", utilisateursPage);
         model.addAttribute("utilisateurs", utilisateursPage.getContent());
         model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", utilisateursPage.getTotalPages());
+        model.addAttribute("totalPages", utilisateursPage.getTotalPages());*/
+        
+        model.addAttribute("utilisateursPage", utilisateursPage);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("currentPage", page);
         
         return "administration/utilisateur/list";
     }

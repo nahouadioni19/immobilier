@@ -19,7 +19,7 @@
 	    <div class="container my-2">
 	        <div class="container mt-4">
 	            <h5>Ajouter un recouvrement</h5>
-	            <form th:action="@{/recouvrements/save}" th:object="${encaisse}" method="post" 
+	            <form th:action="@{/recouvrements/save}" th:object="${encaisse}" method="post" enctype="multipart/form-data"
 	                  class="border p-4 rounded shadow-sm bg-white" id="encaisseForm">
 	
 	                <!-- Hidden fields -->
@@ -33,22 +33,23 @@
 	                <input type="hidden" th:field="*{encFin}" id="arriereFin">
 	                <input type="hidden" th:field="*{encMontant}" id="montantInput">
 						   
-					<input type="hidden" th:field="*{utilisateurId}" id="hiddenAgent">
+					<input type="text" th:field="*{utilisateurId}" id="hiddenAgent">
 					<input type="hidden" th:field="*{bailId}" id="hiddenBail">
-					<input type="hidden" th:field="*{identificationId}" id="hiddenIdentification">
+					<input type="text" th:field="*{identificationId}" id="hiddenIdentification">
 					
 					<input type="hidden" id="initBailId" th:value="${initBailId}">
 					<input type="hidden" id="initBailText" th:value="${initBailText}">
 
-					<input type="hidden" id="initIdentId" th:value="${initIdentId}">
-					<input type="hidden" id="initIdentText" th:value="${initIdentText}">
-									
+					<input type="text" id="initIdentId" th:value="${initIdentId}">
+					<input type="text" id="initIdentText" th:value="${initIdentText}">
+					<input type="hidden" th:field="*{chequePath}">
+					<input type="hidden" name="removeCheque" id="removeCheque">
+					
 	                <!-- Agent -->
 					<div class="row" th:if="! ${userRoles.contains('RECOUV')}">
 		                <div class="mb-1">
 		                    <label for="agentSelect" class="form-label">Agent de recouvrement <span class="text-danger">*</span></label>
 		                    <select id="agentSelect" th:field="*{filtreAgentId}" class="form-select">
-								<option value="9999999">-- Choix --</option>
 		                        <option value=""> TOUS LES AGENTS DU RECOUVREMENT </option>
 		                        <option th:each="u : ${utilisateurs}" th:value="${u.id}" th:text="|${u.prenoms} ${u.nom}|"></option>
 		                    </select>
@@ -94,14 +95,100 @@
 	                <!-- Mode -->
 	                <div class="mb-1">
 	                    <label>Mode de paiement <span class="text-danger">*</span></label>
-	                    <select th:field="*{encMode}" class="form-select" required>
+	                    <select th:field="*{encMode}" id="modePaiement" class="form-select" required>
 	                        <option value="">-- Choisir le mode --</option>
-	                        <option value="ESPÈCES">Espèce</option>
-	                        <option value="CHÈQUE">Chèque</option>
+	                        <option value="ESPECE">Espèce</option>
+	                        <option value="CHEQUE">Chèque</option>
 	                        <option value="VIREMENT">Virement</option>
 	                        <option value="MOBILE MONEY">Mobile Money</option>
 	                    </select>
-	                </div>
+	                </div>					
+					
+					<div class="row">
+					    <div class="col-sm-12 col-md-6" id="chequeBlock" style="display:none;">
+
+					        <!-- =========================
+					             UPLOAD CHÈQUE
+					        ========================== -->
+					        <div class="mb-3">
+
+					            <label class="form-label fw-bold">
+					                Joindre le chèque
+					            </label>
+
+					            <!-- =========================
+					                 DOCUMENT EXISTANT
+					            ========================== -->
+					            <div th:if="${chequeUrl != null}"
+					                 class="border rounded p-3 bg-light mb-3">
+
+					                <div class="d-flex justify-content-between align-items-center mb-2">
+
+					                    <span class="fw-bold">Document actuel</span>
+
+					                    <div class="d-flex gap-2">
+
+					                        <!-- Voir -->
+					                        <a th:href="@{${chequeUrl}}"
+					                           target="_blank"
+					                           class="btn btn-sm btn-outline-secondary">
+					                            🔍 Voir
+					                        </a>
+
+					                        <!-- Supprimer -->
+					                        <button type="button"
+					                                class="btn btn-sm btn-outline-danger"
+					                                onclick="confirmDeleteCheque()">
+					                            🗑 Supprimer
+					                        </button>
+
+					                    </div>
+
+					                </div>
+
+					                <!-- Aperçu -->
+					                <div class="mb-2 text-center">
+
+					                    <!-- IMAGE -->
+					                    <img th:if="${#strings.endsWith(chequeUrl, '.jpg') 
+					                                or #strings.endsWith(chequeUrl, '.jpeg') 
+					                                or #strings.endsWith(chequeUrl, '.png')}"
+					                         th:src="@{${chequeUrl}}"
+					                         class="img-fluid rounded border"
+					                         style="max-height: 180px;">
+
+					                    <!-- PDF -->
+					                    <div th:if="${#strings.endsWith(chequeUrl, '.pdf')}">
+					                        <a th:href="@{${chequeUrl}}"
+					                           target="_blank"
+					                           class="btn btn-sm btn-outline-primary">
+					                            📄 Ouvrir le PDF
+					                        </a>
+					                    </div>
+
+					                </div>
+
+					                <p class="text-muted small mb-0 text-center">
+					                    Vous pouvez remplacer ou supprimer ce fichier.
+					                </p>
+
+					            </div>
+
+					            <!-- =========================
+					                 INPUT FILE
+					            ========================== -->
+					            <input type="file"
+					                   id="cheque"
+					                   name="chequeFile"
+					                   class="form-control">
+
+					            <!-- preview live -->
+					            <div id="previewLive" class="mt-2"></div>
+
+					        </div>
+
+					    </div>
+					</div>
 	
 	                <!-- Boutons -->
 	                <div class="mt-3 row g-2">
@@ -195,20 +282,13 @@
 			    const bailsApiUrl = /*[[@{/bails/api/bails}]]*/ '';
 			    const identApiUrl = /*[[@{/carnets/api/identifications}]]*/ '';
 
-			    // =========================
-			    // 🔥 AGENT INIT (EDIT + CREATE + FILTRE)
-			    // =========================
-			    const filtre = $('#filtreAgentId').val();
-
-			    if (filtre === null || filtre === "" || filtre === undefined) {
-			        // TOUS LES AGENTS ou CREATE
-			        $('#agentSelect').val("");
-			        hiddenAgent.val(connectedUserId);
-			    } else {
-			        // EDIT ou sélection précédente
-			        $('#agentSelect').val(filtre);
-			        hiddenAgent.val(filtre);
-			    }
+			    
+				
+				
+				
+				
+				
+				
 
 			    // =========================
 			    // SELECT2 BAIL
@@ -464,6 +544,99 @@
 			});
 			</script>
 			
+			<script>
+			document.addEventListener("DOMContentLoaded", function () {
+
+			    const modeSelect = document.getElementById("modePaiement");
+			    const chequeBlock = document.getElementById("chequeBlock");
+			    const chequeInput = document.getElementById("cheque");
+			    const preview = document.getElementById("previewLive");
+			    const removeInput = document.getElementById("removeCheque");
+
+			    // =========================
+			    // 🔥 TOGGLE CHEQUE BLOCK
+			    // =========================
+			    function toggleCheque() {
+			        if (!modeSelect) return;
+
+			        if (modeSelect.value === "CHEQUE") {
+			            chequeBlock.style.display = "block";
+			            chequeInput.setAttribute("required", "required");
+			        } else {
+			            chequeBlock.style.display = "none";
+			            chequeInput.removeAttribute("required");
+			            chequeInput.value = "";
+			            preview.innerHTML = "";
+			        }
+			    }
+
+			    // =========================
+			    // 🔥 PREVIEW FILE
+			    // =========================
+			    function handlePreview(file) {
+
+			        preview.innerHTML = "";
+
+			        if (!file) return;
+
+			        const type = file.type;
+
+			        if (type.startsWith("image/")) {
+
+			            const img = document.createElement("img");
+			            img.src = URL.createObjectURL(file);
+			            img.className = "img-fluid rounded border mt-2";
+			            img.style.maxHeight = "200px";
+			            preview.appendChild(img);
+
+			        } else if (type === "application/pdf") {
+
+			            const div = document.createElement("div");
+			            div.className = "alert alert-info mt-2";
+			            div.textContent = "📄 PDF sélectionné : " + file.name;
+			            preview.appendChild(div);
+
+			        } else {
+
+			            preview.innerHTML = "<div class='alert alert-warning mt-2'>Type non supporté</div>";
+			        }
+			    }
+
+			    // =========================
+			    // 🔥 DELETE CHEQUE
+			    // =========================
+			    window.confirmDeleteCheque = function () {
+
+			        if (confirm("Voulez-vous supprimer le chèque ?")) {
+
+			            if (removeInput) {
+			                removeInput.value = "true";
+			            }
+
+			            const block = document.querySelector("#chequeBlock .bg-light");
+			            if (block) block.style.display = "none";
+
+			            if (chequeInput) chequeInput.value = "";
+			            if (preview) preview.innerHTML = "";
+			        }
+			    }
+
+			    // =========================
+			    // EVENTS SAFE
+			    // =========================
+			    if (modeSelect) {
+			        modeSelect.addEventListener("change", toggleCheque);
+			        toggleCheque();
+			    }
+
+			    if (chequeInput) {
+			        chequeInput.addEventListener("change", function (event) {
+			            handlePreview(event.target.files[0]);
+			        });
+			    }
+
+			});
+			</script>
 			
 	</section>
 </body>

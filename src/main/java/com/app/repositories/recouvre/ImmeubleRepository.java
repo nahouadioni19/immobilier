@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.app.dto.ImmeubleDTO;
-import com.app.entities.recouvre.Bailleur;
 import com.app.entities.recouvre.Immeuble;
 
 public interface ImmeubleRepository extends JpaRepository<Immeuble, Integer>{
@@ -22,8 +21,8 @@ public interface ImmeubleRepository extends JpaRepository<Immeuble, Integer>{
 		    AND i.agence.id = :agenceId
 		""")
 		Optional<Immeuble> findByIdWithAppartements(
-		        @Param("id") Integer id,
-		        @Param("agenceId") Integer agenceId
+		    @Param("id") Integer id,
+		    @Param("agenceId") Integer agenceId
 		);
 	
 	//
@@ -84,4 +83,5 @@ public interface ImmeubleRepository extends JpaRepository<Immeuble, Integer>{
 		//
 		Page<Immeuble> findByAgenceId(Integer agenceId, Pageable pageable);
 
+		
 }

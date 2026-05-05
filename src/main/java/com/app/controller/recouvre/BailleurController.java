@@ -56,7 +56,7 @@ public class BailleurController {
             @AuthenticationPrincipal UserPrincipal principal,
             Model model) {
 
-        Integer agenceId = principal.getUtilisateur().getAgence().getId();
+        //Integer agenceId = principal.getUtilisateur().getAgence().getId();
 
         Page<BailleurDTO> bailleursPage =
                 service.search(keyword, PageRequest.of(page, 8));
@@ -67,25 +67,7 @@ public class BailleurController {
 
         return "bailleur/enrolement/list";
     }
-    
-    /*@GetMapping
-    public String listBailleurs(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(required = false) String keyword,
-            Model model) {
-
-        Page<Bailleur> bailleursPage = service.search(
-                keyword,
-                PageRequest.of(page, 8)
-        );
-
-        model.addAttribute("bailleursPage", bailleursPage);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("currentPage", page);
-
-        return "bailleur/enrolement/list";
-    }*/
-    
+   
     // FORMULAIRE DE CREATION
     @GetMapping("/create")
     public String showCreateForm(Model model) {
@@ -174,36 +156,12 @@ public class BailleurController {
         
         return "redirect:" + Routes.ROUTE_BAILLEUR;
     }
-    
-    /*@GetMapping(value = "/api/bailleurs", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public Map<String, Object> searchBailleur(@RequestParam String term) {
-
-        Page<Bailleur> page = service.search(term, PageRequest.of(0, 50));
-
-        List<Map<String, Object>> results = page.getContent().stream()
-                .map(l -> {
-                    Map<String, Object> m = new HashMap<>();
-                    m.put("id", l.getId());
-                    m.put("text", l.getNom() + " " + l.getPrenom());
-                    m.put("cellulaire", l.getCellulaire());   // ✅ AJOUTÉ                    
-                    return m;
-                })
-                .collect(Collectors.toList());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("results", results);
-
-        return response;
-    }*/
-    
+        
     @GetMapping(value = "/api/bailleurs", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> searchBailleur(
             @RequestParam String term,
             @AuthenticationPrincipal UserPrincipal principal) {
-
-       // Integer agenceId = principal.getUtilisateur().getAgence().getId();
 
         Page<BailleurDTO> page =
                 service.search(term, PageRequest.of(0, 50));
@@ -220,27 +178,7 @@ public class BailleurController {
 
         return Map.of("results", results);
     }
-
-    /*@GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public Map<String, Object> search(
-            @RequestParam(required = false) String keyword,
-            @PageableDefault(size = 8) Pageable pageable) {
-
-        Page<Bailleur> page = service.search(keyword, pageable);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", page.getContent());
-        response.put("page", page.getNumber());
-        response.put("size", page.getSize());
-        response.put("totalElements", page.getTotalElements());
-        response.put("totalPages", page.getTotalPages());
-        response.put("last", page.isLast());
-        response.put("first", page.isFirst());
-
-        return response;
-    }*/
-    
+   
     @GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> search(

@@ -10,9 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,9 +18,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.PathVariable;
 
-import com.app.entities.recouvre.Bailleur;
+import com.app.dto.LocataireDTO;
 import com.app.entities.recouvre.Locataire;
 import com.app.repositories.recouvre.LocataireRepository;
 import com.app.service.base.BaseService;
@@ -142,23 +139,46 @@ public class LocataireService extends BaseService<Locataire> {
         
         return page.getContent();
     }
-
-    public Page<Locataire> search(String term, Pageable pageable) {
+  
+    
+    public Page<Locataire> searchLocataire(String keyword, Pageable pageable) {
     	
     	Integer agenceId = getCurrentAgenceId();
     	
-        return repo.search(term, agenceId, pageable);
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return repo.findByAgenceId(agenceId, pageable);
+        }
+        return repo.searchLocataire(keyword.trim(), agenceId, pageable);
+    }
+    
+    public Page<LocataireDTO> search(String keyword, Pageable pageable) {
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        Page<Locataire> page;
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            page = repo.findByAgenceId(agenceId, pageable);
+        } else {
+            page = repo.search(keyword.trim(), agenceId, pageable);
+        }
+
+        return page.map(this::toDTO);
     }
 
-    public Page<Locataire> searchLocataire(String keyword, Pageable pageable) {
-        
-    	Integer agenceId = getCurrentAgenceId();
-    	
-    	if (keyword == null || keyword.trim().isEmpty()) {
-            return repo.findLocataireByAgenceId(agenceId, pageable);
+    private LocataireDTO toDTO(Locataire b) {
+    	LocataireDTO dto = new LocataireDTO();
+
+        dto.setId(b.getId());
+        dto.setNom(b.getNom());
+        dto.setPrenom(b.getPrenom());
+        dto.setTelephone(b.getTelephone());
+
+        if (b.getAgence() != null) {
+            dto.setAgenceId(b.getAgence().getId());
         }
-    	
-        return repo.searchLocataire(keyword.trim(), agenceId, pageable);
+
+        return dto;
     }
         
 }

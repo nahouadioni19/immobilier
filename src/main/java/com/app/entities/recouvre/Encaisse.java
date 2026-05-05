@@ -131,5 +131,8 @@ public class Encaisse extends BaseEntity{
 	private Integer statut = 0; // 0 = en attente, 1 = transmis
 	
 	private Integer filtreAgentId;
+	
+	@Column(name = "cheque_path", length = 255)
+    private String chequePath;
 
 }

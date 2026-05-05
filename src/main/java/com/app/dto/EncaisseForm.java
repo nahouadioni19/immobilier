@@ -54,4 +54,6 @@ public class EncaisseForm {
     private Integer statut;
     private Integer version;
     private Integer filtreAgentId;
+    
+    private String chequePath;
 }

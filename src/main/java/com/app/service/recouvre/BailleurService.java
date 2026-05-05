@@ -182,17 +182,7 @@ public class BailleurService extends BaseService<Bailleur>{
     public Bailleur saved(Bailleur bailleur) {
         return repo.save(bailleur);
     }
-    
-    /*public Page<Bailleur> search(String keyword, Pageable pageable) {
-    	
-    	Integer agenceId = getCurrentAgenceId();
-    	
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return repo.findByAgenceId(agenceId, pageable);
-        }
-        return repo.search(keyword.trim(), agenceId, pageable);
-    }*/
-    
+      
     public Page<Bailleur> searchLocataire(String keyword, Pageable pageable) {
     	
     	Integer agenceId = getCurrentAgenceId();

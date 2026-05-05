@@ -192,4 +192,13 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	    WHERE e.id = :id
     	""")
     	Optional<Encaisse> findByIdWithRelations(@Param("id") Integer id);
+    
+    //
+    @Query("""
+    	    SELECT e FROM Encaisse e
+    	    WHERE e.chequePath = :filename
+    	    AND e.agence.id = :agenceId
+    	""")
+    	Optional<Encaisse> findByChequePathAndAgence(@Param("filename") String filename,
+    	                                             @Param("agenceId") Integer agenceId);
 }

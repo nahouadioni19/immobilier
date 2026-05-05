@@ -140,18 +140,20 @@ public interface IdentificationRepository extends JpaRepository<Identification, 
 	//
 		
 		@Query(value = """
-		    SELECT i.idt AS id,
+			SELECT i.idt AS id,
 		           i.ide_numero AS numero
 		    FROM t_identification i
 		    JOIN t_utilisateur u ON u.idt = i.utilisateur_id
 		    WHERE u.agence_id = :agenceId
+		      AND i.agence_id = :agenceId
 		      AND u.idt = :utilisateurId
 		      AND NOT EXISTS (
-		          SELECT 1
-		          FROM t_encaisse e
-		          WHERE e.identification_id = i.idt
-		            AND (:encaisseId IS NULL OR e.idt <> :encaisseId)
+		           SELECT 1
+		           FROM t_encaisse e
+		           WHERE e.identification_id = i.idt
+		           AND (:encaisseId IS NULL OR e.idt <> :encaisseId)
 		      )
+		    ORDER BY i.ide_numero
 		""", nativeQuery = true)
 		List<IdentificationProjection> findAvailableIdentifications(
 		    @Param("agenceId") Integer agenceId,

@@ -43,7 +43,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @Table(name = "t_appartement")
 @DynamicUpdate
-//@SequenceGenerator(name = "appartement_gen", sequenceName = "appartement_seq", allocationSize = 1)
 public class Appartement extends BaseEntity {
 	
     @ManyToOne(fetch = FetchType.LAZY)

@@ -22,6 +22,8 @@ public class UtilisateurDTO {
     private String email;
     private String titre;
     private Integer version;
+    private Integer agenceId;
+    private boolean enabled;
     
     private List<AssignationDTO> assignations = new ArrayList<>();
 

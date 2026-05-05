@@ -99,8 +99,8 @@ public class ImmeubleController{
     
     // FORMULAIRE EDIT
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable int id, Model model, RedirectAttributes redirectAttributes, String code) {
-        Immeuble immeuble = service.findByIdWithAppartements(id).orElse(null);
+    public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes, String code) {
+        Immeuble immeuble = service.findByIdAppartements(id).orElse(null);
         
         code = "RECOUV";
         
@@ -323,7 +323,7 @@ public class ImmeubleController{
     
     // SUPPRESSION
     @GetMapping("/delete/{id}")
-    public String deleteImmeub(@PathVariable("id") int id, RedirectAttributes redirectAttrs) {
+    public String deleteImmeub(@PathVariable("id") Integer id, RedirectAttributes redirectAttrs) {
         service.delete(id);
         
         redirectAttrs.addFlashAttribute("successMessage", "Suppression effectuée avec succès !");

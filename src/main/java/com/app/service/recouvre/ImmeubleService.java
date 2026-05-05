@@ -36,7 +36,7 @@ public class ImmeubleService extends BaseService<Immeuble> {
         return repo;
     }
 	
-	public Optional<Immeuble> findByIdWithAppartements(Integer id) {
+	public Optional<Immeuble> findByIdAppartements(Integer id) {
 		Integer agenceId = getCurrentAgenceId();
 		
         return repo.findByIdWithAppartements(id, agenceId);
@@ -197,7 +197,7 @@ public class ImmeubleService extends BaseService<Immeuble> {
 	        return repo.findByAgenceId(agenceId, pageable);
 	    }
 
-	    return repo.search(keyword.toLowerCase(), agenceId, pageable);
+	    return repo.search(keyword.trim(), agenceId, pageable);
 	}
    
    public Page<ImmeubleDTO> searchDTO(String keyword, Pageable pageable) {

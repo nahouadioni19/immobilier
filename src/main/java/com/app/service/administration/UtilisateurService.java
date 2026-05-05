@@ -15,8 +15,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.app.dto.BailleurDTO;
+import com.app.dto.UtilisateurDTO;
 import com.app.entities.administration.Assignation;
 import com.app.entities.administration.Utilisateur;
+import com.app.entities.recouvre.Bailleur;
 import com.app.repositories.administration.UserRepository;
 import com.app.repositories.administration.UtilisateurRepository;
 import com.app.service.base.BaseService;
@@ -46,11 +49,6 @@ public class UtilisateurService extends BaseService<Utilisateur> {
     public Optional<Utilisateur> findByUsernameIgnoreCaseWithRoles(String username) {
         return repo.findByUsernameIgnoreCaseWithRoles(username);
     }
-    
-   // public Optional<Utilisateur> findByUsername(String username) {
-     //   return repo.findByUsername(username);
-     //   return repo.findByUserAdmin();
-    //}
     
     public Optional<Utilisateur> findByMatricule(String matricule) {
         return repo.findByMatriculeIgnoreCase(matricule);
@@ -139,13 +137,6 @@ public class UtilisateurService extends BaseService<Utilisateur> {
     public JpaRepository<Utilisateur, Integer> getRepository() {
         return repo;
     }
-
-    /*@Transactional
-    @Override
-    public void save(Utilisateur user) {
-    	user.setAgence(getCurrentAgence());
-        repo.save(user);
-    }*/
     
     @Transactional
     @Override
@@ -290,6 +281,39 @@ public class UtilisateurService extends BaseService<Utilisateur> {
                 .findUserWithRoles(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
+    }
+    
+    public Page<UtilisateurDTO> search(String keyword, Pageable pageable) {
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        Page<Utilisateur> page;
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            page = repo.findByAgenceId(agenceId, pageable);
+        } else {
+            page = repo.search(keyword.trim(), agenceId, pageable);
+        }
+
+        return page.map(this::toDTO);
+    }
+
+    private UtilisateurDTO toDTO(Utilisateur b) {
+    	UtilisateurDTO dto = new UtilisateurDTO();
+
+        dto.setId(b.getId());
+        dto.setNom(b.getNom());
+        dto.setPrenoms(b.getPrenoms());
+        dto.setTelephone(b.getTelephone());
+        dto.setMatricule(b.getMatricule());
+        dto.setUsername(b.getUsername());
+        dto.setEnabled(b.isEnabled());
+
+        if (b.getAgence() != null) {
+            dto.setAgenceId(b.getAgence().getId());
+        }
+
+        return dto;
     }
     
 }

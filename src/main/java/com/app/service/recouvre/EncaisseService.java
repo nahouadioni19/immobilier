@@ -127,8 +127,138 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    return value != null ? value : 0L;
 	}
 	
+	
 	@Transactional
 	public Encaisse saveEncaissement(EncaisseForm form) {
+
+	    Agence currentAgence = getCurrentAgence();
+	    	    
+	    Encaisse entity;
+
+	    boolean isNew = (form.getId() == null);
+
+	    if (isNew) {
+	        entity = new Encaisse();
+	        entity.setAgence(currentAgence);
+	    } else {
+	        entity = repo.findById(form.getId())
+	                .orElseThrow(() -> new IllegalArgumentException("Encaisse introuvable"));
+
+	        if (entity.getAgence() == null 
+	                || !entity.getAgence().getId().equals(currentAgence.getId())) {
+	            throw new SecurityException("Accès refusé");
+	        }
+	    }
+
+	    // =========================
+	    // 🔗 Bail sécurisé
+	    // =========================
+	    if (form.getBailId() != null) {
+
+	        Bail bail = bailRepository.findById(form.getBailId())
+	                .orElseThrow(() -> new IllegalArgumentException("Bail introuvable"));
+
+	        checkAgence(bail.getAgence(), currentAgence.getId(), "Bail d’une autre agence");
+
+	        entity.setBail(bail);
+
+	    } else {
+	        entity.setBail(null);
+	    }
+
+	    // =========================
+	    // 🔗 Identification sécurisé
+	    // =========================
+	    if (form.getIdentificationId() != null) {
+
+	        Identification ident = identificationRepository.findById(form.getIdentificationId())
+	                .orElseThrow(() -> new IllegalArgumentException("Identification introuvable"));
+
+	        checkAgence(ident.getAgence(), currentAgence.getId(), "Identification d’une autre agence");
+
+	        entity.setIdentification(ident);
+
+	    } else {
+	        entity.setIdentification(null);
+	    }
+
+	    // =========================
+	    // 🔗 Utilisateur sécurisé
+	    // =========================
+	    if (form.getUtilisateurId() != null) {
+
+	        Utilisateur user = utilisateurRepository.findById(form.getUtilisateurId())
+	                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+
+	        if (user.getAgence() == null 
+	                || !user.getAgence().getId().equals(currentAgence.getId())) {
+	            throw new SecurityException("Utilisateur d’une autre agence");
+	        }
+
+	        entity.setUtilisateur(user);
+	    }
+
+	    // =========================
+	    // 🔢 Mapping simple
+	    // =========================
+	    entity.setEncDate(form.getEncDate());
+
+	    entity.setEncMontant(defaultLong(form.getEncMontant()));
+	    entity.setEncPerdeb(defaultLong(form.getEncPerdeb()));
+	    entity.setEncAndeb(defaultLong(form.getEncAndeb()));
+	    entity.setEncPerfin(defaultLong(form.getEncPerfin()));
+	    entity.setEncAnfin(defaultLong(form.getEncAnfin()));
+	    entity.setEnctotal(defaultLong(form.getEnctotal()));
+	    entity.setEncloyer(defaultLong(form.getEncloyer()));
+
+	    entity.setEncvalide(form.isEncvalide());
+
+	    entity.setEncmois(defaultLong(form.getEncmois()));
+	    entity.setEncannee(defaultLong(form.getEncannee()));
+	    entity.setEncArriere(defaultLong(form.getEncArriere()));
+	    entity.setEncPenalite(defaultLong(form.getEncPenalite()));
+	    entity.setEncNet(defaultLong(form.getEncNet()));
+	    entity.setEncRepport(defaultLong(form.getEncRepport()));
+	    entity.setEncMontReppo(defaultLong(form.getEncMontReppo()));
+
+	    entity.setEncStatutRetour(form.getEncStatutRetour());
+	    entity.setEncMode(form.getEncMode());
+	    entity.setEncDeb(form.getEncDeb());
+	    entity.setEncFin(form.getEncFin());
+	    entity.setEncNumChq(form.getEncNumChq());
+	    
+	    entity.setFiltreAgentId(form.getFiltreAgentId());
+	    // =========================
+	    // 📎 CHEQUE FILE (PROPRE + SAFE)
+	    // =========================
+	    String existingCheque = entity.getChequePath();
+
+	    if (form.getChequePath() != null && !form.getChequePath().isBlank()) {
+	        // nouveau fichier uploadé
+	        entity.setChequePath(form.getChequePath());
+
+	    } else {
+	        // aucun changement → on garde l'ancien
+	        entity.setChequePath(existingCheque);
+	    }
+
+	    // =========================
+	    // 🧾 statut
+	    // =========================
+	    if (form.getStatut() != null) {
+	        entity.setStatut(form.getStatut());
+	    } else if (entity.getStatut() == null) {
+	        entity.setStatut(0);
+	    }
+
+	    // =========================
+	    // 🏢 agence auto SaaS
+	    // =========================
+	    entity.setAgence(currentAgence);
+
+	    return repo.save(entity);
+	}
+	/*public Encaisse saveEncaissement(EncaisseForm form) {
 
 	    Agence currentAgence = getCurrentAgence();
 
@@ -228,6 +358,13 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    entity.setEncNumChq(form.getEncNumChq());
 	    
 	    entity.setFiltreAgentId(form.getFiltreAgentId());
+	    //entity.setChequePath(form.getChequePath());
+	    
+	    if (form.getChequePath() == null) {
+	        entity.setChequePath(null);
+	    } else {
+	        entity.setChequePath(form.getChequePath());
+	    }
 	    
 	   //respecter le statut venant du form
 	    if (form.getStatut() != null) {
@@ -242,7 +379,7 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    entity.setAgence(currentAgence);
 
 	    return repo.save(entity);
-	}
+	}*/
 
 	
 	private void checkAgence(Agence agenceEntity, Integer currentAgenceId, String message) {
@@ -299,7 +436,16 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    return repo.findById(id);
 	}
 	
+	public Encaisse findByIdOrThrow(Integer id) {
+	    return repo.findById(id)
+	            .orElseThrow(() -> new IllegalArgumentException("Encaisse introuvable"));
+	}
+	
 	public Optional<Encaisse> findByIdRelations(Integer id) {
 	    return repo.findByIdWithRelations(id);
+	}
+	
+	public Optional<Encaisse> findByChequeAndAgence(String filename, Integer agenceId) {
+	    return repo.findByChequePathAndAgence(filename, agenceId);
 	}
 }

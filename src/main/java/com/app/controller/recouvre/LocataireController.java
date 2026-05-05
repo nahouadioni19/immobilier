@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 import java.util.Map;
@@ -37,8 +38,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.app.controller.common.Routes;
 import com.app.controller.common.SetupPage;
+import com.app.dto.BailleurDTO;
+import com.app.dto.LocataireDTO;
 import com.app.entities.recouvre.Bailleur;
 import com.app.entities.recouvre.Locataire;
+import com.app.security.UserPrincipal;
 import com.app.service.common.PaginationService;
 import com.app.service.recouvre.LocataireService;
 import com.app.service.referentiel.PaysService;
@@ -51,8 +55,6 @@ import jakarta.servlet.http.HttpServletRequest;
 public class LocataireController {
 	
 	private final LocataireService service;
-    private final SetupPage setup;
-    private final PaginationService paginationService;
     private final PaysService paysService;
     private final ProfessionService prfService;
     
@@ -62,44 +64,13 @@ public class LocataireController {
     @Autowired
 	private MessageSource messageSource;
     
-    public LocataireController(LocataireService service, SetupPage setup, PaginationService paginationService, 
+    public LocataireController(LocataireService service, 
     					PaysService paysService, ProfessionService prfService) {
         this.service = service;
-        this.setup = setup;
-        this.paginationService = paginationService;
         this.paysService = paysService;
         this.prfService = prfService;
     }
-
-    // LISTE
-  /*  @GetMapping
-    public String listLocataires(Model model, @RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
-    	
-        Page<Locataire> locatairesPage = paginationService.getPage(service::findAll, page, 8);
-
-        model.addAttribute("locatairesPage", locatairesPage);
-        model.addAttribute("locataires", locatairesPage.getContent()); // la liste pour Thymeleaf
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", locatairesPage.getTotalPages());
-        model.addAttribute("currentUri", request.getRequestURI());
-        
-        return "locataire/enrolement/list"; // Thymeleaf template : bailleur/list.html
-    }*/
-    
-   /* @GetMapping
-    public String listLocataires(
-            @RequestParam(required = false) String keyword,
-            @PageableDefault(size = 8) Pageable pageable,
-            Model model) {
-
-        Page<Locataire> page = service.searchLocataire(keyword, pageable);
-
-        model.addAttribute("locatairesPage", page);
-        model.addAttribute("keyword", keyword);
-
-        return "locataire/enrolement/list";
-    }*/
-
+       
     
     @GetMapping
     public String listLocataires(
@@ -107,10 +78,8 @@ public class LocataireController {
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        Page<Locataire> locatairesPage = service.searchLocataire(
-                keyword,
-                PageRequest.of(page, 8)
-        );
+        Page<LocataireDTO> locatairesPage =
+                service.search(keyword, PageRequest.of(page, 8));
 
         model.addAttribute("locatairesPage", locatairesPage);
         model.addAttribute("keyword", keyword);
@@ -202,35 +171,9 @@ public class LocataireController {
         
         return "redirect:" + Routes.ROUTE_LOCATAIRE;
     }
+   
     
-    /*@GetMapping("/api/locataires")
-    @ResponseBody
-    public List<Map<String, Object>> searchLocataire(@RequestParam String term) {
-        return service.search(term).stream()
-                .map(l -> Map.of(
-                        "id", l.getId(),
-                        "text", l.getPrenoms() + " " + l.getNom()
-                ))
-                .toList();
-    }*/
-    
-   /* @GetMapping(value = "/api/locataires", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public List<Map<String, Object>> searchLocataire(@RequestParam String term) {
-        Page<Locataire> page = service.search(term, PageRequest.of(0, 50));
-
-        return page.getContent().stream()
-                .map(l -> {
-                    Map<String, Object> m = new java.util.HashMap<>();
-                    m.put("id", l.getId());
-                    m.put("text", l.getPrenom() + " " + l.getNom());
-                    return m;
-                })
-                .collect(Collectors.toList());
-        
-    }*/
-    
-    @GetMapping(value = "/api/locataires", produces = MediaType.APPLICATION_JSON_VALUE)
+   /*@GetMapping(value = "/api/locataires", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> searchLocataire(@RequestParam String term) {
 
@@ -253,12 +196,6 @@ public class LocataireController {
         return response;
     }
 
-   /* @GetMapping("/api/search")
-    @ResponseBody
-    public Page<Locataire> search(@RequestParam String keyword, Pageable pageable) {
-        return service.searchLocataire(keyword, pageable);
-    }*/
-
     @GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Page<Locataire> search(
@@ -266,5 +203,51 @@ public class LocataireController {
             @PageableDefault(size = 8) Pageable pageable) {
 
         return service.searchLocataire(keyword, pageable);
+    }*/
+    
+    
+    @GetMapping(value = "/api/locataires", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> searchLocataire(
+            @RequestParam String term,
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+        Page<LocataireDTO> page =
+                service.search(term, PageRequest.of(0, 50));
+
+        List<Map<String, Object>> results = page.getContent().stream()
+                .map(dto -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", dto.getId());
+                    m.put("text", dto.getNom() + " " + dto.getPrenom());
+                    m.put("telephone", dto.getTelephone());
+                    m.put("email", dto.getEmail());
+                    return m;
+                })
+                .collect(Collectors.toList());
+
+        return Map.of("results", results);
+    }
+   
+    @GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> search(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 8) Pageable pageable) {
+
+        Page<LocataireDTO> page =
+                service.search(keyword, pageable);
+        
+        System.out.println("TOTAL PAGES = " + page.getTotalPages()); // 👈 AJOUTE ÇA
+
+        return Map.of(
+                "content", page.getContent(),
+                "number", page.getNumber(),
+                "size", page.getSize(),
+                "totalElements", page.getTotalElements(),
+                "totalPages", page.getTotalPages(),
+                "last", page.isLast(),
+                "first", page.isFirst()
+        );
     }
 }

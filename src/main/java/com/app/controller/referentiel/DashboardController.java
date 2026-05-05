@@ -16,9 +16,8 @@ import com.lowagie.text.pdf.PdfWriter;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,6 +28,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.app.dto.DashboardLoyerDTO;
 import com.app.dto.DashboardLoyerMontantDTO;
+import com.app.security.UserPrincipal;
 import com.app.service.recouvre.BailService;
 import com.app.service.recouvre.DashboardService;
 import com.app.utils.PdfFooter;
@@ -183,14 +183,17 @@ public class DashboardController {
     public String dashboardLoyersMontant(Model model,
                                          @RequestParam(required = false) Integer annee,
                                          @RequestParam(required = false) String search,
-                                         @RequestParam(defaultValue = "0") int page) {
+                                         @RequestParam(defaultValue = "0") int page,
+                                         @AuthenticationPrincipal UserPrincipal principal) {
 
+    	Integer agenceId = principal.getUtilisateur().getAgence().getId();
+    	
         if (annee == null) {
             annee = Year.now().getValue();
         }
 
         Page<DashboardLoyerMontantDTO> pageData =
-                dashboardService.getDashboardMontant(annee, search, PageRequest.of(page, 10));
+                dashboardService.getDashboardMontant(annee, search, agenceId,PageRequest.of(page, 10));
 
         List<DashboardLoyerMontantDTO> dashboard = pageData.getContent();
 
@@ -269,12 +272,16 @@ public class DashboardController {
     public Map<String, Object> searchDashboard(
             @RequestParam int annee,
             @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "0") int page) {
+            @RequestParam(defaultValue = "0") int page,
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+    	Integer agenceId = principal.getUtilisateur().getAgence().getId();
 
         Page<DashboardLoyerMontantDTO> pageData =
                 dashboardService.getDashboardMontant(
                         annee,
                         search,
+                        agenceId,
                         PageRequest.of(page, 10)
                 );
 
@@ -296,13 +303,14 @@ public class DashboardController {
     public void exportPdf(
             @RequestParam int annee,
             @RequestParam(required = false) String search,
-            HttpServletResponse response) throws Exception {
+            HttpServletResponse response,
+            @AuthenticationPrincipal UserPrincipal principal) throws Exception {
 
+        Integer agenceId = principal.getUtilisateur().getAgence().getId();
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=loyers.pdf");
 
-        List<DashboardLoyerMontantDTO> data = dashboardService.getDashboard(annee, search);
-      //  Map<String, Long> totals = dashboardService.getTotals(annee, search);
+        List<DashboardLoyerMontantDTO> data = dashboardService.getDashboard(annee, search, agenceId);
         Map<String, Long> totals = calculateTotals(data);
 
         // 📄 PDF paysage

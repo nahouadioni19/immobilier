@@ -35,7 +35,9 @@ public class IdentificationService {
     	        .anyMatch(auth -> "ROLE_RECOUV".equals(auth.getAuthority()));
     	
 		if (isAgentRecouv) {
-			return repo.findAvailableIdentifications(principal.getId(), encaisseId, agenceId);
+			
+			//return repo.findAvailableIdentifications(agenceId,agentId, encaisseId);
+			return repo.findAvailableIdentifications(agenceId,principal.getId(), encaisseId);
 			
 		} 
 			// Admin → tous ou filtré
