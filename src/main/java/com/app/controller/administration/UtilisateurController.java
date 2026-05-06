@@ -63,17 +63,10 @@ public class UtilisateurController {
                                    @RequestParam(required = false) String keyword,
                                    @AuthenticationPrincipal UserPrincipal principal,
                                    Model model) {
-     //   Page<Utilisateur> utilisateursPage = paginationService.getPage(service::findAll, page, 8);
-        
+         
         Page<UtilisateurDTO> utilisateursPage =
                 service.search(keyword, PageRequest.of(page, 8));
-        
-        /*model.addAttribute("currentUri", request.getRequestURI());
-        model.addAttribute("utilisateursPage", utilisateursPage);
-        model.addAttribute("utilisateurs", utilisateursPage.getContent());
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", utilisateursPage.getTotalPages());*/
-        
+                
         model.addAttribute("utilisateursPage", utilisateursPage);
         model.addAttribute("keyword", keyword);
         model.addAttribute("currentPage", page);
@@ -110,55 +103,7 @@ public class UtilisateurController {
 
     // -----------------------
     // ENREGISTREMENT
-    // -----------------------
-    
-	/*
-	 * @PostMapping("/save") public String saveUtilisateur(@ModelAttribute
-	 * UtilisateurDTO dto, RedirectAttributes redirectAttrs) {
-	 * 
-	 * boolean isNew = dto.getId() == null;
-	 * 
-	 * Utilisateur user = service.findByIdWithAssignations(dto.getId())
-	 * .orElseGet(Utilisateur::new);
-	 * 
-	 * UtilisateurMapper.updateEntity(user, dto);
-	 * 
-	 * if (isNew) {
-	 * user.setPassword(passwordEncoder.encode(Constants.DEFAULT_PASSWORD)); }
-	 * 
-	 * // ========================= // 🔗 Assignations // =========================
-	 * user.getAssignations().clear();
-	 * 
-	 * if (dto.getAssignations() != null) { dto.getAssignations().stream()
-	 * .filter(adto -> adto.getRoleId() != null) .forEach(adto -> {
-	 * 
-	 * Assignation assign = new Assignation();
-	 * 
-	 * assign.setRole(roleService.findById(adto.getRoleId()) .orElseThrow(() -> new
-	 * IllegalArgumentException("Rôle introuvable : " + adto.getRoleId())));
-	 * 
-	 * assign.setDateDebut( adto.getDateDebut() != null ? adto.getDateDebut() :
-	 * LocalDate.now() );
-	 * 
-	 * assign.setDateFin( adto.getDateFin() != null ? adto.getDateFin() :
-	 * LocalDate.of(9999, 12, 31) );
-	 * 
-	 * assign.setUtilisateur(user); //assign.setAgence(getCurrentAgence()); // 🔐
-	 * SaaS
-	 * 
-	 * user.getAssignations().add(assign); }); }
-	 * 
-	 * service.save(user);
-	 * 
-	 * String successMessage = messageSource.getMessage( isNew ?
-	 * "success.enregistrement" : "success.modification", null,
-	 * LocaleContextHolder.getLocale() );
-	 * 
-	 * redirectAttrs.addFlashAttribute("successMessage", successMessage);
-	 * 
-	 * return "redirect:" + Routes.ROUTE_UTILISATEUR; }
-	 */
-    
+    // -----------------------   
     @PostMapping("/save")
     public String saveUtilisateur(@ModelAttribute UtilisateurDTO dto, RedirectAttributes redirectAttrs) {
         boolean isNew = dto.getId() == null;

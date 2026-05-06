@@ -57,7 +57,6 @@ public class BailleurService extends BaseService<Bailleur>{
     @Override
     public void afterSave(Bailleur entity) {
         super.afterSave(entity);
-      //  clearCache(TYPE_ROLE_CACHE); 
     }
         
     

@@ -11,14 +11,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
+import com.app.dto.BailleurDTO;
+import com.app.dto.EncaisseDTO;
 import com.app.dto.EncaisseForm;
+import com.app.dto.EncaisseListDto;
 import com.app.entities.administration.Agence;
 import com.app.entities.administration.Utilisateur;
 import com.app.entities.recouvre.Bail;
+import com.app.entities.recouvre.Bailleur;
 import com.app.entities.recouvre.Encaisse;
 import com.app.entities.recouvre.Identification;
 import com.app.entities.recouvre.Loyann;
-import com.app.repositories.EncaisseListDto;
+import com.app.mapper.EncaisseMapper;
 import com.app.repositories.administration.UtilisateurRepository;
 import com.app.repositories.recouvre.BailRepository;
 import com.app.repositories.recouvre.EncaisseRepository;
@@ -40,7 +44,8 @@ public class EncaisseService extends BaseService<Encaisse>{
 	private final IdentificationRepository identificationRepository;
 	private final UtilisateurRepository utilisateurRepository;
 	private final LoyannService loyannService;
-	
+	 private final EncaisseMapper mapper;
+	 
 	@Override
     public JpaRepository<Encaisse, Integer> getRepository() {
         return repo;
@@ -82,7 +87,9 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    return loyers;
 	}	
 	
-	public Page<EncaisseListDto> findByUtilisateur(UserPrincipal principal, Long agentId, String keyword, Pageable pageable) {
+	/*public Page<EncaisseListDto> findByUtilisateur(UserPrincipal principal, Long agentId, String keyword, 
+			 										LocalDate startDate, LocalDate endDate,Pageable pageable) {
+		
 	    boolean isDirec = principal.getAuthorities().stream()
 	        .anyMatch(auth -> "ROLE_DIREC".equals(auth.getAuthority()));	    // ROLE_RECOUV
 	    
@@ -104,9 +111,58 @@ public class EncaisseService extends BaseService<Encaisse>{
 	            keyword = null;
 	        }
 	    	
-	    	return repo.findEncaissePageByUtilisateur(principal.getUsername(), keyword, pageable);
+	    	return repo.findEncaissePageByUtilisateur(
+	    			principal.getUsername(), 
+	    			keyword,
+	    			startDate, 
+	    			endDate,
+	    			pageable
+	    			);
 	    }
 
+	}*/
+	
+	
+	public Page<EncaisseListDto> findByUtilisateur(
+	        UserPrincipal principal,
+	        Long agentId,
+	        String keyword,
+	        LocalDate startDate,
+	        LocalDate endDate,
+	        Pageable pageable) {
+
+	    boolean isDirec = principal.getAuthorities().stream()
+	            .anyMatch(auth -> "ROLE_DIREC".equals(auth.getAuthority()));
+
+	    // NORMALISATION COMMUNE
+	    if (keyword != null && keyword.trim().isEmpty()) {
+	        keyword = null;
+	    }
+
+	    if (agentId != null && agentId <= 0) {
+	        agentId = null;
+	    }
+
+	    // ===================== ADMIN / DIRECTEUR =====================
+	    if (isDirec) {
+
+	        /*return repo.findEncaissePageByAdmin(
+	                agentId,
+	                keyword,
+	                startDate,
+	                endDate,
+	                pageable
+	        );*/
+	    }
+
+	    // ===================== AGENT SIMPLE =====================
+	    return repo.findEncaissePageByUtilisateur(
+	            principal.getUsername(),
+	            keyword,
+	            startDate,
+	            endDate,
+	            pageable
+	    );
 	}
 	
 	public Page<EncaisseListDto> findWithFilters(
@@ -448,4 +504,48 @@ public class EncaisseService extends BaseService<Encaisse>{
 	public Optional<Encaisse> findByChequeAndAgence(String filename, Integer agenceId) {
 	    return repo.findByChequePathAndAgence(filename, agenceId);
 	}
+	
+	/*public Page<EncaisseDTO> searcher(String keyword, Integer agentId, Pageable pageable) {
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        Page<Encaisse> page;
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            page = repo.findByAgenceId(agentId,agenceId, pageable);
+        } else {
+            page = repo.search(keyword.trim(), agentId, agenceId, pageable);
+        }
+
+        return page.map(this::toDTO);
+    }*/
+	
+	public Page<EncaisseDTO> search(String keyword, Integer agentId, Pageable pageable) {
+		
+		Integer agenceId = getCurrentAgenceId();
+		
+		System.out.println("AGENCE :" + agenceId);
+		
+	    if (keyword != null && keyword.isBlank()) {
+	        keyword = null;
+	    }
+
+	    return repo.searchEncaisse(keyword, agenceId, agentId, pageable);
+	}
+
+    /*private EncaisseDTO toDTO(Encaisse e) {
+    	EncaisseDTO dto = new EncaisseDTO();
+
+        dto.setId(e.getId());
+        dto.setEncDate(e.getEncDate());
+        dto.setEncMontant(e.getEncMontant());
+        dto.setEncMode(e.getEncMode());
+        dto.setLocataireNom(e.getBail().getLocataire().getNom());
+        dto.setLocatairePrenom(e.getBail().getLocataire().getPrenom());
+        dto.setAppartementNumero(e.getBail().getAppartement().getNumAppart());
+        dto.setUtilisateurNom(e.getUtilisateur().getNom());
+        dto.setUtilisateurPrenoms(e.getUtilisateur().getPrenoms());
+
+        return dto;
+    }*/
 }

@@ -50,7 +50,7 @@ public class Encaisse extends BaseEntity{
     private Agence agence;
 	
 	@DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
-	@Column
+	@Column(name = "enc_date")
 	private LocalDate encDate;
 	
 	@Min(0)

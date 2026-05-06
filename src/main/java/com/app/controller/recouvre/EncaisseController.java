@@ -1,6 +1,9 @@
 package com.app.controller.recouvre;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.temporal.WeekFields;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,12 +25,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.app.dto.BailleurDTO;
+import com.app.dto.EncaisseDTO;
 import com.app.dto.EncaisseForm;
+import com.app.dto.EncaisseListDto;
 import com.app.dto.IdentificationProjection;
 import com.app.entities.administration.Utilisateur;
 import com.app.entities.recouvre.Encaisse;
 import com.app.repositories.BailSelectProjection;
-import com.app.repositories.EncaisseListDto;
 import com.app.security.UserPrincipal;
 import com.app.service.FileStorageService;
 import com.app.service.administration.UtilisateurService;
@@ -63,37 +68,92 @@ public class EncaisseController {
 	}
 	
 	@GetMapping
-    public String listEncaisses(
-            @AuthenticationPrincipal UserPrincipal principal,
-            Model model,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "agentId", required = false) Long agentId,
-            @RequestParam(value = "keyword", required = false) String keyword,
-            HttpServletRequest request) {
+	public String listEncaisses(
+	        @AuthenticationPrincipal UserPrincipal principal,
+	        Model model,
+	        @RequestParam(value = "page", defaultValue = "0") int page,
+	        @RequestParam(value = "keyword", required = false) String keyword,
+	        @RequestParam(value = "periodeType", required = false) String periodeType,
+	        @RequestParam(value = "semaine", required = false) String semaine,
+	        @RequestParam(value = "mois", required = false) String mois,
+	        HttpServletRequest request) {
 
-        int pageSize = 8;
+	    int pageSize = 8;
 
-        // Récupération filtrée avec pagination
-        Page<EncaisseListDto> encaissesPage =
-                service.findByUtilisateur(principal, agentId, keyword, PageRequest.of(page, pageSize));
+	    Integer agentId = principal.getId(); // ✔ propre
+	    
+	    LocalDate startDate = null;
+	    LocalDate endDate = null;
 
-        model.addAttribute("encaissesPage", encaissesPage);
-        model.addAttribute("encaisses", encaissesPage.getContent());
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", encaissesPage.getTotalPages());
-        model.addAttribute("currentUri", request.getRequestURI());
+	    keyword = (keyword == null) ? "" : keyword.trim();
 
-        // Liste des agents pour le select
-        String code = "RECOUV"; // ou autre code si nécessaire
-        List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement(code);
-        model.addAttribute("utilisateurs", utilisateurs);
+	     // =====================
+	    // PERIODE SEMAINE
+	    // =====================
+	    if ("SEMAINE".equals(periodeType) && semaine != null && !semaine.isEmpty()) {
 
-        // Garder les valeurs sélectionnées dans le formulaire
-        model.addAttribute("selectedAgent", agentId);
-        model.addAttribute("keyword", keyword);
+	        try {
+	            String[] parts = semaine.split("-W");
+	            int year = Integer.parseInt(parts[0]);
+	            int week = Integer.parseInt(parts[1]);
 
-        return "recouvrement/list"; // correspond à src/main/resources/templates/recouvrement/list.html
-    }
+	            WeekFields weekFields = WeekFields.ISO;
+
+	            startDate = LocalDate.of(year, 1, 4)
+	                    .with(weekFields.weekOfYear(), week)
+	                    .with(DayOfWeek.MONDAY);
+
+	            endDate = startDate.plusDays(6);
+	        } catch (Exception e) {
+	            startDate = null;
+	            endDate = null;
+	        }
+	    }
+
+	    // =====================
+	    // PERIODE MOIS
+	    // =====================
+	    if ("MOIS".equals(periodeType) && mois != null && !mois.isEmpty()) {
+	        try {
+	            YearMonth ym = YearMonth.parse(mois);
+	            startDate = ym.atDay(1);
+	            endDate = ym.atEndOfMonth();
+	        } catch (Exception e) {
+	            startDate = null;
+	            endDate = null;
+	        }
+	    }
+
+	    // DEBUG
+	    System.out.println("START = " + startDate);
+	    System.out.println("END   = " + endDate);
+	    System.out.println("AGENT :" + agentId);
+	    /*Page<EncaisseListDto> encaissesPage =
+	            service.findByUtilisateur(
+	                    principal,
+	                    agentId,
+	                    keyword,
+	                    startDate,
+	                    endDate,
+	                    PageRequest.of(page, pageSize)
+	            );*/
+	    
+	    Page<EncaisseDTO> encaissesPage =
+                service.search(keyword, agentId, PageRequest.of(page, 8));
+
+	    model.addAttribute("encaissesPage", encaissesPage);
+	    model.addAttribute("selectedAgent", agentId);
+	    model.addAttribute("keyword", keyword);
+
+	    model.addAttribute("periodeType", periodeType);
+	    model.addAttribute("semaine", semaine);
+	    model.addAttribute("mois", mois);
+
+	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement("RECOUV");
+	    model.addAttribute("utilisateurs", utilisateurs);
+
+	    return "recouvrement/list";
+	}
 	
 	
 	@GetMapping("/create")

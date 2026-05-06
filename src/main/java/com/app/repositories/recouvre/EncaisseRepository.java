@@ -1,5 +1,6 @@
 package com.app.repositories.recouvre;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,15 +11,23 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.app.dto.EncaisseDTO;
+import com.app.dto.EncaisseListDto;
 import com.app.entities.administration.Utilisateur;
-import com.app.entities.recouvre.Carnet;
 import com.app.entities.recouvre.Encaisse;
-import com.app.repositories.EncaisseListDto;
 
 @Repository
 public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
 
 	List<Encaisse> findByUtilisateur(Utilisateur utilisateur);
+	//
+	 @Query("""
+		    SELECT e FROM Encaisse e
+		    WHERE e.chequePath = :filename
+		    AND e.agence.id = :agenceId
+		""")
+		Optional<Encaisse> findByChequePathAndAgence(@Param("filename") String filename,
+		                                             @Param("agenceId") Integer agenceId);
 	
 	//
 	@Query("SELECT r FROM Encaisse r WHERE r.utilisateur.id = :userId")
@@ -72,7 +81,7 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
 		    nativeQuery = true)
 		Page<Encaisse> findEncaissesDetailsByUtilisateur(@Param("username") String username, Pageable pageable);
 	//
-	@Query(
+	/*@Query(
 		    value = """
 		        SELECT 
 		            e.id as id,
@@ -108,7 +117,7 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
 		Page<EncaisseListDto> findEncaissePageByUtilisateur(
 				@Param("username") String username, 
 				@Param("keyword") String keyword, 
-				Pageable pageable);
+				Pageable pageable);*/
 
 	//
 	@Query(
@@ -194,11 +203,182 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	Optional<Encaisse> findByIdWithRelations(@Param("id") Integer id);
     
     //
+      //
+    
     @Query("""
-    	    SELECT e FROM Encaisse e
-    	    WHERE e.chequePath = :filename
+    	    SELECT new com.app.dto.EncaisseListDto(
+    	        e.id,
+    	        e.encDate,
+    	        e.encMontant,
+    	        e.encMode,
+    	        l.nom,
+    	        l.prenom,
+    	        a.numAppart,
+    	        u.id,
+    	        u.nom,
+    	        u.prenoms
+    	    )
+    	    FROM Encaisse e
+    	    JOIN e.bail b
+    	    JOIN b.locataire l
+    	    JOIN b.appartement a
+    	    JOIN e.utilisateur u
+    	    WHERE u.username = :username
+    	    AND e.statut = 0
+
+    	    AND (
+    	        :keyword IS NULL OR :keyword = ''
+    	        OR LOWER(l.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	        OR LOWER(l.prenom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	    )
+
+    	    AND (:startDate IS NULL OR e.encDate >= :startDate)
+    	    AND (:endDate IS NULL OR e.encDate <= :endDate)
+    	""")
+    	Page<EncaisseListDto> findEncaissePageByUtilisateur(
+    	    @Param("username") String username,
+    	    @Param("keyword") String keyword,
+    	    @Param("startDate") LocalDate startDate,
+    	    @Param("endDate") LocalDate endDate,
+    	    Pageable pageable
+    	);
+    
+    ///
+    @Query("""
+    	    SELECT COUNT(e)
+    	    FROM Encaisse e
+    	    JOIN e.bail b
+    	    JOIN b.locataire l
+    	    JOIN b.appartement a
+    	    JOIN e.utilisateur u
+    	    WHERE u.username = :username
+    	    AND e.statut = 0
+
+    	    AND (
+    	        :keyword IS NULL OR :keyword = ''
+    	        OR LOWER(l.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	        OR LOWER(l.prenom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	    )
+
+    	    AND (:startDate IS NULL OR e.encDate >= :startDate)
+    	    AND (:endDate IS NULL OR e.encDate <= :endDate)
+    	""")
+    	long countEncaissePageByUtilisateur(
+    	    @Param("username") String username,
+    	    @Param("keyword") String keyword,
+    	    @Param("startDate") LocalDate startDate,
+    	    @Param("endDate") LocalDate endDate
+    	);
+    
+    //
+    
+    @Query("""
+    	    SELECT new com.app.dto.EncaisseDTO(
+    	        e.id,
+    	        e.encDate,
+    	        e.encMontant,
+    	        e.encMode,
+    	        l.nom,
+    	        l.prenom,
+    	        a.numAppart,
+    	        u.nom,
+    	        u.prenoms
+    	    )
+    	    FROM Encaisse e
+    	    JOIN e.bail b
+    	    JOIN b.locataire l
+    	    JOIN b.appartement a
+    	    JOIN e.utilisateur u
+    	    WHERE u.id = :agentId
+    	    AND e.statut = 0
+    	    AND (:keyword IS NULL OR LOWER(l.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	         OR LOWER(l.prenom) LIKE LOWER(CONCAT('%', :keyword, '%')))
     	    AND e.agence.id = :agenceId
     	""")
-    	Optional<Encaisse> findByChequePathAndAgence(@Param("filename") String filename,
-    	                                             @Param("agenceId") Integer agenceId);
+		Page<Encaisse> search(@Param("keyword") String keyword,
+		                      @Param("agenceId") Integer agenceId,
+		                      @Param("agentId") Integer agentId,
+		                      Pageable pageable);
+    
+    //
+    @Query("""
+    	    SELECT new com.app.dto.EncaisseDTO(
+    	        e.id,
+    	        e.encDate,
+    	        e.encMontant,
+    	        e.encMode,
+    	        l.nom,
+    	        l.prenom,
+    	        a.numAppart,
+    	        u.nom,
+    	        u.prenoms
+    	    )
+    	    FROM Encaisse e
+    	    JOIN e.bail b
+    	    JOIN b.locataire l
+    	    JOIN b.appartement a
+    	    JOIN e.utilisateur u
+    	    WHERE u.id = :agentId
+    	    AND e.statut = 0
+    	    AND e.agence.id = :agenceId
+    	""")
+    Page<Encaisse> findByAgenceId(
+    		@Param("agenceId") Integer agenceId,
+            @Param("agentId") Integer agentId,
+    		Pageable pageable);
+    
+    ///
+    @Query(value = """
+    	    SELECT new com.app.dto.EncaisseDTO(
+    	        e.id,
+    	        e.encDate,
+    	        e.encMontant,
+    	        e.encMode,
+    	        l.nom,
+    	        l.prenom,
+    	        a.numAppart,
+    	        u.nom,
+    	        u.prenoms
+    	    )
+    	    FROM Encaisse e
+    	    JOIN e.bail b
+    	    JOIN b.locataire l
+    	    JOIN b.appartement a
+    	    JOIN e.utilisateur u
+    	    WHERE e.statut = 0
+    	    AND e.agence.id = :agenceId
+    	    AND u.id = :agentId
+    	    AND (
+    	        :keyword IS NULL
+    	        OR :keyword = ''
+    	        OR LOWER(l.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	        OR LOWER(l.prenom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	        OR LOWER(a.numAppart) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	    )
+    	""",
+    	countQuery = """
+    	    SELECT COUNT(e)
+    	    FROM Encaisse e
+    	    JOIN e.bail b
+    	    JOIN b.locataire l
+    	    JOIN b.appartement a
+    	    JOIN e.utilisateur u
+    	    WHERE e.statut = 0
+    	    AND e.agence.id = :agenceId
+    	    AND u.id = :agentId
+    	    AND (
+    	        :keyword IS NULL
+    	        OR :keyword = ''
+    	        OR LOWER(l.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	        OR LOWER(l.prenom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	        OR LOWER(a.numAppart) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    	    )
+    	"""
+    	)
+    	Page<EncaisseDTO> searchEncaisse(
+    	        @Param("keyword") String keyword,
+    	        @Param("agenceId") Integer agenceId,
+    	        @Param("agentId") Integer agentId,
+    	        Pageable pageable
+    	);
 }

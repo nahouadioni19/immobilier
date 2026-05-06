@@ -19,32 +19,61 @@
 										
 				<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
 					    
-						<form method="get" th:action="@{/recouvrements}" class="row g-2 mb-3">
-							<div class="col-md-3" th:if="${#sets.contains(userRoles, 'DIREC') or #sets.contains(userRoles, 'CONTRO')}">
-								<select name="agentId" class="form-select">
-						            <option value="">Tous les agents</option>
-						            <option th:each="u : ${utilisateurs}"
-						                    th:value="${u.id}"
-						                    th:text="|${u.prenoms} ${u.nom}|"
-						                    th:selected="${u.id == selectedAgent}">
-						            </option>
-						        </select>
-							</div>
-							<!-- Recherche locataire -->
-							    <div class="col-md-3">
-							        <input type="text"
-							               name="keyword"
-							               class="form-control"
-							               placeholder="Nom ou prénom locataire"
-							               th:value="${keyword}">
-							    </div>
+					<form method="get" th:action="@{/recouvrements}" class="row g-2 mb-3">
 
-							    <div class="col-md-2">
-							        <button type="submit" class="btn btn-success w-100">
-							            Rechercher
-							        </button>
-							    </div>
-						</form>
+					    <!-- Période -->
+					    <div class="col-md-2">
+					        <select name="periodeType" class="form-select" id="periodeType">
+					            <option value="">-- Période --</option>
+					            <option value="SEMAINE" th:selected="${periodeType == 'SEMAINE'}">Semaine</option>
+					            <option value="MOIS" th:selected="${periodeType == 'MOIS'}">Mois</option>
+					        </select>
+					    </div>
+
+					    <!-- SEMAINE -->
+					    <div class="col-md-2" id="semaineBlock" style="display:none;">
+					        <input type="week" name="semaine" class="form-control" th:value="${semaine}">
+					    </div>
+
+					    <!-- MOIS -->
+					    <div class="col-md-2" id="moisBlock" style="display:none;">
+					        <input type="month" name="mois" class="form-control" th:value="${mois}">
+					    </div>
+
+					    <!-- Agent -->
+					    <div class="col-md-3" th:if="${#sets.contains(userRoles, 'DIREC') or #sets.contains(userRoles, 'CONTRO')}">
+					        <select name="agentId" class="form-select">
+					            <option value="">Tous les agents</option>
+					            <option th:each="u : ${utilisateurs}"
+					                    th:value="${u.id}"
+					                    th:text="|${u.prenoms} ${u.nom}|"
+					                    th:selected="${u.id == selectedAgent}">
+					            </option>
+					        </select>
+					    </div>
+
+					    <!-- Keyword -->
+					    <div class="col-md-3">
+					        <input type="text"
+					               name="keyword"
+					               class="form-control"
+					               placeholder="Nom ou prénom locataire"
+					               th:value="${keyword}">
+					    </div>
+						
+						<div class="col-md-2">
+													        <button type="submit" class="btn btn-success w-100">
+													            Rechercher
+													        </button>
+													    </div>
+					    <!-- Reset -->
+					    <div class="col-md-2">
+					        <a th:href="@{/recouvrements}" class="btn btn-secondary w-100">
+					            Réinitialiser
+					        </a>
+					    </div>
+
+					</form>
 					<br/>
 				    <table class="table">
 				        <thead class="table-success">
@@ -122,73 +151,112 @@
 					    </tr>
 				    </tbody>
 				 </table>
+				 
+				 
 				 <!-- Pagination -->
-				<div class="d-flex justify-content-center mt-3" th:if="${encaissesPage.totalElements > 0}">
-				    <ul class="pagination">
+				 <div class="d-flex justify-content-center mt-3" th:if="${encaissesPage.totalElements > 0}">
+				     <ul class="pagination">
 
-				        <!-- Précédent -->
-				        <li class="page-item"
-				            th:classappend="${encaissesPage.first} ? 'disabled'">
-				            <a class="page-link"				               
-							   th:href="@{/recouvrements(page=${encaissesPage.number - 1},agentId=${selectedAgent},keyword=${keyword})}">
-				                &laquo;
-				            </a>
-				        </li>
+				         <!-- Précédent -->
+				         <li class="page-item"
+				             th:classappend="${encaissesPage.first} ? 'disabled'">
+				             <a class="page-link"
+				                th:href="@{/recouvrements(
+				                     page=${encaissesPage.number - 1},
+				                     agentId=${selectedAgent},
+				                     keyword=${keyword},
+				                     periodeType=${periodeType},
+				                     semaine=${semaine},
+				                     mois=${mois}
+				                )}">
+				                 &laquo;
+				             </a>
+				         </li>
 
-				        <!-- Première page -->
-				        <li class="page-item"
-				            th:if="${encaissesPage.number > 2}">
-				            <a class="page-link"
-				               th:href="@{/recouvrements(page=0)}">1</a>
-				        </li>
+				         <!-- Première page -->
+				         <li class="page-item"
+				             th:if="${encaissesPage.number > 2}">
+				             <a class="page-link"
+				                th:href="@{/recouvrements(
+				                     page=0,
+				                     agentId=${selectedAgent},
+				                     keyword=${keyword},
+				                     periodeType=${periodeType},
+				                     semaine=${semaine},
+				                     mois=${mois}
+				                )}">
+				                 1
+				             </a>
+				         </li>
 
-				        <!-- ... -->
-				        <li class="page-item disabled"
-				            th:if="${encaissesPage.number > 3}">
-				            <span class="page-link">...</span>
-				        </li>
+				         <!-- ... -->
+				         <li class="page-item disabled"
+				             th:if="${encaissesPage.number > 3}">
+				             <span class="page-link">...</span>
+				         </li>
 
-				        <!-- Pages autour -->
-				        <li class="page-item"
-				            th:each="i : ${#numbers.sequence(
-				                T(java.lang.Math).max(0, encaissesPage.number - 2),
-				                T(java.lang.Math).min(encaissesPage.totalPages - 1, encaissesPage.number + 2)
-				            )}"
-				            th:classappend="${i == encaissesPage.number} ? 'active'">
+				         <!-- Pages autour -->
+				         <li class="page-item"
+				             th:each="i : ${#numbers.sequence(
+				                 T(java.lang.Math).max(0, encaissesPage.number - 2),
+				                 T(java.lang.Math).min(encaissesPage.totalPages - 1, encaissesPage.number + 2)
+				             )}"
+				             th:classappend="${i == encaissesPage.number} ? 'active'">
 
-				            <a class="page-link"
-				               th:text="${i + 1}"
-							   th:href="@{/recouvrements(page=${i}, agentId=${selectedAgent}, keyword=${keyword})}">
-				            </a>
+				             <a class="page-link"
+				                th:text="${i + 1}"
+				                th:href="@{/recouvrements(
+				                     page=${i},
+				                     agentId=${selectedAgent},
+				                     keyword=${keyword},
+				                     periodeType=${periodeType},
+				                     semaine=${semaine},
+				                     mois=${mois}
+				                )}">
+				             </a>
 
-				        </li>
+				         </li>
 
-				        <!-- ... -->
-				        <li class="page-item disabled"
-				            th:if="${encaissesPage.number < encaissesPage.totalPages - 4}">
-				            <span class="page-link">...</span>
-				        </li>
+				         <!-- ... -->
+				         <li class="page-item disabled"
+				             th:if="${encaissesPage.number < encaissesPage.totalPages - 4}">
+				             <span class="page-link">...</span>
+				         </li>
 
-				        <!-- Dernière page -->
-				        <li class="page-item"
-				            th:if="${encaissesPage.number < encaissesPage.totalPages - 3}">
-				            <a class="page-link"
-				               th:href="@{/recouvrements(page=${encaissesPage.totalPages - 1})}"
-				               th:text="${encaissesPage.totalPages}">
-				            </a>
-				        </li>
+				         <!-- Dernière page -->
+				         <li class="page-item"
+				             th:if="${encaissesPage.number < encaissesPage.totalPages - 3}">
+				             <a class="page-link"
+				                th:text="${encaissesPage.totalPages}"
+				                th:href="@{/recouvrements(
+				                     page=${encaissesPage.totalPages - 1},
+				                     agentId=${selectedAgent},
+				                     keyword=${keyword},
+				                     periodeType=${periodeType},
+				                     semaine=${semaine},
+				                     mois=${mois}
+				                )}">
+				             </a>
+				         </li>
 
-				        <!-- Suivant -->
-				        <li class="page-item"
-				            th:classappend="${encaissesPage.last} ? 'disabled'">
-				            <a class="page-link"
-				               th:href="@{/recouvrements(page=${encaissesPage.number + 1})}">
-				                &raquo;
-				            </a>
-				        </li>
+				         <!-- Suivant -->
+				         <li class="page-item"
+				             th:classappend="${encaissesPage.last} ? 'disabled'">
+				             <a class="page-link"
+				                th:href="@{/recouvrements(
+				                     page=${encaissesPage.number + 1},
+				                     agentId=${selectedAgent},
+				                     keyword=${keyword},
+				                     periodeType=${periodeType},
+				                     semaine=${semaine},
+				                     mois=${mois}
+				                )}">
+				                 &raquo;
+				             </a>
+				         </li>
 
-				    </ul>
-				</div>
+				     </ul>
+				 </div>
 
 				
 				</fieldset> 
@@ -209,41 +277,80 @@
 			<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
 					
 			<script>
-			document.addEventListener('DOMContentLoaded', function() {
-			    // Sélectionner tous les boutons réinitialiser
-			    document.querySelectorAll('.del-btn').forEach(btn => {
-			        btn.addEventListener('click', function(e) {
-			            e.preventDefault(); // empêcher le href="#"
+				document.addEventListener('DOMContentLoaded', function() {
 
-			            const href = this.href;
+				    // DELETE
+				    document.querySelectorAll('.del-btn').forEach(btn => {
+				        btn.addEventListener('click', function(e) {
+				            e.preventDefault();
 
-			            Swal.fire({
-			                title: 'Confirmation',
-			                text: "Voulez-vous supprimer ?",
-			                icon: 'warning',
-			                showCancelButton: true,
-			                confirmButtonText: 'Oui',
-			                cancelButtonText: 'Non'
-			            }).then((result) => {
-			                if (result.isConfirmed) {
-			                    // Redirection vers le controller
-			                    window.location.href = href;
-			                }
-			            });
-			        });
-				
-				// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+				            const href = this.href;
+
+				            Swal.fire({
+				                title: 'Confirmation',
+				                text: "Voulez-vous supprimer ?",
+				                icon: 'warning',
+				                showCancelButton: true,
+				                confirmButtonText: 'Oui',
+				                cancelButtonText: 'Non'
+				            }).then((result) => {
+				                if (result.isConfirmed) {
+				                    window.location.href = href;
+				                }
+				            });
+				        });
+				    });
+
+				    // SUCCESS MESSAGE (en dehors !)
 				    const successDiv = document.getElementById('successMessage');
 				    if (successDiv && successDiv.textContent.trim() !== '') {
-				        const msg = successDiv.textContent.trim();
 				        Swal.fire({
 				            icon: 'success',
 				            title: 'Succès !',
-				            text: msg,
-				            confirmButtonText: 'OK'
+				            text: successDiv.textContent.trim()
 				        });
 				    }
+
 				});
+			</script>
+			
+			<script>
+			document.addEventListener("DOMContentLoaded", function () {
+
+			    const periode = document.getElementById("periodeType");
+			    const semaineBlock = document.getElementById("semaineBlock");
+			    const moisBlock = document.getElementById("moisBlock");
+
+			    const semaineInput = document.querySelector("input[name='semaine']");
+			    const moisInput = document.querySelector("input[name='mois']");
+
+			    function togglePeriode() {
+
+			        if (periode.value === "SEMAINE") {
+			            semaineBlock.style.display = "block";
+			            moisBlock.style.display = "none";
+
+			            semaineInput.disabled = false;
+			            moisInput.disabled = true;
+
+			        } else if (periode.value === "MOIS") {
+			            semaineBlock.style.display = "none";
+			            moisBlock.style.display = "block";
+
+			            semaineInput.disabled = true;
+			            moisInput.disabled = false;
+
+			        } else {
+			            semaineBlock.style.display = "none";
+			            moisBlock.style.display = "none";
+
+			            semaineInput.disabled = true;
+			            moisInput.disabled = true;
+			        }
+			    }
+
+			    togglePeriode();
+			    periode.addEventListener("change", togglePeriode);
 			});
 			</script>
 	   

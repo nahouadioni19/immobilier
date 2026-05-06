@@ -167,6 +167,7 @@ public class UtilisateurService extends BaseService<Utilisateur> {
             entity.setUsername(user.getUsername());
             entity.setEmail(user.getEmail());
             entity.setEnabled(user.isEnabled());
+            entity.setAgence(getCurrentAgence());
             // ajoute les autres champs utiles
 
             repo.save(entity);
