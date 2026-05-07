@@ -19,8 +19,9 @@
 										
 				<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
 					    
-					<form method="get" th:action="@{/recouvrements}" class="row g-2 mb-3">
-
+					<form id="filterForm" method="get" th:action="@{/recouvrements}" class="row g-2 mb-3">
+						
+						<input type="hidden" name="page" value="0">
 					    <!-- Période -->
 					    <div class="col-md-2">
 					        <select name="periodeType" class="form-select" id="periodeType">
@@ -31,9 +32,17 @@
 					    </div>
 
 					    <!-- SEMAINE -->
-					    <div class="col-md-2" id="semaineBlock" style="display:none;">
-					        <input type="week" name="semaine" class="form-control" th:value="${semaine}">
-					    </div>
+						<div class="col-md-3" id="semaineBlock" style="display:none;">
+							<select name="dateSemaine" class="form-select">
+							    <option value="">Sélectionner une semaine</option>
+
+							    <option th:each="s : ${semaines}"
+							            th:value="${s.dateDebut}"
+							            th:text="${s.libelle}"
+							            th:selected="${dateSemaine != null and s.dateDebut.equals(dateSemaine)}">
+							    </option>
+							</select>
+						</div>						
 
 					    <!-- MOIS -->
 					    <div class="col-md-2" id="moisBlock" style="display:none;">
@@ -60,12 +69,7 @@
 					               placeholder="Nom ou prénom locataire"
 					               th:value="${keyword}">
 					    </div>
-						
-						<div class="col-md-2">
-													        <button type="submit" class="btn btn-success w-100">
-													            Rechercher
-													        </button>
-													    </div>
+												
 					    <!-- Reset -->
 					    <div class="col-md-2">
 					        <a th:href="@{/recouvrements}" class="btn btn-secondary w-100">
@@ -74,6 +78,7 @@
 					    </div>
 
 					</form>
+					
 					<br/>
 				    <table class="table">
 				        <thead class="table-success">
@@ -166,7 +171,7 @@
 				                     agentId=${selectedAgent},
 				                     keyword=${keyword},
 				                     periodeType=${periodeType},
-				                     semaine=${semaine},
+				                     dateSemaine=${dateSemaine},
 				                     mois=${mois}
 				                )}">
 				                 &laquo;
@@ -182,7 +187,7 @@
 				                     agentId=${selectedAgent},
 				                     keyword=${keyword},
 				                     periodeType=${periodeType},
-				                     semaine=${semaine},
+				                     dateSemaine=${dateSemaine},
 				                     mois=${mois}
 				                )}">
 				                 1
@@ -210,7 +215,7 @@
 				                     agentId=${selectedAgent},
 				                     keyword=${keyword},
 				                     periodeType=${periodeType},
-				                     semaine=${semaine},
+				                     dateSemaine=${dateSemaine},
 				                     mois=${mois}
 				                )}">
 				             </a>
@@ -233,7 +238,7 @@
 				                     agentId=${selectedAgent},
 				                     keyword=${keyword},
 				                     periodeType=${periodeType},
-				                     semaine=${semaine},
+				                     dateSemaine=${dateSemaine},
 				                     mois=${mois}
 				                )}">
 				             </a>
@@ -248,7 +253,7 @@
 				                     agentId=${selectedAgent},
 				                     keyword=${keyword},
 				                     periodeType=${periodeType},
-				                     semaine=${semaine},
+				                     dateSemaine=${dateSemaine},
 				                     mois=${mois}
 				                )}">
 				                 &raquo;
@@ -317,40 +322,109 @@
 			<script>
 			document.addEventListener("DOMContentLoaded", function () {
 
+			    const form = document.getElementById("filterForm");
+
 			    const periode = document.getElementById("periodeType");
 			    const semaineBlock = document.getElementById("semaineBlock");
 			    const moisBlock = document.getElementById("moisBlock");
 
-			    const semaineInput = document.querySelector("input[name='semaine']");
-			    const moisInput = document.querySelector("input[name='mois']");
+			    const dateSemaine = document.querySelector("select[name='dateSemaine']");
+			    const mois = document.querySelector("input[name='mois']");
+			    const keyword = document.querySelector("input[name='keyword']");
+			    const agent = document.querySelector("select[name='agentId']");
 
-			    function togglePeriode() {
+			    // =====================
+			    // AFFICHAGE
+			    // =====================
+			    function toggle() {
 
 			        if (periode.value === "SEMAINE") {
 			            semaineBlock.style.display = "block";
 			            moisBlock.style.display = "none";
 
-			            semaineInput.disabled = false;
-			            moisInput.disabled = true;
-
 			        } else if (periode.value === "MOIS") {
 			            semaineBlock.style.display = "none";
 			            moisBlock.style.display = "block";
 
-			            semaineInput.disabled = true;
-			            moisInput.disabled = false;
-
 			        } else {
 			            semaineBlock.style.display = "none";
 			            moisBlock.style.display = "none";
-
-			            semaineInput.disabled = true;
-			            moisInput.disabled = true;
 			        }
 			    }
 
-			    togglePeriode();
-			    periode.addEventListener("change", togglePeriode);
+			    // =====================
+			    // AUTO SELECTION SEMAINE
+			    // =====================
+			    function autoSelectWeek() {
+
+			        if (periode.value === "SEMAINE" && dateSemaine && !dateSemaine.value) {
+
+			            const today = new Date();
+
+			            const start = new Date(today);
+			            start.setDate(today.getDate() - today.getDay() + 1); // lundi
+
+			            const yyyy = start.getFullYear();
+			            const mm = String(start.getMonth() + 1).padStart(2, '0');
+			            const dd = String(start.getDate()).padStart(2, '0');
+
+			            const value = `${yyyy}-${mm}-${dd}`;
+
+			            for (let opt of dateSemaine.options) {
+			                if (opt.value === value) {
+			                    dateSemaine.value = value;
+			                    break;
+			                }
+			            }
+			        }
+			    }
+
+			    // =====================
+			    // INIT
+			    // =====================
+			    toggle();
+			    autoSelectWeek();
+
+			    // =====================
+			    // EVENTS
+			    // =====================
+
+			    periode.addEventListener("change", function () {
+
+			        toggle();
+			        autoSelectWeek();
+
+			        if (periode.value !== "SEMAINE") {
+			            dateSemaine.value = "";
+			        }
+
+			        if (periode.value !== "MOIS") {
+			            mois.value = "";
+			        }
+
+			        form.submit();
+			    });
+
+			    if (dateSemaine) {
+			        dateSemaine.addEventListener("change", () => form.submit());
+			    }
+
+			    if (mois) {
+			        mois.addEventListener("change", () => form.submit());
+			    }
+
+			    if (agent) {
+			        agent.addEventListener("change", () => form.submit());
+			    }
+
+			    let timer;
+			    keyword.addEventListener("input", function () {
+
+			        clearTimeout(timer);
+
+			        timer = setTimeout(() => form.submit(), 500);
+			    });
+
 			});
 			</script>
 	   

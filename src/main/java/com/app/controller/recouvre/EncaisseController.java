@@ -3,7 +3,9 @@ package com.app.controller.recouvre;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,10 +28,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.app.dto.BailleurDTO;
 import com.app.dto.EncaisseDTO;
 import com.app.dto.EncaisseForm;
-import com.app.dto.EncaisseListDto;
 import com.app.dto.IdentificationProjection;
 import com.app.entities.administration.Utilisateur;
 import com.app.entities.recouvre.Encaisse;
@@ -67,25 +68,259 @@ public class EncaisseController {
 		this.fileStorageService = fileStorageService;
 	}
 	
+	
 	@GetMapping
 	public String listEncaisses(
 	        @AuthenticationPrincipal UserPrincipal principal,
 	        Model model,
 	        @RequestParam(value = "page", defaultValue = "0") int page,
 	        @RequestParam(value = "keyword", required = false) String keyword,
+	        @RequestParam(value = "agentId", required = false) Integer agentId,
 	        @RequestParam(value = "periodeType", required = false) String periodeType,
-	        @RequestParam(value = "semaine", required = false) String semaine,
+	        @RequestParam(value = "dateSemaine", required = false)
+	        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateSemaine,
+	        @RequestParam(value = "mois", required = false) String mois) {
+
+	    int pageSize = 8;
+
+	    // AGENT CONNECTÉ
+	    if (agentId == null) {
+	        agentId = principal.getId();
+	    }
+
+	    // KEYWORD
+	    String search = (keyword == null || keyword.isBlank())
+	            ? null
+	            : "%" + keyword.trim().toLowerCase() + "%";
+
+	    LocalDate startDate = null;
+	    LocalDate endDate = null;
+
+	    // =====================
+	    // SEMAINE
+	    // =====================
+	    if ("SEMAINE".equals(periodeType)) {
+
+	        WeekFields weekFields = WeekFields.ISO;
+	        LocalDate today = LocalDate.now();
+
+	        LocalDate currentWeekStart = today.with(weekFields.dayOfWeek(), 1);
+	        LocalDate currentWeekEnd = currentWeekStart.plusDays(6);
+
+	        // si rien sélectionné → semaine actuelle
+	        if (dateSemaine == null) {
+	            dateSemaine = currentWeekStart;
+	        }
+
+	        startDate = dateSemaine.with(DayOfWeek.MONDAY);
+	        endDate = dateSemaine.with(DayOfWeek.SUNDAY);
+	    }
+
+	    // =====================
+	    // MOIS
+	    // =====================
+	    if ("MOIS".equals(periodeType) && mois != null && !mois.isBlank()) {
+
+	        YearMonth ym = YearMonth.parse(mois);
+
+	        startDate = ym.atDay(1);
+	        endDate = ym.atEndOfMonth();
+	    }
+
+	    System.out.println("START = " + startDate);
+	    System.out.println("END   = " + endDate);
+	    System.out.println("AGENT = " + agentId);
+
+	    Page<EncaisseDTO> encaissesPage = service.search(
+	            search,
+	            agentId,
+	            startDate,
+	            endDate,
+	            PageRequest.of(page, pageSize)
+	    );
+
+	    model.addAttribute("encaissesPage", encaissesPage);
+
+	    model.addAttribute("selectedAgent", agentId);
+	    model.addAttribute("keyword", keyword);
+
+	    model.addAttribute("periodeType", periodeType);
+	    model.addAttribute("dateSemaine", dateSemaine);
+	    model.addAttribute("mois", mois);
+
+	    // =====================
+	    // SEMAINES LISTE
+	    // =====================
+	    List<Map<String, Object>> semaines = new ArrayList<>();
+
+	    LocalDate debut = LocalDate.now().minusWeeks(12);
+
+	    for (int i = 0; i < 24; i++) {
+
+	        LocalDate lundi = debut.plusWeeks(i).with(DayOfWeek.MONDAY);
+	        LocalDate dimanche = lundi.with(DayOfWeek.SUNDAY);
+
+	        Map<String, Object> item = new HashMap<>();
+	        item.put("dateDebut", lundi);
+	        item.put("libelle",
+	                "Semaine du " +
+	                        lundi.format(DateTimeFormatter.ofPattern("dd/MM")) +
+	                        " - " +
+	                        dimanche.format(DateTimeFormatter.ofPattern("dd/MM"))
+	        );
+
+	        semaines.add(item);
+	    }
+
+	    model.addAttribute("semaines", semaines);
+
+	    return "recouvrement/list";
+	}
+	
+	
+	/*@GetMapping
+	public String listEncaisses(
+	        @AuthenticationPrincipal UserPrincipal principal,
+	        Model model,
+	        @RequestParam(value = "page", defaultValue = "0") int page,
+	        @RequestParam(value = "keyword", required = false) String keyword,
+	        @RequestParam(value = "agentId", required = false) Integer agentId,
+	        @RequestParam(value = "periodeType", required = false) String periodeType,
+	        @RequestParam(value = "dateSemaine", required = false)
+	        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateSemaine,
 	        @RequestParam(value = "mois", required = false) String mois,
 	        HttpServletRequest request) {
 
 	    int pageSize = 8;
 
-	    Integer agentId = principal.getId(); // ✔ propre
+	    // AGENT CONNECTÉ
+	    if (agentId == null) {
+	        agentId = principal.getId();
+	    }
+
+	    LocalDate startDate = null;
+	    LocalDate endDate = null;
+
+	    // KEYWORD
+	    keyword = (keyword == null || keyword.isBlank())
+	            ? null
+	            : "%" + keyword.trim().toLowerCase() + "%";
+
+	    // =====================
+	    // PERIODE SEMAINE
+	    // =====================
+	    if ("SEMAINE".equals(periodeType) && dateSemaine != null) {
+
+	        startDate = dateSemaine.with(DayOfWeek.MONDAY);
+	        endDate = dateSemaine.with(DayOfWeek.SUNDAY);
+	    }
+
+	    // =====================
+	    // PERIODE MOIS
+	    // =====================
+	    if ("MOIS".equals(periodeType)
+	            && mois != null
+	            && !mois.isBlank()) {
+
+	        try {
+
+	            YearMonth ym = YearMonth.parse(mois);
+
+	            startDate = ym.atDay(1);
+	            endDate = ym.atEndOfMonth();
+
+	        } catch (Exception e) {
+
+	            startDate = null;
+	            endDate = null;
+	        }
+	    }
+
+	    // DEBUG
+	    System.out.println("START = " + startDate);
+	    System.out.println("END   = " + endDate);
+	    System.out.println("AGENT = " + agentId);
+
+	    Page<EncaisseDTO> encaissesPage =
+	            service.search(
+	                    keyword,
+	                    agentId,
+	                    startDate,
+	                    endDate,
+	                    PageRequest.of(page, pageSize)
+	            );
+
+	    model.addAttribute("encaissesPage", encaissesPage);
+
+	    model.addAttribute("selectedAgent", agentId);
+	    model.addAttribute("keyword", keyword);
+
+	    model.addAttribute("periodeType", periodeType);
+	    model.addAttribute("dateSemaine", dateSemaine);
+	    model.addAttribute("mois", mois);
+
+	    List<Utilisateur> utilisateurs =
+	            utilisateurService.findByAgentRecouvrement("RECOUV");
+
+	    model.addAttribute("utilisateurs", utilisateurs);
+	    
+	    List<Map<String, Object>> semaines = new ArrayList<>();
+
+	    LocalDate debut = LocalDate.now().minusWeeks(12);
+
+	    for (int i = 0; i < 24; i++) {
+
+	        LocalDate lundi = debut.plusWeeks(i).with(DayOfWeek.MONDAY);
+	        LocalDate dimanche = lundi.with(DayOfWeek.SUNDAY);
+
+	        Map<String, Object> item = new HashMap<>();
+
+	        item.put("dateDebut", lundi);
+
+	        item.put(
+	                "libelle",
+	                "Semaine du "
+	                        + lundi.format(DateTimeFormatter.ofPattern("dd/MM"))
+	                        + " - "
+	                        + dimanche.format(DateTimeFormatter.ofPattern("dd/MM"))
+	        );
+
+	        semaines.add(item);
+	    }
+
+	    model.addAttribute("semaines", semaines);
+	    
+	    return "recouvrement/list";
+	}*/
+	
+	
+	
+	/*@GetMapping
+	public String listEncaisses(
+	        @AuthenticationPrincipal UserPrincipal principal,
+	        Model model,
+	        @RequestParam(value = "page", defaultValue = "0") int page,
+	        @RequestParam(value = "keyword", required = false) String keyword,
+	        @RequestParam(value = "agentId", required = false) Integer agentId,
+	        @RequestParam(value = "periodeType", required = false) String periodeType,
+	        @RequestParam(value = "dateSemaine", required = false) LocalDate dateSemaine,
+	        @RequestParam(value = "mois", required = false) String mois,
+	        HttpServletRequest request) {
+
+	    int pageSize = 8;
+
+	    //Integer agentId = principal.getId(); // ✔ propre
+	    
+	    if (agentId == null) {
+	        agentId = principal.getId();
+	    }
 	    
 	    LocalDate startDate = null;
 	    LocalDate endDate = null;
 
-	    keyword = (keyword == null) ? "" : keyword.trim();
+	    keyword = (keyword == null || keyword.isBlank())
+	            ? null
+	            : keyword.trim();
 
 	     // =====================
 	    // PERIODE SEMAINE
@@ -109,6 +344,17 @@ public class EncaisseController {
 	            endDate = null;
 	        }
 	    }
+	    
+	    Integer week = null;
+	    Integer year = null;
+
+	    if (dateSemaine != null && "SEMAINE".equals(periodeType)) {
+
+	        WeekFields weekFields = WeekFields.ISO;
+
+	        week = dateSemaine.get(weekFields.weekOfWeekBasedYear());
+	        year = dateSemaine.get(weekFields.weekBasedYear());
+	    }
 
 	    // =====================
 	    // PERIODE MOIS
@@ -128,7 +374,7 @@ public class EncaisseController {
 	    System.out.println("START = " + startDate);
 	    System.out.println("END   = " + endDate);
 	    System.out.println("AGENT :" + agentId);
-	    /*Page<EncaisseListDto> encaissesPage =
+	    Page<EncaisseListDto> encaissesPage =
 	            service.findByUtilisateur(
 	                    principal,
 	                    agentId,
@@ -136,10 +382,16 @@ public class EncaisseController {
 	                    startDate,
 	                    endDate,
 	                    PageRequest.of(page, pageSize)
-	            );*/
+	            );
 	    
 	    Page<EncaisseDTO> encaissesPage =
-                service.search(keyword, agentId, PageRequest.of(page, 8));
+                service.search(keyword, 
+                		agentId, 
+                		startDate,
+	                    endDate,
+	                    week,
+	                    year,
+	                    PageRequest.of(page, 8));
 
 	    model.addAttribute("encaissesPage", encaissesPage);
 	    model.addAttribute("selectedAgent", agentId);
@@ -153,7 +405,7 @@ public class EncaisseController {
 	    model.addAttribute("utilisateurs", utilisateurs);
 
 	    return "recouvrement/list";
-	}
+	}*/
 	
 	
 	@GetMapping("/create")
@@ -375,7 +627,7 @@ public class EncaisseController {
 	        // =========================
 	        // 🔐 statut automatique
 	        // =========================
-	        form.setStatut(isDirec ? 1 : 0);
+	        form.setStatut(isDirec ? 1 : 1);
 
 	        // =========================
 	        // 📁 GESTION FICHIER CHEQUE

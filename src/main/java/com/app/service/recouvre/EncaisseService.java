@@ -123,7 +123,7 @@ public class EncaisseService extends BaseService<Encaisse>{
 	}*/
 	
 	
-	public Page<EncaisseListDto> findByUtilisateur(
+	/*public Page<EncaisseListDto> findByUtilisateur(
 	        UserPrincipal principal,
 	        Long agentId,
 	        String keyword,
@@ -146,13 +146,13 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    // ===================== ADMIN / DIRECTEUR =====================
 	    if (isDirec) {
 
-	        /*return repo.findEncaissePageByAdmin(
+	        return repo.findEncaissePageByAdmin(
 	                agentId,
 	                keyword,
 	                startDate,
 	                endDate,
 	                pageable
-	        );*/
+	        );
 	    }
 
 	    // ===================== AGENT SIMPLE =====================
@@ -163,7 +163,7 @@ public class EncaisseService extends BaseService<Encaisse>{
 	            endDate,
 	            pageable
 	    );
-	}
+	}*/
 	
 	public Page<EncaisseListDto> findWithFilters(
 	        UserPrincipal principal,
@@ -304,7 +304,7 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    if (form.getStatut() != null) {
 	        entity.setStatut(form.getStatut());
 	    } else if (entity.getStatut() == null) {
-	        entity.setStatut(0);
+	        entity.setStatut(1);
 	    }
 
 	    // =========================
@@ -520,17 +520,29 @@ public class EncaisseService extends BaseService<Encaisse>{
         return page.map(this::toDTO);
     }*/
 	
-	public Page<EncaisseDTO> search(String keyword, Integer agentId, Pageable pageable) {
-		
-		Integer agenceId = getCurrentAgenceId();
-		
-		System.out.println("AGENCE :" + agenceId);
-		
-	    if (keyword != null && keyword.isBlank()) {
-	        keyword = null;
+	public Page<EncaisseDTO> search(
+	        String keyword,
+	        Integer agentId,
+	        LocalDate startDate,
+	        LocalDate endDate,
+	        Pageable pageable) {
+
+	    Integer agenceId = getCurrentAgenceId();
+
+	    String search = "";
+
+	    if (keyword != null && !keyword.isBlank()) {
+	        search = "%" + keyword.toLowerCase().trim() + "%";
 	    }
 
-	    return repo.searchEncaisse(keyword, agenceId, agentId, pageable);
+	    return repo.searchEncaisse(
+	            search,
+	            agenceId,
+	            agentId,
+	            startDate,
+	            endDate,
+	            pageable
+	    );
 	}
 
     /*private EncaisseDTO toDTO(Encaisse e) {
