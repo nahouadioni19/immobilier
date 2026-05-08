@@ -132,53 +132,11 @@
 					        </tr>
 					        </thead>
 					        <tbody>								
-							<!--<tr th:each="app, iter : *{appartements}">
+							<tr th:each="app, iter : *{appartements}">
 							    <td><input type="text" th:field="*{appartements[__${iter.index}__].numAppart}" class="form-control" oninput="uppercaseWords(this)" required></td>
 							    <td><input type="number" th:field="*{appartements[__${iter.index}__].loyerMensuel}" class="form-control"></td>
 							    <td><input type="text" th:field="*{appartements[__${iter.index}__].libelle}" class="form-control" oninput="uppercaseWords(this)" required></td>
 							    <td><button type="button" onclick="supprimerLigne(this)" class="btn btn-danger">Supprimer</button></td>
-							  </tr>-->
-							  <tr th:each="app, iter : *{appartements}">
-
-							      <input type="hidden"
-							             th:field="*{appartements[__${iter.index}__].id}" />
-
-							      <input type="hidden"
-							             th:field="*{appartements[__${iter.index}__].version}" />
-
-							      <!-- IMPORTANT -->
-							      <input type="hidden"
-							             th:field="*{appartements[__${iter.index}__].statut}"
-							             class="statut-appartement" />
-
-							      <td>
-							          <input type="text"
-							                 th:field="*{appartements[__${iter.index}__].numAppart}"
-							                 class="form-control" oninput="uppercaseWords(this)"
-							                 required>
-							      </td>
-
-							      <td>
-							          <input type="number"
-							                 th:field="*{appartements[__${iter.index}__].loyerMensuel}"
-							                 class="form-control">
-							      </td>
-
-							      <td>
-							          <input type="text"
-							                 th:field="*{appartements[__${iter.index}__].libelle}"
-							                 class="form-control" oninput="uppercaseWords(this)" 
-							                 required>
-							      </td>
-
-							      <td>
-							          <button type="button"
-							                  onclick="supprimerLigne(this)"
-							                  class="btn btn-danger">
-							              Supprimer
-							          </button>
-							      </td>
-
 							  </tr>
 					        </tbody>
 					    </table>
@@ -217,87 +175,22 @@
 		  let compteurAppartements = document.querySelectorAll('#table-appartements tbody tr').length;
 		 
 		  function ajouterAppartement() {
-
 		      const tbody = document.querySelector('#table-appartements tbody');
 		      const idx = compteurAppartements++;
-
+	
 		      const tr = document.createElement('tr');
-
 		      tr.innerHTML = `
-
-		          <input type="hidden" name="appartements[${idx}].id" value="">
-		          <input type="hidden" name="appartements[${idx}].version" value="0">
-
-		          <!-- NOUVEAU -->
-		          <input type="hidden"
-		                 name="appartements[${idx}].statut"
-		                 value="LIBRE"
-		                 class="statut-appartement">
-
-		          <td>
-		              <input type="text"
-		                     name="appartements[${idx}].numAppart"
-		                     class="form-control" oninput="uppercaseWords(this)" 
-		                     required>
-		          </td>
-
-		          <td>
-		              <input type="number"
-		                     name="appartements[${idx}].loyerMensuel"
-		                     class="form-control">
-		          </td>
-
-		          <td>
-		              <input type="text"
-		                     name="appartements[${idx}].libelle"
-		                     class="form-control" oninput="uppercaseWords(this)" 
-		                     required>
-		          </td>
-
-		          <td>
-		              <button type="button"
-		                      onclick="supprimerLigne(this)"
-		                      class="btn btn-danger">
-		                  Supprimer
-		              </button>
-		          </td>
+		        <td><input type="text" name="appartements[${idx}].numAppart" class="form-control" oninput="uppercaseWords(this)" required></td>
+		        <td><input type="number" name="appartements[${idx}].loyerMensuel" class="form-control"></td>
+		        <td><input type="text" name="appartements[${idx}].libelle" class="form-control" oninput="uppercaseWords(this)" required></td>
+		        <td><button type="button" onclick="supprimerLigne(this)" class="btn btn-danger">Supprimer</button></td>
 		      `;
-
 		      tbody.appendChild(tr);
 		  }
-		  
-		  		  
+	
 		  function supprimerLigne(btn) {
-
-		      const tr = btn.closest('tr');
-
-		      const statutInput = tr.querySelector('.statut-appartement');
-
-		      // valeur réelle
-		      let statut = statutInput
-		          ? statutInput.value
-		          : 'LIBRE';
-
-		      statut = statut.trim().toUpperCase();
-
-		      console.log("STATUT =", statut);
-
-		      // 🔥 BLOQUER SI ≠ LIBRE
-		      if (statut !== 'LIBRE') {
-
-		          Swal.fire({
-		              icon: 'warning',
-		              title: 'Suppression impossible',
-		              text: 'Cet appartement ne peut pas être supprimé.'
-		          });
-
-		          return;
-		      }
-
-		      // 🔥 AUTORISÉ UNIQUEMENT SI LIBRE
-		      tr.remove();
+		      btn.closest('tr').remove();
 		  }
-		  
 		</script>
 		
 		<script>

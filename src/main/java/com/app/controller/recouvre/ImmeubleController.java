@@ -45,24 +45,19 @@ import jakarta.transaction.Transactional;
 public class ImmeubleController{
 
 	private final ImmeubleService service;
-	private final BailleurService bailleurService;
 	private final UtilisateurService utilisateurService;
 	private final AppartementService appartementService;
-	private final PaginationService paginationService;
-    private final SetupPage setup;
 
     @Autowired
 	private MessageSource messageSource;
     
-    public ImmeubleController(ImmeubleService service, SetupPage setup, BailleurService bailleurService, 
-    			AppartementService appartementService, PaginationService paginationService, UtilisateurService utilisateurService) {
+    public ImmeubleController(ImmeubleService service, 
+    			AppartementService appartementService, 
+    			UtilisateurService utilisateurService) {
     	
         this.service = service;
-        this.setup = setup;
-        this.bailleurService = bailleurService;
         this.utilisateurService = utilisateurService;
         this.appartementService = appartementService;
-        this.paginationService = paginationService;
     }
 
     @GetMapping
@@ -145,6 +140,13 @@ public class ImmeubleController{
 
             boolean isNew = (form.getImmeuble().getId() == null);
 
+            for (Appartement a : form.getAppartements()) {
+
+                System.out.println("ID APPART = " + a.getId());
+                System.out.println("NUM = " + a.getNumAppart());
+                System.out.println("LOYER = " + a.getLoyerMensuel());
+            }
+            
             // 🔥 Toute la logique est dans le service
             service.saveImmeubleWithAppartement(form);
 

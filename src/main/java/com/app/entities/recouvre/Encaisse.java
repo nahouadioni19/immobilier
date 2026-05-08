@@ -30,8 +30,90 @@ import lombok.Setter;
 @NoArgsConstructor
 @Table(name = "t_encaisse")
 @DynamicUpdate
+public class Encaisse extends BaseEntity {
 
-public class Encaisse extends BaseEntity{
+    // =========================
+    // UTILISATEUR
+    // =========================
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "utilisateur_id")
+    private Utilisateur utilisateur;
+
+    // =========================
+    // BAIL (IMPORTANT FIX)
+    // =========================
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "bail_id", nullable = false)
+    private Bail bail;
+
+    // =========================
+    // IDENTIFICATION
+    // =========================
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "identification_id")
+    private Identification identification;
+
+    // =========================
+    // AGENCE
+    // =========================
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "agence_id", nullable = false)
+    private Agence agence;
+
+    // =========================
+    // DATE
+    // =========================
+    @DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
+    @Column(name = "enc_date", nullable = false)
+    private LocalDate encDate;
+
+    // =========================
+    // MONTANTS
+    // =========================
+    private Long encMontant = 0L;
+    private Long encPerdeb = 0L;
+    private Long encAndeb = 0L;
+    private Long encPerfin = 0L;
+    private Long encAnfin = 0L;
+    private Long enctotal = 0L;
+    private Long encloyer = 0L;
+
+    private boolean encvalide;
+
+    private Long encmois = 0L;
+    private Long encannee = 0L;
+
+    private String encStatutRetour;
+    private String encMode;
+
+    private Long encArriere = 0L;
+    private String encDeb;
+    private String encFin;
+
+    private Long encPenalite = 0L;
+    private Long encNet = 0L;
+
+    private String encNumChq;
+
+    private Long encRepport = 0L;
+    private Long encMontReppo = 0L;
+
+    // =========================
+    // STATUT
+    // =========================
+    @Column(nullable = false)
+    private Integer statut = 0; // 0=attente, 1=transmis
+
+    private Integer filtreAgentId;
+
+    @Column(length = 255)
+    private String chequePath;
+}
+
+
+
+
+/*public class Encaisse extends BaseEntity{
 	
 	@ManyToOne
 	@JoinColumn(name = "utilisateur_id", nullable = true, referencedColumnName ="idt") 
@@ -135,4 +217,4 @@ public class Encaisse extends BaseEntity{
 	@Column(name = "cheque_path", length = 255)
     private String chequePath;
 
-}
+}*/

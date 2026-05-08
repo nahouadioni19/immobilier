@@ -41,14 +41,108 @@ import lombok.Setter;
 @NoArgsConstructor
 @Table(name = "t_bail")
 @DynamicUpdate
-
 public class Bail extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "agence_id", nullable = false)
+    private Agence agence;
+
+    @NotNull
+    @Column(nullable = false)
+    private LocalDate dateDebut;
+
+    @NotNull
+    @Column(nullable = false)
+    private LocalDate dateFin;
+
+    private LocalDate dateResiliation;
+
+    @Column(nullable = false)
+    private Long montantLoyer = 0L;
+
+    @Column(nullable = false)
+    private Long montantCharges = 0L;
+
+    @Column(nullable = false)
+    private Long caution = 0L;
+
+    @Column(nullable = false)
+    private Long avance = 0L;
+
+    @Column(nullable = false)
+    private Long honoraire = 0L;
+
+    @Column(nullable = false)
+    private Long total = 0L;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatutBail statut = StatutBail.ACTIF;
+
+    @Enumerated(EnumType.STRING)
+    private UsageBail utilite = UsageBail.HABITATION;
+
+    // 🔥 IMPORTANT : PAS DE CASCADE ICI
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "appartement_id", nullable = false)
+    private Appartement appartement;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "locataire_id", nullable = false)
+    private Locataire locataire;
+
+    @DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
+    private LocalDate derniereDatePaiement;
+
+    @Column(nullable = false)
+    private boolean actif = true;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    // =========================
+    // CALCUL TOTAL
+    // =========================
+    
+    @Transient
+    public long getDureeEnMois() {
+        if (dateDebut != null && dateFin != null) {
+            return ChronoUnit.MONTHS.between(
+                    YearMonth.from(dateDebut),
+                    YearMonth.from(dateFin)
+            ) + 1;
+        }
+        return 0;
+    }
+    
+    @PrePersist
+    @PreUpdate
+    private void calculerTotal() {
+
+        this.total =
+                safe(montantLoyer)
+              + safe(montantCharges)
+              + safe(caution)
+              + safe(avance)
+              + safe(honoraire);
+
+        if (dateResiliation != null) {
+            this.statut = StatutBail.RESILIE;
+        }
+    }
+
+    private long safe(Long v) {
+        return v == null ? 0L : v;
+    }
+}
+
+
+/*public class Bail extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agence_id", nullable = false)
     private Agence agence;
 	
-    /* ===== Dates ===== */
 
     @NotNull(message = "La date de début est obligatoire")
     @DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
@@ -63,7 +157,6 @@ public class Bail extends BaseEntity {
     @DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
     private LocalDate dateResiliation;
 
-    /* ===== Montants ===== */
 
     @NotNull @Min(0)
     @Column(nullable = false)
@@ -88,7 +181,6 @@ public class Bail extends BaseEntity {
     @Column(nullable = false)
     private Long total = 0L;
 
-    /* ===== Statuts ===== */
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -98,7 +190,6 @@ public class Bail extends BaseEntity {
     @Column(nullable = false, length = 20)
     private UsageBail utilite = UsageBail.HABITATION;
 
-    /* ===== Relations ===== */
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "appartement_id", nullable = false)
@@ -108,13 +199,12 @@ public class Bail extends BaseEntity {
     @JoinColumn(name = "locataire_id", nullable = false)
     private Locataire locataire;
 
-    /* ===== Paiement ===== */
 
     @DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
     @Column(name = "der_paye_date")
     private LocalDate derniereDatePaiement;
 
-    /* ===== Calcul durée ===== */
+  
 
     @Transient
     public long getDureeEnMois() {
@@ -127,7 +217,7 @@ public class Bail extends BaseEntity {
         return 0;
     }
 
-    /* ===== Calcul automatique ===== */
+   
 
     @PrePersist
     @PreUpdate
@@ -156,7 +246,7 @@ public class Bail extends BaseEntity {
 
     @Column(nullable = false)
     private boolean deleted = false;
-}
+}*/
 
 
 
