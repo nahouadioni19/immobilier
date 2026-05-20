@@ -35,7 +35,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     public Authentication authenticate(Authentication authentication)
             throws AuthenticationException {
 
-        System.out.println("🔥 CUSTOM AUTH PROVIDER ACTIF");
+        System.out.println("CUSTOM AUTH PROVIDER ACTIF");
         
         String username = authentication.getName();
         String password = authentication.getCredentials().toString();

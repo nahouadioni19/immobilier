@@ -46,27 +46,3 @@ public class CustomAuthFailureHandler implements AuthenticationFailureHandler {
         response.sendRedirect(request.getContextPath() + "/login?error=true");
     }
 }
-
-/*@Component
-public class CustomAuthFailureHandler implements AuthenticationFailureHandler {
-    
-	@Override
-	public void onAuthenticationFailure(HttpServletRequest request,
-	                                    HttpServletResponse response,
-	                                    AuthenticationException exception)
-	        throws IOException {
-
-	    if (exception instanceof AbonnementExpireException) {
-	        response.sendRedirect(request.getContextPath() + "/paiement/expired");
-	        return;
-	    }
-
-	    if (exception instanceof LockedException) {
-	        response.sendRedirect(request.getContextPath() + "/login?error=blocked");
-	        return;
-	    }
-
-	    response.sendRedirect(request.getContextPath() + "/login?error=true");
-	}
-    
-}*/

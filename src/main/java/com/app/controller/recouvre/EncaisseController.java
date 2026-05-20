@@ -133,7 +133,7 @@ public class EncaisseController {
 
 	    Page<EncaisseDTO> encaissesPage = service.search(
 	            search,
-	            agentId,
+	            /*agentId,*/
 	            startDate,
 	            endDate,
 	            PageRequest.of(page, pageSize)

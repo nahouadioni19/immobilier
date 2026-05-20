@@ -35,28 +35,15 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-//@SequenceGenerator(name = "droit_gen", sequenceName = "droit_acces_seq", allocationSize = 1)
 @DynamicUpdate
 public class DroitAcces extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
-
-	/*
-	 * @Override
-	 * 
-	 * @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "droit_gen")
-	 * 
-	 * @Id public Integer getId() { return super.getId(); }
-	 */
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
     @JoinColumn(name = "type_role_id", nullable = false, referencedColumnName = "idt")
     private Typerole typeRole;
-
-    /*@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu_id", nullable = false, referencedColumnName = "idt")
-    private Menu menu;*/
 
     @Enumerated(EnumType.STRING)
     private ActionMenu action;

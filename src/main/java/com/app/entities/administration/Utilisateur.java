@@ -30,7 +30,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Utilisateur extends BaseEntity implements UserDetails {
 
     private static final long serialVersionUID = 1L;
@@ -155,8 +154,8 @@ public class Utilisateur extends BaseEntity implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (assignations == null) return Collections.emptyList();
         return assignations.stream()
-                .filter(a -> a.getRole() != null && a.getRole().getLibelle() != null)
-                .map(a -> new SimpleGrantedAuthority("ROLE_" + a.getRole().getLibelle().toUpperCase()))
+                .filter(a -> a.getRole() != null && a.getRole().getCode() != null)
+                .map(a -> new SimpleGrantedAuthority("ROLE_" + a.getRole().getCode().toUpperCase()))
                 .collect(Collectors.toList());
     }
 
@@ -190,4 +189,32 @@ public class Utilisateur extends BaseEntity implements UserDetails {
         return enabled;
     }
 
+    public boolean hasRole(String code) {
+
+        if (assignations == null || assignations.isEmpty()) {
+            return false;
+        }
+
+        return assignations.stream()
+                .anyMatch(a ->
+                        a.getRole() != null
+                        && a.getRole().getCode() != null
+                        && a.getRole().getCode().equalsIgnoreCase(code)
+                );
+    }
+    
+    public boolean hasAnyRole(String... codes) {
+
+        if (assignations == null || assignations.isEmpty()) {
+            return false;
+        }
+
+        return assignations.stream()
+                .filter(a -> a.getRole() != null)
+                .anyMatch(a -> Arrays.stream(codes)
+                        .anyMatch(code ->
+                                code.equalsIgnoreCase(a.getRole().getCode())
+                        ));
+    }
+    
 }

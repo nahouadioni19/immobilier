@@ -52,12 +52,13 @@ public class Constants {
     public static final String FORMAT_DATE_TIME_ENG = "yyyy-MM-dd HH:mm:ss";
 
     // user
+    public static final String ROLE_SUPER_ADMIN = "SUPER_ADMIN";
     public static final String ROLE_ADMIN = "ADMIN";
     public static final String ROLE_PF = "PF";
     public static final String ROLE_PRIM = "PRIM";
     public static final String ROLE_DEVELOPEUR = "SSADM";
-    public static final String DEFAULT_USER_NAME = "admpg";
-    public static final String DEFAULT_USER_PASS = "pg@2022";
+    public static final String DEFAULT_USER_NAME = "admin";
+    public static final String DEFAULT_USER_PASS = "immo@2026";
     public static final String ROLE_RECOUV = "RECOUV";
     public static final String ROLE_DIREC = "DIREC";
     public static final String ROLE_SECRET = "SECRET";

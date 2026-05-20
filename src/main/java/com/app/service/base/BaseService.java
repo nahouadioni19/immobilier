@@ -27,6 +27,7 @@ import com.app.entities.administration.Agence;
 import com.app.entities.administration.Utilisateur;
 import com.app.service.common.CacheUtils;
 import com.app.utils.Constants;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -235,7 +236,7 @@ public abstract class BaseService<T> {
         return newChildren;
     }
     
-    protected Agence getCurrentAgence() {
+    /*protected Agence getCurrentAgence() {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -262,7 +263,57 @@ public abstract class BaseService<T> {
     protected Integer getCurrentAgenceId() {
         Agence agence = getCurrentAgence();
         return (agence != null) ? agence.getId() : null;
+    }*/
+    
+    
+    protected Agence getCurrentAgence() {
+
+        Authentication auth =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()
+                || auth.getPrincipal() == null) {
+
+            throw new RuntimeException("Non authentifié");
+        }
+
+        Object principal = auth.getPrincipal();
+
+        if (principal instanceof UserPrincipal userPrincipal) {
+
+            Utilisateur user = userPrincipal.getUtilisateur();
+
+            // utilisateur technique / système
+            if (user == null) {
+                return null;
+            }
+
+            // utilisateur sans site
+            if (user.getAgence() == null) {
+                return null;
+            }
+
+            return user.getAgence();
+        }
+
+        return null;
     }
+    
+    
+    protected Integer getCurrentAgenceId() {
+
+        Agence agence = getCurrentAgence();
+
+        return (agence != null)
+                ? agence.getId()
+                : null;
+    }
+    
+    
+    
+    
+    
+    
     
     public void checkAgenceActive(Agence agence) {
 
@@ -278,6 +329,38 @@ public abstract class BaseService<T> {
             LocalDate.now().isAfter(agence.getDateFinAbonnement())) {
             throw new SecurityException("Abonnement expiré");
         }
+    }
+    
+    
+    protected Utilisateur getCurrentUser() {
+
+        Authentication auth =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null
+                || !auth.isAuthenticated()
+                || auth.getPrincipal() == null) {
+
+            throw new RuntimeException("Non authentifié");
+        }
+
+        Object principal = auth.getPrincipal();
+
+        if (principal instanceof UserPrincipal userPrincipal) {
+
+            Utilisateur user = userPrincipal.getUtilisateur();
+
+            if (user == null) {
+                throw new RuntimeException("Utilisateur introuvable");
+            }
+
+            return user;
+        }
+
+        throw new RuntimeException(
+                "Principal invalide : "
+                        + principal.getClass().getName()
+        );
     }
     
 }

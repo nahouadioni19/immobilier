@@ -11,7 +11,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.app.entities.administration.Utilisateur;
-import com.app.entities.recouvre.Bailleur;
 
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, Integer> {
 
@@ -174,4 +173,18 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Intege
 	//
 	
 	Page<Utilisateur> findByAgenceId(Integer agenceId, Pageable pageable);
+	
+	@Query("""
+		    SELECT u FROM Utilisateur u
+		    WHERE (
+		        :keyword IS NULL OR :keyword = '' OR
+		        LOWER(u.prenoms) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+		        LOWER(u.nom) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+		        LOWER(u.telephone) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		    )
+		    ORDER BY u.nom ASC
+		""")
+		Page<Utilisateur> searchWithoutAgence(
+		        @Param("keyword") String keyword,
+		        Pageable pageable);
 }

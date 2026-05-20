@@ -50,7 +50,7 @@
 					    </div>
 
 					    <!-- Agent -->
-					    <div class="col-md-3" th:if="${#sets.contains(userRoles, 'DIREC') or #sets.contains(userRoles, 'CONTRO')}">
+					    <div class="col-md-2" th:if="${#sets.contains(userRoles, 'DIREC') or #sets.contains(userRoles, 'CONTRO')}">
 					        <select name="agentId" class="form-select">
 					            <option value="">Tous les agents</option>
 					            <option th:each="u : ${utilisateurs}"
@@ -62,7 +62,7 @@
 					    </div>
 
 					    <!-- Keyword -->
-					    <div class="col-md-3">
+					    <div class="col-md-2">
 					        <input type="text"
 					               name="keyword"
 					               class="form-control"
@@ -72,7 +72,7 @@
 												
 					    <!-- Reset -->
 					    <div class="col-md-2">
-					        <a th:href="@{/recouvrements}" class="btn btn-secondary w-100">
+					        <a th:href="@{/recouvrements}" class="btn btn-secondary  ms-2">
 					            Réinitialiser
 					        </a>
 					    </div>
@@ -127,7 +127,7 @@
 										            <button type="submit" 
 															class="dropdown-item"
 															th:if="${#sets.contains(userRoles, 'RECOUV') or #sets.contains(userRoles, 'SECRET') or #sets.contains(userRoles, 'AGENT')}"
-										                    style="width:100%; text-align:left; border:none; background:none;margin-left: 10%; padding:0;">
+										                    style="width:100%; text-align:left; border:none; background:none;margin-left: 10%; padding:0;" disabled>
 										                <i class="bi bi-send me-2"></i>Transmettre
 										            </button>
 										        </form>

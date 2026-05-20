@@ -520,7 +520,7 @@ public class EncaisseService extends BaseService<Encaisse>{
         return page.map(this::toDTO);
     }*/
 	
-	public Page<EncaisseDTO> search(
+	/*public Page<EncaisseDTO> search(
 	        String keyword,
 	        Integer agentId,
 	        LocalDate startDate,
@@ -543,8 +543,46 @@ public class EncaisseService extends BaseService<Encaisse>{
 	            endDate,
 	            pageable
 	    );
-	}
+	}*/
 
+	
+	public Page<EncaisseDTO> search(
+	        String keyword,
+	        LocalDate startDate,
+	        LocalDate endDate,
+	        Pageable pageable) {
+
+	    Integer agenceId = getCurrentAgence().getId();
+
+	    Utilisateur userConnected = getCurrentUser();
+
+	    Integer agentId = null;
+
+	    // =========================
+	    // SI PAS DIRECTEUR
+	    // =========================
+
+	    if (!userConnected.hasRole("DIREC")) {
+	        agentId = userConnected.getId();
+	    }
+
+	    String search = "";
+
+	    if (keyword != null && !keyword.isBlank()) {
+	        search = "%" + keyword.toLowerCase().trim() + "%";
+	    }
+
+	    return repo.searchEncaisse(
+	            search,
+	            agenceId,
+	            agentId,
+	            startDate,
+	            endDate,
+	            pageable
+	    );
+	}
+	
+	
     /*private EncaisseDTO toDTO(Encaisse e) {
     	EncaisseDTO dto = new EncaisseDTO();
 

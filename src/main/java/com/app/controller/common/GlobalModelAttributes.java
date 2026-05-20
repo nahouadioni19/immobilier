@@ -35,7 +35,8 @@ public class GlobalModelAttributes {
         if (principal == null) return "Invité";
 
         String username = principal.getName();
-        if ("admpg".equalsIgnoreCase(username)) return "Administrateur";
+       // if ("admpg".equalsIgnoreCase(username)) return "Administrateur";
+        if ("super_admin".equalsIgnoreCase(username)) return "Super Administrateur";
 
         List<Utilisateur> users = utilisateurService.findByUsername(username);
         if (users.isEmpty()) return username;
@@ -53,7 +54,8 @@ public class GlobalModelAttributes {
         if (principal == null) return Set.of();
 
         String username = principal.getName();
-        if ("admpg".equalsIgnoreCase(username)) return Set.of("ADMIN");
+      //  if ("admpg".equalsIgnoreCase(username)) return Set.of("ADMIN");
+        if ("super_admin".equalsIgnoreCase(username)) return Set.of("SUPER_ADMIN");
 
         List<Utilisateur> users = utilisateurService.findByUsername(username);
         if (users.isEmpty()) return Set.of();
@@ -70,6 +72,7 @@ public class GlobalModelAttributes {
     // 🔹 Convertit le rôle BDD vers celui attendu par l’UI
     private String mapRoleToMenu(String libelleBdd) {
         switch (libelleBdd.trim().toUpperCase()) {
+        	case "SUPER_ADMIN": return "SUPER_ADMIN";
             case "ADMIN": return "ADMIN";
             case "RECOUV": return "RECOUV";
             case "SECRET": return "SECRET";

@@ -11,15 +11,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.app.dto.BailleurDTO;
 import com.app.dto.UtilisateurDTO;
+import com.app.entities.administration.Agence;
 import com.app.entities.administration.Assignation;
 import com.app.entities.administration.Utilisateur;
-import com.app.entities.recouvre.Bailleur;
+import com.app.repositories.administration.AgenceRepository;
 import com.app.repositories.administration.UserRepository;
 import com.app.repositories.administration.UtilisateurRepository;
 import com.app.service.base.BaseService;
@@ -35,6 +36,7 @@ public class UtilisateurService extends BaseService<Utilisateur> {
     private final UtilisateurRepository repo;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final AgenceRepository agenceRepository;
     
     private static final String PREFIX_USER = "OPE";
     private static final String DEFAULT_PASSWORD = "O"; // Mot de passe standard
@@ -283,17 +285,30 @@ public class UtilisateurService extends BaseService<Utilisateur> {
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
     }
+  
     
     public Page<UtilisateurDTO> search(String keyword, Pageable pageable) {
-    	
-    	Integer agenceId = getCurrentAgenceId();
-    	
+
+        Integer agenceId = getCurrentAgenceId();
+
         Page<Utilisateur> page;
 
-        if (keyword == null || keyword.trim().isEmpty()) {
-            page = repo.findByAgenceId(agenceId, pageable);
+        // SUPER ADMIN => pas de filtre site
+        if (agenceId == null) {
+
+            if (keyword == null || keyword.trim().isEmpty()) {
+                page = repo.findAll(pageable);
+            } else {
+                page = repo.searchWithoutAgence(keyword.trim(), pageable);
+            }
+
         } else {
-            page = repo.search(keyword.trim(), agenceId, pageable);
+
+            if (keyword == null || keyword.trim().isEmpty()) {
+                page = repo.findByAgenceId(agenceId, pageable);
+            } else {
+                page = repo.search(keyword.trim(), agenceId, pageable);
+            }
         }
 
         return page.map(this::toDTO);
@@ -317,4 +332,171 @@ public class UtilisateurService extends BaseService<Utilisateur> {
         return dto;
     }
     
+   
+    public void save(Utilisateur user, Integer agenceId) {
+
+        boolean isSuperAdmin =
+                SecurityContextHolder.getContext()
+                        .getAuthentication()
+                        .getAuthorities()
+                        .stream()
+                        .anyMatch(a ->
+                                a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+
+        boolean isNew = (user.getId() == null);
+
+        // =========================================
+        // CRÉATION
+        // =========================================
+
+        if (isNew) {
+
+            if (isSuperAdmin) {
+
+                // SUPER ADMIN choisit le site
+                if (agenceId != null) {
+
+                    Agence agence = agenceRepository.findById(agenceId)
+                            .orElseThrow(() ->
+                                    new IllegalArgumentException("Site introuvable"));
+
+                    user.setAgence(agence);
+                } else {
+                    throw new IllegalArgumentException("Site obligatoire");
+                }
+
+            } else {
+
+                // ADMIN → site automatique
+                user.setAgence(getCurrentAgence());
+            }
+
+            repo.save(user);
+            return;
+        }
+
+        // =========================================
+        // MODIFICATION
+        // =========================================
+
+        Utilisateur entity = repo.findById(user.getId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Utilisateur introuvable"));
+
+        // =========================================
+        // SÉCURITÉ SAAS
+        // =========================================
+
+        if (!isSuperAdmin) {
+
+            Integer agenceEntityId =
+                    entity.getAgence() != null
+                            ? entity.getAgence().getId()
+                            : null;
+
+            Integer agenceCurrentId = getCurrentAgenceId();
+
+            if (agenceEntityId != null
+                    && !agenceEntityId.equals(agenceCurrentId)) {
+
+                throw new SecurityException("Accès refusé");
+            }
+        }
+
+        // =========================================
+        // MAPPING
+        // =========================================
+
+        entity.setNom(user.getNom());
+        entity.setPrenoms(user.getPrenoms());
+        entity.setUsername(user.getUsername());
+        entity.setEmail(user.getEmail());
+        entity.setEnabled(user.isEnabled());
+        entity.setTelephone(user.getTelephone());
+        entity.setTitre(user.getTitre());
+
+        // =========================================
+        // SITE
+        // =========================================
+
+        if (isSuperAdmin) {
+
+            // SUPER ADMIN peut changer le site
+            if (agenceId != null) {
+
+                Agence agence = agenceRepository.findById(agenceId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException("Site introuvable"));
+
+                entity.setAgence(agence);
+            }
+
+        } else {
+
+            // ADMIN → site imposé
+            entity.setAgence(getCurrentAgence());
+        }
+
+        repo.save(entity);
+    }
+    
+    protected boolean isSuperAdmin() {
+
+        return SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority()
+                .equals("ROLE_SUPER_ADMIN"));
+    }
 }
+
+    
+    
+    
+   /* public Page<UtilisateurDTO> search(String keyword, Pageable pageable) {
+
+    	Integer agenceId = getCurrentAgenceId();
+
+    	Page<Utilisateur> page;
+
+        // SUPER ADMIN => pas de filtre site
+        if (agenceId == null) {
+
+            if (keyword == null || keyword.trim().isEmpty()) {
+                page = repo.findAll(pageable);
+            } else {
+                page = repo.searchWithoutAgence(keyword.trim(), pageable);
+            }
+
+        } else {
+
+            if (keyword == null || keyword.trim().isEmpty()) {
+                page = repo.findByAgenceId(agenceId, pageable);
+            } else {
+                page = repo.search(keyword.trim(), agenceId, pageable);
+            }
+        }
+
+        return page.map(this::toDTO);
+    }
+
+    private UtilisateurDTO toDTO(Utilisateur b) {
+    	UtilisateurDTO dto = new UtilisateurDTO();
+
+        dto.setId(b.getId());
+        dto.setNom(b.getNom());
+        dto.setPrenoms(b.getPrenoms());
+        dto.setTelephone(b.getTelephone());
+        dto.setMatricule(b.getMatricule());
+        dto.setUsername(b.getUsername());
+        dto.setEnabled(b.isEnabled());
+
+        if (b.getAgence() != null) {
+            dto.setAgenceId(b.getAgence().getId());
+        }
+
+        return dto;
+    }
+    
+}*/

@@ -27,7 +27,9 @@ CREATE TABLE immonet.t_agence (
 	CONSTRAINT t_agence_statut_abonnement_check CHECK (((statut_abonnement)::text = ANY ((ARRAY['ACTIF'::character varying, 'EXPIRE'::character varying, 'SUSPENDU'::character varying])::text[]))),
 	CONSTRAINT ukaltpb8sf7jhm8wx35qmt21aly UNIQUE (nom),
 	CONSTRAINT ukf16t6rdqbtthu6o6fqpm6xvmd UNIQUE (code)
-);
+); 									///=====DEJA CREE LE 16/05/2026 A 11:47=====////
+
+
 
 ///
 

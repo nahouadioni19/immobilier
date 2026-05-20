@@ -36,9 +36,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Agence extends BaseEntity {
-
     /* ===== IDENTITÉ ===== */
-
     @NotBlank
     @Column(nullable = false, unique = true)
     private String nom;

@@ -19,7 +19,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.app.controller.common.Routes;
 import com.app.controller.common.SetupPage;
 import com.app.entities.administration.Role;
-import com.app.entities.administration.Typerole;
 import com.app.service.administration.RoleService;
 import com.app.service.administration.TyperoleService;
 import com.app.service.common.PaginationService;

@@ -71,29 +71,3 @@ public class WebConfig implements WebMvcConfigurer {
     }
     
 }
-
-
-/*@Configuration
-public class WebConfig implements WebMvcConfigurer {
-
-    @Value("${app.storage.directory}")
-    private String storageDirectory;
-
-    private static final String[] CLASSPATH_RESOURCE_LOCATIONS = {
-            "classpath:/META-INF/resources/",
-            "classpath:/resources/",
-            "classpath:/static/",
-            "classpath:/public/"
-    };
-
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Ressources statiques classiques
-        registry.addResourceHandler("/**")
-                .addResourceLocations(CLASSPATH_RESOURCE_LOCATIONS);
-
-        // Dossier d’upload (exposé sous /uploads/**)
-        registry.addResourceHandler("/dossiers/**")
-                .addResourceLocations("file:///" + storageDirectory + "/");
-    }
-}*/

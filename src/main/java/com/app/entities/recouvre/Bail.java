@@ -118,7 +118,9 @@ public class Bail extends BaseEntity {
     @PrePersist
     @PreUpdate
     private void calculerTotal() {
-
+    	
+    	long duree = getDureeEnMois();
+    	
         this.total =
                 safe(montantLoyer)
               + safe(montantCharges)

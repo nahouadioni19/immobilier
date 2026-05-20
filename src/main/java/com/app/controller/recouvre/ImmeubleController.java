@@ -147,7 +147,7 @@ public class ImmeubleController{
                 System.out.println("LOYER = " + a.getLoyerMensuel());
             }
             
-            // 🔥 Toute la logique est dans le service
+            //Toute la logique est dans le service
             service.saveImmeubleWithAppartement(form);
 
             redirectAttributes.addFlashAttribute(

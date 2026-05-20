@@ -32,6 +32,7 @@ import com.app.entities.administration.Utilisateur;
 import com.app.enums.Titre;
 import com.app.mapper.UtilisateurMapper;
 import com.app.security.UserPrincipal;
+import com.app.service.administration.AgenceService;
 import com.app.service.administration.RoleService;
 import com.app.service.administration.UtilisateurService;
 import com.app.service.common.PaginationService;
@@ -49,7 +50,7 @@ public class UtilisateurController {
     private final UtilisateurService service;
     private final RoleService roleService;
     private final SetupPage setup;
-    private final PaginationService paginationService;
+    private final AgenceService agenceService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -84,6 +85,7 @@ public class UtilisateurController {
         model.addAttribute("utilisateur", dto);
         model.addAttribute("roles", roleService.findAllLight()); // ✅ version DTO
         model.addAttribute("listTitre", Titre.values());
+        model.addAttribute("agences", agenceService.findAll());// ✅ version DTO
         return "administration/utilisateur/form";
     }
 

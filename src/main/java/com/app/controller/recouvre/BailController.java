@@ -51,19 +51,15 @@ public class BailController {
     private final BailService service;
     private final LocataireService locataireService;
     private final AppartementService appartementService;
-    private final PaginationService paginationService;
-    private final SetupPage setup;
     
     @Autowired
 	private MessageSource messageSource;
     
-    public BailController(SetupPage setup, PaginationService paginationService, BailService service, 
+    public BailController(BailService service, 
     			LocataireService locataireService, AppartementService appartementService) {
         this.service = service;
         this.locataireService = locataireService;
         this.appartementService = appartementService;
-        this.setup = setup;
-        this.paginationService = paginationService;
     }
     
     // Liste initiale + pagination

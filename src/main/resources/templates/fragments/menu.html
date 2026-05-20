@@ -3,16 +3,16 @@
 <ul class="nav flex-column" th:fragment="menu">
 
     <!-- Accueil -->
-    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
         <a class="nav-link" th:href="@{/}">🏠 Accueil</a>
     </li>
 	
-	<!--<li class="nav-item" sec:authorize="hasRole('ADMIN')">
+	<!--<li class="nav-item" sec:authorize="hasRole('SUPER_ADMIN','ADMIN')">
 	    <a class="nav-link" th:href="@{/}">🏠 Accueil</a>
 	</li>-->
 
     <!-- Dashboard -->
-    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
         <a class="nav-link" data-bs-toggle="collapse" href="#dashboardMenu">
             <i class="bi bi-speedometer2"></i> Tableau de bord ▾
         </a>
@@ -27,7 +27,7 @@
     </li>
 
 	<!-- Dashboard 
-    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
         <a class="nav-link"
            th:href="@{/dashboards/loyers}"
            th:classappend="${currentUri != null and currentUri.startsWith('/dashboards/loyers')} ? ' active' : ''">
@@ -36,7 +36,7 @@
     </li>
 	
 	
-	<li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+	<li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
         <a class="nav-link"
            th:href="@{/dashboards/loyers-montant}"
            th:classappend="${currentUri != null and currentUri.startsWith('/dashboards/loyers-montant')} ? ' active' : ''">
@@ -54,7 +54,7 @@
     </li>
 
     <!-- Carnet -->
-    <li class="nav-item" sec:authorize="!hasRole('ADMIN')">
+    <li class="nav-item" sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN')">
         <a class="nav-link"
            th:href="@{/carnets}"
            th:classappend="${currentUri != null and currentUri.startsWith('/carnets')} ? ' active' : ''">
@@ -63,7 +63,7 @@
     </li>
 
     <!-- Recouvrement -->
-    <li class="nav-item" sec:authorize="!hasRole('ADMIN')">
+    <li class="nav-item" sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN')">
         <a class="nav-link"
            th:href="@{/recouvrements}"
            th:classappend="${currentUri != null and currentUri.startsWith('/recouvrements')} ? ' active' : ''">
@@ -71,7 +71,7 @@
         </a>
     </li>
 	
-	<li class="nav-item" sec:authorize="!hasRole('ADMIN')">
+	<li class="nav-item" sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN')">
         <a class="nav-link"
            th:href="@{/encaissements}"
            th:classappend="${currentUri != null and currentUri.startsWith('/encaissements')} ? ' active' : ''">
@@ -80,7 +80,7 @@
     </li>
 
     <!-- Bailleur -->
-    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
         <a class="nav-link" data-bs-toggle="collapse" href="#bailleurMenu">
             <i class="bi bi-building"></i> Bailleur ▾
         </a>
@@ -95,7 +95,7 @@
     </li>
 
     <!-- Locataire -->
-    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
         <a class="nav-link" data-bs-toggle="collapse" href="#locataireMenu">
             <i class="bi bi-person-vcard"></i> Locataire ▾
         </a>
@@ -109,8 +109,8 @@
         </div>
     </li>
 
-    <!-- Admin -->
-    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+    <!-- SUPER_ADMIN -->
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN')">
         <a class="nav-link" data-bs-toggle="collapse" href="#adminMenu">
             <i class="bi bi-gear"></i> Administration ▾
         </a>
@@ -125,7 +125,7 @@
     </li>
 
     <!-- Référentiel -->
-    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
         <a class="nav-link" data-bs-toggle="collapse" href="#refMenu">
             <i class="bi bi-archive"></i> Référentiel ▾
         </a>
@@ -138,7 +138,7 @@
         </div>
     </li>
 	
-	<li class="nav-item" sec:authorize="hasRole('ADMIN')">
+	<li class="nav-item" sec:authorize="hasRole('SUPER_ADMIN')">
         <a class="nav-link"
            th:href="@{/agences}"
            th:classappend="${currentUri != null and currentUri.startsWith('/agences')} ? ' active' : ''">

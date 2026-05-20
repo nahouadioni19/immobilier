@@ -5,13 +5,9 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.DynamicUpdate;
@@ -33,7 +29,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-//@SequenceGenerator(name = "type_role_gen", sequenceName = "type_role_seq", allocationSize = 1)
+
 public class Typerole extends BaseEntityWithCodeLibelle {
 	
     @OneToMany(mappedBy = "typeRole", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)

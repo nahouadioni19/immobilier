@@ -430,53 +430,7 @@
 		    });
 		</script>
 		
-		<!--<script th:inline="javascript">
-			$(document).ready(function() {
-			    // ===============================
-			    // Initialiser Select2
-			    // ===============================
-			    $('#bailleurSelect').select2({
-			        theme: 'bootstrap-5',
-			        placeholder: 'Rechercher un bailleur',
-			        minimumInputLength: 1,
-					language: {
-					
-					inputTooShort: function() {
-					       return 'Veuillez saisir 1 caractère ou plus';
-					        },
-					        noResults: function() {
-					            return 'Aucun résultat trouvé';
-					        },
-					        searching: function() {
-					            return 'Recherche en cours…';
-					        }
-					    },
-			        ajax: {
-			            url: /*[[@{/bailleurs/api/bailleurs}]]*/,
-			            dataType: 'json',
-			            delay: 250,
-			            data: params => ({ term: params.term }),
-			            processResults: data => data
-			        }
-			    });
-
-			    // ===============================
-			    // Préremplissage bailleur
-			    // ===============================
-			    const currentBailleur = /*[[${currentBailleurData}]]*/ null;
-			    if(currentBailleur){
-			        const option = new Option(
-			            currentBailleur.prenom + ' ' + currentBailleur.nom,
-			            currentBailleur.id,
-			            true,
-			            true
-			        );
-					$('#bailleurSelect').append(option).trigger('change');
-			     }
-
-			});
-			</script>-->
-
+		
 	
 	</section>
 	

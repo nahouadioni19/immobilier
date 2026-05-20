@@ -4,7 +4,6 @@ import java.util.stream.Collectors;
 
 import com.app.dto.AssignationDTO;
 import com.app.dto.UtilisateurDTO;
-import com.app.entities.administration.Assignation;
 import com.app.entities.administration.Utilisateur;
 
 public class UtilisateurMapper {
@@ -29,6 +28,7 @@ public class UtilisateurMapper {
                     AssignationDTO adto = new AssignationDTO();
                     adto.setId(a.getId());
                     adto.setRoleId(a.getRole() != null ? a.getRole().getId() : null);
+                    adto.setRoleCode(a.getRole() != null ? a.getRole().getCode() : null);
                     adto.setRoleLibelle(a.getRole() != null ? a.getRole().getLibelle() : null);
                     adto.setDateDebut(a.getDateDebut());
                     adto.setDateFin(a.getDateFin());

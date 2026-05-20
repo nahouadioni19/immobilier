@@ -13,11 +13,11 @@
 	<!-- ==== MENU PRINCIPAL ==== -->
 	<div class="menu-section p-3">
 	    <ul class="nav flex-column">
-	        <li class="nav-item" th:if="${userRoles.contains('ADMIN')}">
+	        <li class="nav-item" th:if="${userRoles.contains('SUPER_ADMIN')}">
 	            <a class="nav-link d-flex align-items-center" th:href="@{/}">🏠 Accueil</a>
 	        </li>
 			
-			<!--<li class="nav-item" th:if="${userRoles.contains('ADMIN') or userRoles.contains('DIREC')}">
+			<!--<li class="nav-item" th:if="${userRoles.contains('SUPER_ADMIN') or userRoles.contains('DIREC')}">
 		        <a class="nav-link d-flex align-items-center" th:href="@{/dashboards/loyers}">
 		            <i class="bi bi-speedometer2 me-2"></i>
 		            <span>Tableau de bord ✔ Dashboard paiements</span>
@@ -25,7 +25,7 @@
 		    </li>-->
 			
 			<!-- dashboard desktop -->
-	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('ADMIN')}">
+	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('SUPER_ADMIN')}">
 	            <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#dashboardMenuDesktop"
 	               role="button" aria-expanded="false" aria-controls="dashboardMenuDesktop">
 	                <i class="bi bi-building me-2"></i> Tableau de bord▾
@@ -45,14 +45,14 @@
 	            </a>
 	        </li>
 	
-	        <li class="nav-item" th:if="! ${userRoles.contains('ADMIN')}">
+	        <li class="nav-item" th:if="! ${userRoles.contains('SUPER_ADMIN')}">
 	            <a class="nav-link d-flex align-items-center" th:href="@{/carnets}"
 	               th:classappend="${currentUri != null and currentUri.startsWith('/carnets')} ? ' active' : ''">
 	               🧾 Carnet
 	            </a>
 	        </li>
 	
-	        <li class="nav-item" th:if="! ${userRoles.contains('ADMIN')}">
+	        <li class="nav-item" th:if="! ${userRoles.contains('SUPER_ADMIN')}">
 	            <a class="nav-link d-flex align-items-center" th:href="@{/recouvrements}"
 	               th:classappend="${currentUri.startsWith('/recouvrements') ? ' active' : ''}">
 	               💰 Recouvrement
@@ -60,7 +60,7 @@
 	        </li>
 	
 	        <!-- Bailleur desktop -->
-	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('ADMIN')}">
+	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('SUPER_ADMIN')}">
 	            <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#bailleurMenuDesktop"
 	               role="button" aria-expanded="false" aria-controls="bailleurMenuDesktop">
 	                <i class="bi bi-building me-2"></i> Bailleur ▾
@@ -74,7 +74,7 @@
 	        </li>
 	
 	        <!-- Locataire desktop -->
-	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('ADMIN')}">
+	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('SUPER_ADMIN')}">
 	            <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#locataireMenuDesktop"
 	               role="button" aria-expanded="false" aria-controls="locataireMenuDesktop">
 	                <i class="bi bi-person-vcard me-2"></i> Locataire ▾
@@ -88,7 +88,7 @@
 	        </li>
 	
 	        <!-- Administration desktop -->
-	        <li class="nav-item" th:if="${userRoles.contains('ADMIN')}">
+	        <li class="nav-item" th:if="${userRoles.contains('SUPER_ADMIN')}">
 	            <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#adminMenuDesktop"
 	               role="button" aria-expanded="false" aria-controls="adminMenuDesktop">
 	                <i class="bi bi-person-gear me-2"></i> Administration ▾
@@ -103,7 +103,7 @@
 	        </li>
 			
 			<!-- Administration desktop -->
-	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('ADMIN')}">
+	        <li class="nav-item" th:if="${userRoles.contains('DIREC') or userRoles.contains('SUPER_ADMIN')}">
 	            <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#referenMenuDesktop"
 	               role="button" aria-expanded="false" aria-controls="referenMenuDesktop">
 	                <i class="bi bi-archive"></i> Référentiel ▾
@@ -130,13 +130,13 @@
     <div class="offcanvas-body">
         <ul class="nav flex-column">
 
-            <li class="nav-item" th:if="${userRoles.contains('ADMIN')}">
+            <li class="nav-item" th:if="${userRoles.contains('SUPER_ADMIN')}">
                 <a class="nav-link text-white" th:href="@{/}">
                     🏠 Accueil
                 </a>
             </li>
 			
-			<li class="nav-item" th:if="${userRoles.contains('ADMIN') or userRoles.contains('DIREC')}">
+			<li class="nav-item" th:if="${userRoles.contains('SUPER_ADMIN') or userRoles.contains('DIREC')}">
 		        <a class="nav-link d-flex align-items-center" th:href="@{/dashboards/loyers}">
 		            <i class="bi bi-speedometer2 me-2"></i>
 		            <span>Tableau de bord</span>
@@ -149,20 +149,20 @@
                 </a>
             </li>
 
-            <li class="nav-item" th:if="! ${userRoles.contains('ADMIN')}">
+            <li class="nav-item" th:if="! ${userRoles.contains('SUPER_ADMIN')}">
                 <a class="nav-link text-white" th:href="@{/carnets}">
                     🧾 Carnet
                 </a>
             </li>
 
-            <li class="nav-item" th:if="! ${userRoles.contains('ADMIN')}">
+            <li class="nav-item" th:if="! ${userRoles.contains('SUPER_ADMIN')}">
                 <a class="nav-link text-white" th:href="@{/recouvrements}">
                     💰 Recouvrement
                 </a>
             </li>
 
             <!-- Bailleur mobile -->
-            <li class="nav-item" th:if="${userRoles.contains('ADMIN') or userRoles.contains('DIREC')}">
+            <li class="nav-item" th:if="${userRoles.contains('SUPER_ADMIN') or userRoles.contains('DIREC')}">
                 <a class="nav-link text-white" data-bs-toggle="collapse" href="#bailleurMenuMobile"
                    role="button" aria-expanded="false" aria-controls="bailleurMenuMobile">
                     <i class="bi bi-building me-2"></i> Bailleur ▾
@@ -176,7 +176,7 @@
             </li>
 
             <!-- Locataire mobile -->
-            <li class="nav-item" th:if="${userRoles.contains('ADMIN') or userRoles.contains('DIREC')}">
+            <li class="nav-item" th:if="${userRoles.contains('SUPER_ADMIN') or userRoles.contains('DIREC')}">
                 <a class="nav-link text-white" data-bs-toggle="collapse" href="#locataireMenuMobile"
                    role="button" aria-expanded="false" aria-controls="locataireMenuMobile">
                     <i class="bi bi-person-vcard me-2"></i> Locataire ▾
@@ -190,7 +190,7 @@
             </li>
 
             <!-- Administration mobile -->
-            <li class="nav-item" th:if="${userRoles.contains('ADMIN')}">
+            <li class="nav-item" th:if="${userRoles.contains('SUPER_ADMIN')}">
                 <a class="nav-link text-white" data-bs-toggle="collapse" href="#adminMenuMobile"
                    role="button" aria-expanded="false" aria-controls="adminMenuMobile">
                     <i class="bi bi-person-gear me-2"></i> Administration ▾
@@ -205,7 +205,7 @@
             </li>
 
 			<!-- Administration mobile -->
-            <li class="nav-item" th:if="${userRoles.contains('ADMIN') or userRoles.contains('DIREC')}">
+            <li class="nav-item" th:if="${userRoles.contains('SUPER_ADMIN') or userRoles.contains('DIREC')}">
                 <a class="nav-link text-white" data-bs-toggle="collapse" href="#referenMenuMobile"
                    role="button" aria-expanded="false" aria-controls="referenMenuMobile">
                     <i class="bi bi-archive"></i> Référentiel ▾
