@@ -223,7 +223,78 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	    JOIN b.appartement a
     	    JOIN e.utilisateur u
 
-    	    WHERE e.statut = 1
+    	    WHERE e.agence.id = :agenceId
+
+    	    AND (:agentId IS NULL OR u.id = :agentId)
+
+    	    AND (
+    	        :keyword = ''
+    	        OR :keyword IS NULL
+    	        OR LOWER(l.nom) LIKE :keyword
+    	        OR LOWER(l.prenom) LIKE :keyword
+    	        OR LOWER(CAST(a.numAppart AS string)) LIKE :keyword
+    	    )
+
+    	    AND e.encDate >= COALESCE(:startDate, e.encDate)
+    	    AND e.encDate <= COALESCE(:endDate, e.encDate)
+
+    	    ORDER BY e.encDate DESC
+    	""",
+    	countQuery = """
+    	    SELECT COUNT(e)
+    	    FROM Encaisse e
+    	    JOIN e.bail b
+    	    JOIN b.locataire l
+    	    JOIN b.appartement a
+    	    JOIN e.utilisateur u
+
+    	    WHERE e.agence.id = :agenceId
+
+    	    AND (:agentId IS NULL OR u.id = :agentId)
+
+    	    AND (
+    	        :keyword = ''
+    	        OR :keyword IS NULL
+    	        OR LOWER(l.nom) LIKE :keyword
+    	        OR LOWER(l.prenom) LIKE :keyword
+    	        OR LOWER(CAST(a.numAppart AS string)) LIKE :keyword
+    	    )
+
+    	    AND e.encDate >= COALESCE(:startDate, e.encDate)
+    	    AND e.encDate <= COALESCE(:endDate, e.encDate)
+    	"""
+    	)
+    	Page<EncaisseDTO> searchPeriode(
+    	        @Param("keyword") String keyword,
+    	        @Param("agenceId") Integer agenceId,
+    	        @Param("agentId") Integer agentId,
+    	        @Param("startDate") LocalDate startDate,
+    	        @Param("endDate") LocalDate endDate,
+    	        Pageable pageable
+    	);
+    
+    ///
+    @Query(value = """
+    	    SELECT new com.app.dto.EncaisseDTO(
+    	        e.id,
+    	        e.encDate,
+    	        e.encMontant,
+    	        e.encMode,
+    	        l.nom,
+    	        l.prenom,
+    	        a.numAppart,
+    	        u.nom,
+    	        u.prenoms
+    	    )
+    	    FROM Encaisse e
+    	    JOIN e.bail b
+    	    JOIN b.locataire l
+    	    JOIN b.appartement a
+    	    JOIN e.utilisateur u
+
+    	    WHERE
+    	    (:statut IS NULL OR e.statut = :statut)
+
     	    AND e.agence.id = :agenceId
 
     	    AND (:agentId IS NULL OR u.id = :agentId)
@@ -249,7 +320,9 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	    JOIN b.appartement a
     	    JOIN e.utilisateur u
 
-    	    WHERE e.statut = 1
+    	    WHERE
+    	    (:statut IS NULL OR e.statut = :statut)
+
     	    AND e.agence.id = :agenceId
 
     	    AND (:agentId IS NULL OR u.id = :agentId)
@@ -270,6 +343,7 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        @Param("keyword") String keyword,
     	        @Param("agenceId") Integer agenceId,
     	        @Param("agentId") Integer agentId,
+    	        @Param("statut") Integer statut,
     	        @Param("startDate") LocalDate startDate,
     	        @Param("endDate") LocalDate endDate,
     	        Pageable pageable

@@ -3,10 +3,8 @@ package com.app.controller.recouvre;
 import com.app.controller.common.Routes;
 import com.app.entities.recouvre.Bailleur;
 import com.app.security.UserPrincipal;
-import com.app.service.common.PaginationService;
 import com.app.service.recouvre.BailleurService;
 
-import com.app.controller.common.SetupPage;
 import com.app.dto.BailleurDTO;
 
 import org.springframework.data.domain.Page;

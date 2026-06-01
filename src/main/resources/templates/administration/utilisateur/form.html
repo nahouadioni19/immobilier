@@ -28,9 +28,9 @@
                 </div>
 				
 				<div class="col-sm-12 col-md-6" 
-									sec:authorize="hasRole('SUPER_ADMIN')">
+									sec:authorize="hasRole('ADMIN')">
                     <div class="mb-3 form-group">
-                        <label for="titre" class="form-label">Site</label>
+                        <label for="titre" class="form-label">Agence</label>
                         <select th:field="*{agenceId}" class="form-control" required>
 							<option value="" >-- Sélectionner --</option>
 							<option th:each="a : ${agences}" th:value="${a.id}" th:text="${a.nom}"></option>

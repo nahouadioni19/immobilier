@@ -140,45 +140,38 @@ public class UtilisateurService extends BaseService<Utilisateur> {
         return repo;
     }
     
-    @Transactional
-    @Override
-    public void save(Utilisateur user) {
-
-        boolean isNew = (user.getId() == null);
-
-        if (isNew) {
-            // création → on affecte l’agence de l’utilisateur connecté
-            user.setAgence(getCurrentAgence());
-
-        } else {
-            // modification → on récupère l’existant
-            Utilisateur entity = repo.findById(user.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
-
-            // 🔒 sécurité SaaS
-            Integer agenceEntityId = entity.getAgence() != null ? entity.getAgence().getId() : null;
-            Integer agenceCurrentId = getCurrentAgenceId();
-
-            if (agenceEntityId != null && !agenceEntityId.equals(agenceCurrentId)) {
-                throw new SecurityException("Accès refusé");
-            }
-
-            // 🔄 mapping champs modifiables
-            entity.setNom(user.getNom());
-            entity.setPrenoms(user.getPrenoms());
-            entity.setUsername(user.getUsername());
-            entity.setEmail(user.getEmail());
-            entity.setEnabled(user.isEnabled());
-            entity.setAgence(getCurrentAgence());
-            // ajoute les autres champs utiles
-
-            repo.save(entity);
-            return;
-        }
-      
-        repo.save(user);
-    }
-
+	/*
+	 * @Transactional
+	 * 
+	 * @Override public void save(Utilisateur user) {
+	 * 
+	 * boolean isNew = (user.getId() == null);
+	 * 
+	 * if (isNew) { // création → on affecte l’agence de l’utilisateur connecté
+	 * user.setAgence(getCurrentAgence());
+	 * 
+	 * } else { // modification → on récupère l’existant Utilisateur entity =
+	 * repo.findById(user.getId()) .orElseThrow(() -> new
+	 * IllegalArgumentException("Utilisateur introuvable"));
+	 * 
+	 * // 🔒 sécurité SaaS Integer agenceEntityId = entity.getAgence() != null ?
+	 * entity.getAgence().getId() : null; Integer agenceCurrentId =
+	 * getCurrentAgenceId();
+	 * 
+	 * if (agenceEntityId != null && !agenceEntityId.equals(agenceCurrentId)) {
+	 * throw new SecurityException("Accès refusé"); }
+	 * 
+	 * // 🔄 mapping champs modifiables entity.setNom(user.getNom());
+	 * entity.setPrenoms(user.getPrenoms()); entity.setUsername(user.getUsername());
+	 * entity.setEmail(user.getEmail()); entity.setEnabled(user.isEnabled());
+	 * entity.setAgence(getCurrentAgence()); // ajoute les autres champs utiles
+	 * 
+	 * repo.save(entity); return; }
+	 * 
+	 * repo.save(user); }
+	 */
+    
+    
     public boolean isConformPassword(Utilisateur utilisateur, String password) {
         return passwordEncoder.matches(password, utilisateur.getPassword());
     }
@@ -341,7 +334,7 @@ public class UtilisateurService extends BaseService<Utilisateur> {
                         .getAuthorities()
                         .stream()
                         .anyMatch(a ->
-                                a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+                                a.getAuthority().equals("ROLE_ADMIN"));
 
         boolean isNew = (user.getId() == null);
 
@@ -358,11 +351,11 @@ public class UtilisateurService extends BaseService<Utilisateur> {
 
                     Agence agence = agenceRepository.findById(agenceId)
                             .orElseThrow(() ->
-                                    new IllegalArgumentException("Site introuvable"));
+                                    new IllegalArgumentException("Agence introuvable"));
 
                     user.setAgence(agence);
                 } else {
-                    throw new IllegalArgumentException("Site obligatoire");
+                    throw new IllegalArgumentException("Agence obligatoire");
                 }
 
             } else {
@@ -447,56 +440,6 @@ public class UtilisateurService extends BaseService<Utilisateur> {
                 .getAuthorities()
                 .stream()
                 .anyMatch(a -> a.getAuthority()
-                .equals("ROLE_SUPER_ADMIN"));
+                .equals("ROLE_ADMIN"));
     }
 }
-
-    
-    
-    
-   /* public Page<UtilisateurDTO> search(String keyword, Pageable pageable) {
-
-    	Integer agenceId = getCurrentAgenceId();
-
-    	Page<Utilisateur> page;
-
-        // SUPER ADMIN => pas de filtre site
-        if (agenceId == null) {
-
-            if (keyword == null || keyword.trim().isEmpty()) {
-                page = repo.findAll(pageable);
-            } else {
-                page = repo.searchWithoutAgence(keyword.trim(), pageable);
-            }
-
-        } else {
-
-            if (keyword == null || keyword.trim().isEmpty()) {
-                page = repo.findByAgenceId(agenceId, pageable);
-            } else {
-                page = repo.search(keyword.trim(), agenceId, pageable);
-            }
-        }
-
-        return page.map(this::toDTO);
-    }
-
-    private UtilisateurDTO toDTO(Utilisateur b) {
-    	UtilisateurDTO dto = new UtilisateurDTO();
-
-        dto.setId(b.getId());
-        dto.setNom(b.getNom());
-        dto.setPrenoms(b.getPrenoms());
-        dto.setTelephone(b.getTelephone());
-        dto.setMatricule(b.getMatricule());
-        dto.setUsername(b.getUsername());
-        dto.setEnabled(b.isEnabled());
-
-        if (b.getAgence() != null) {
-            dto.setAgenceId(b.getAgence().getId());
-        }
-
-        return dto;
-    }
-    
-}*/

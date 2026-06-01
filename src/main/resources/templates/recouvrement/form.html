@@ -33,15 +33,15 @@
 	                <input type="hidden" th:field="*{encFin}" id="arriereFin">
 	                <input type="hidden" th:field="*{encMontant}" id="montantInput">
 						   
-					<input type="text" th:field="*{utilisateurId}" id="hiddenAgent">
+					<input type="hidden" th:field="*{utilisateurId}" id="hiddenAgent">
 					<input type="hidden" th:field="*{bailId}" id="hiddenBail">
-					<input type="text" th:field="*{identificationId}" id="hiddenIdentification">
+					<input type="hidden" th:field="*{identificationId}" id="hiddenIdentification">
 					
 					<input type="hidden" id="initBailId" th:value="${initBailId}">
 					<input type="hidden" id="initBailText" th:value="${initBailText}">
 
-					<input type="text" id="initIdentId" th:value="${initIdentId}">
-					<input type="text" id="initIdentText" th:value="${initIdentText}">
+					<input type="hidden" id="initIdentId" th:value="${initIdentId}">
+					<input type="hidden" id="initIdentText" th:value="${initIdentText}">
 					<input type="hidden" th:field="*{chequePath}">
 					<input type="hidden" name="removeCheque" id="removeCheque">
 					
@@ -196,7 +196,7 @@
 	                        <button type="submit" class="btn btn-primary w-100">Enregistrer</button>
 	                    </div>
 	                    <div class="col-12 col-md-2">
-	                        <a th:href="@{/recouvrements}" class="btn btn-danger w-100">Retour à la liste</a>
+	                        <a th:href="@{/recouvrements/a-encaisser}" class="btn btn-danger w-100">Retour à la liste</a>
 	                    </div>
 	                </div>
 	            </form>

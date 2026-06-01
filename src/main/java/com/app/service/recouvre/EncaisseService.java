@@ -546,7 +546,52 @@ public class EncaisseService extends BaseService<Encaisse>{
 	}*/
 
 	
+	
 	public Page<EncaisseDTO> search(
+	        String keyword,
+	        LocalDate startDate,
+	        LocalDate endDate,
+	        Pageable pageable) {
+
+	    Integer agenceId = getCurrentAgence().getId();
+
+	    Utilisateur userConnected = getCurrentUser();
+
+	    Integer agentId = null;
+	    Integer statut = null;
+
+	    // =========================
+	    // SI PAS DIRECTEUR
+	    // =========================
+	    if (!userConnected.hasRole("DIREC")) {
+	        agentId = userConnected.getId();
+
+	        // voit tous les statuts
+	        statut = null;
+	    } else {
+	        // DIREC voit uniquement statut = 1
+	        statut = 1;
+	    }
+
+	    String search = "";
+
+	    if (keyword != null && !keyword.isBlank()) {
+	        search = "%" + keyword.toLowerCase().trim() + "%";
+	    }
+
+	    return repo.searchEncaisse(
+	            search,
+	            agenceId,
+	            agentId,
+	            statut,
+	            startDate,
+	            endDate,
+	            pageable
+	    );
+	}
+	
+	
+	public Page<EncaisseDTO> searchPeriode(
 	        String keyword,
 	        LocalDate startDate,
 	        LocalDate endDate,
@@ -572,7 +617,7 @@ public class EncaisseService extends BaseService<Encaisse>{
 	        search = "%" + keyword.toLowerCase().trim() + "%";
 	    }
 
-	    return repo.searchEncaisse(
+	    return repo.searchPeriode(
 	            search,
 	            agenceId,
 	            agentId,
@@ -582,20 +627,4 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    );
 	}
 	
-	
-    /*private EncaisseDTO toDTO(Encaisse e) {
-    	EncaisseDTO dto = new EncaisseDTO();
-
-        dto.setId(e.getId());
-        dto.setEncDate(e.getEncDate());
-        dto.setEncMontant(e.getEncMontant());
-        dto.setEncMode(e.getEncMode());
-        dto.setLocataireNom(e.getBail().getLocataire().getNom());
-        dto.setLocatairePrenom(e.getBail().getLocataire().getPrenom());
-        dto.setAppartementNumero(e.getBail().getAppartement().getNumAppart());
-        dto.setUtilisateurNom(e.getUtilisateur().getNom());
-        dto.setUtilisateurPrenoms(e.getUtilisateur().getPrenoms());
-
-        return dto;
-    }*/
 }

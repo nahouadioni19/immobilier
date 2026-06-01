@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,15 +37,21 @@ import com.app.entities.recouvre.Encaisse;
 import com.app.repositories.BailSelectProjection;
 import com.app.security.UserPrincipal;
 import com.app.service.FileStorageService;
+import com.app.service.administration.AgenceService;
+import com.app.service.administration.RoleService;
 import com.app.service.administration.UtilisateurService;
 import com.app.service.recouvre.BailService;
 import com.app.service.recouvre.EncaisseService;
 import com.app.service.recouvre.IdentificationService;
 
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+
+import com.app.controller.common.Routes;
+import com.app.controller.common.SetupPage;
 
 @Controller
-@RequestMapping("recouvrements")
+@RequestMapping(Routes.ROUTE_RECOUVRE)
+@RequiredArgsConstructor
 public class EncaisseController {
 	
 	private final EncaisseService service;
@@ -57,7 +64,7 @@ public class EncaisseController {
 	@Autowired
 	private MessageSource messageSource;
 	
-	public EncaisseController(EncaisseService service,
+	/*public EncaisseController(EncaisseService service,
 				BailService bailService, UtilisateurService utilisateurService, 
 				IdentificationService identificationService, FileStorageService fileStorageService) {
 		
@@ -66,10 +73,10 @@ public class EncaisseController {
 		this.utilisateurService = utilisateurService;
 		this.identificationService = identificationService;
 		this.fileStorageService = fileStorageService;
-	}
+	}*/
 	
 	
-	@GetMapping
+	@GetMapping("/a-encaisser")
 	public String listEncaisses(
 	        @AuthenticationPrincipal UserPrincipal principal,
 	        Model model,
@@ -173,13 +180,18 @@ public class EncaisseController {
 	    }
 
 	    model.addAttribute("semaines", semaines);
+	    
+	    List<Utilisateur> utilisateurs =
+	            utilisateurService.findByAgentRecouvrement("RECOUV");
+
+	   // model.addAttribute("utilisateurs", utilisateurs);
 
 	    return "recouvrement/list";
 	}
 	
 	
-	/*@GetMapping
-	public String listEncaisses(
+	@GetMapping("/encaissements")
+	public String listperiodes(
 	        @AuthenticationPrincipal UserPrincipal principal,
 	        Model model,
 	        @RequestParam(value = "page", defaultValue = "0") int page,
@@ -188,8 +200,7 @@ public class EncaisseController {
 	        @RequestParam(value = "periodeType", required = false) String periodeType,
 	        @RequestParam(value = "dateSemaine", required = false)
 	        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateSemaine,
-	        @RequestParam(value = "mois", required = false) String mois,
-	        HttpServletRequest request) {
+	        @RequestParam(value = "mois", required = false) String mois) {
 
 	    int pageSize = 8;
 
@@ -198,57 +209,56 @@ public class EncaisseController {
 	        agentId = principal.getId();
 	    }
 
-	    LocalDate startDate = null;
-	    LocalDate endDate = null;
-
 	    // KEYWORD
-	    keyword = (keyword == null || keyword.isBlank())
+	    String search = (keyword == null || keyword.isBlank())
 	            ? null
 	            : "%" + keyword.trim().toLowerCase() + "%";
 
+	    LocalDate startDate = null;
+	    LocalDate endDate = null;
+
 	    // =====================
-	    // PERIODE SEMAINE
+	    // SEMAINE
 	    // =====================
-	    if ("SEMAINE".equals(periodeType) && dateSemaine != null) {
+	    if ("SEMAINE".equals(periodeType)) {
+
+	        WeekFields weekFields = WeekFields.ISO;
+	        LocalDate today = LocalDate.now();
+
+	        LocalDate currentWeekStart = today.with(weekFields.dayOfWeek(), 1);
+	        LocalDate currentWeekEnd = currentWeekStart.plusDays(6);
+
+	        // si rien sélectionné → semaine actuelle
+	        if (dateSemaine == null) {
+	            dateSemaine = currentWeekStart;
+	        }
 
 	        startDate = dateSemaine.with(DayOfWeek.MONDAY);
 	        endDate = dateSemaine.with(DayOfWeek.SUNDAY);
 	    }
 
 	    // =====================
-	    // PERIODE MOIS
+	    // MOIS
 	    // =====================
-	    if ("MOIS".equals(periodeType)
-	            && mois != null
-	            && !mois.isBlank()) {
+	    if ("MOIS".equals(periodeType) && mois != null && !mois.isBlank()) {
 
-	        try {
+	        YearMonth ym = YearMonth.parse(mois);
 
-	            YearMonth ym = YearMonth.parse(mois);
-
-	            startDate = ym.atDay(1);
-	            endDate = ym.atEndOfMonth();
-
-	        } catch (Exception e) {
-
-	            startDate = null;
-	            endDate = null;
-	        }
+	        startDate = ym.atDay(1);
+	        endDate = ym.atEndOfMonth();
 	    }
 
-	    // DEBUG
 	    System.out.println("START = " + startDate);
 	    System.out.println("END   = " + endDate);
 	    System.out.println("AGENT = " + agentId);
 
-	    Page<EncaisseDTO> encaissesPage =
-	            service.search(
-	                    keyword,
-	                    agentId,
-	                    startDate,
-	                    endDate,
-	                    PageRequest.of(page, pageSize)
-	            );
+	    Page<EncaisseDTO> encaissesPage = service.searchPeriode(
+	            search,
+	            /*agentId,*/
+	            startDate,
+	            endDate,
+	            PageRequest.of(page, pageSize)
+	    );
 
 	    model.addAttribute("encaissesPage", encaissesPage);
 
@@ -259,11 +269,9 @@ public class EncaisseController {
 	    model.addAttribute("dateSemaine", dateSemaine);
 	    model.addAttribute("mois", mois);
 
-	    List<Utilisateur> utilisateurs =
-	            utilisateurService.findByAgentRecouvrement("RECOUV");
-
-	    model.addAttribute("utilisateurs", utilisateurs);
-	    
+	    // =====================
+	    // SEMAINES LISTE
+	    // =====================
 	    List<Map<String, Object>> semaines = new ArrayList<>();
 
 	    LocalDate debut = LocalDate.now().minusWeeks(12);
@@ -274,15 +282,12 @@ public class EncaisseController {
 	        LocalDate dimanche = lundi.with(DayOfWeek.SUNDAY);
 
 	        Map<String, Object> item = new HashMap<>();
-
 	        item.put("dateDebut", lundi);
-
-	        item.put(
-	                "libelle",
-	                "Semaine du "
-	                        + lundi.format(DateTimeFormatter.ofPattern("dd/MM"))
-	                        + " - "
-	                        + dimanche.format(DateTimeFormatter.ofPattern("dd/MM"))
+	        item.put("libelle",
+	                "Semaine du " +
+	                        lundi.format(DateTimeFormatter.ofPattern("dd/MM")) +
+	                        " - " +
+	                        dimanche.format(DateTimeFormatter.ofPattern("dd/MM"))
 	        );
 
 	        semaines.add(item);
@@ -290,123 +295,13 @@ public class EncaisseController {
 
 	    model.addAttribute("semaines", semaines);
 	    
-	    return "recouvrement/list";
-	}*/
-	
-	
-	
-	/*@GetMapping
-	public String listEncaisses(
-	        @AuthenticationPrincipal UserPrincipal principal,
-	        Model model,
-	        @RequestParam(value = "page", defaultValue = "0") int page,
-	        @RequestParam(value = "keyword", required = false) String keyword,
-	        @RequestParam(value = "agentId", required = false) Integer agentId,
-	        @RequestParam(value = "periodeType", required = false) String periodeType,
-	        @RequestParam(value = "dateSemaine", required = false) LocalDate dateSemaine,
-	        @RequestParam(value = "mois", required = false) String mois,
-	        HttpServletRequest request) {
+	    List<Utilisateur> utilisateurs =
+	            utilisateurService.findByAgentRecouvrement("RECOUV");
 
-	    int pageSize = 8;
+	   // model.addAttribute("utilisateurs", utilisateurs);
 
-	    //Integer agentId = principal.getId(); // ✔ propre
-	    
-	    if (agentId == null) {
-	        agentId = principal.getId();
-	    }
-	    
-	    LocalDate startDate = null;
-	    LocalDate endDate = null;
-
-	    keyword = (keyword == null || keyword.isBlank())
-	            ? null
-	            : keyword.trim();
-
-	     // =====================
-	    // PERIODE SEMAINE
-	    // =====================
-	    if ("SEMAINE".equals(periodeType) && semaine != null && !semaine.isEmpty()) {
-
-	        try {
-	            String[] parts = semaine.split("-W");
-	            int year = Integer.parseInt(parts[0]);
-	            int week = Integer.parseInt(parts[1]);
-
-	            WeekFields weekFields = WeekFields.ISO;
-
-	            startDate = LocalDate.of(year, 1, 4)
-	                    .with(weekFields.weekOfYear(), week)
-	                    .with(DayOfWeek.MONDAY);
-
-	            endDate = startDate.plusDays(6);
-	        } catch (Exception e) {
-	            startDate = null;
-	            endDate = null;
-	        }
-	    }
-	    
-	    Integer week = null;
-	    Integer year = null;
-
-	    if (dateSemaine != null && "SEMAINE".equals(periodeType)) {
-
-	        WeekFields weekFields = WeekFields.ISO;
-
-	        week = dateSemaine.get(weekFields.weekOfWeekBasedYear());
-	        year = dateSemaine.get(weekFields.weekBasedYear());
-	    }
-
-	    // =====================
-	    // PERIODE MOIS
-	    // =====================
-	    if ("MOIS".equals(periodeType) && mois != null && !mois.isEmpty()) {
-	        try {
-	            YearMonth ym = YearMonth.parse(mois);
-	            startDate = ym.atDay(1);
-	            endDate = ym.atEndOfMonth();
-	        } catch (Exception e) {
-	            startDate = null;
-	            endDate = null;
-	        }
-	    }
-
-	    // DEBUG
-	    System.out.println("START = " + startDate);
-	    System.out.println("END   = " + endDate);
-	    System.out.println("AGENT :" + agentId);
-	    Page<EncaisseListDto> encaissesPage =
-	            service.findByUtilisateur(
-	                    principal,
-	                    agentId,
-	                    keyword,
-	                    startDate,
-	                    endDate,
-	                    PageRequest.of(page, pageSize)
-	            );
-	    
-	    Page<EncaisseDTO> encaissesPage =
-                service.search(keyword, 
-                		agentId, 
-                		startDate,
-	                    endDate,
-	                    week,
-	                    year,
-	                    PageRequest.of(page, 8));
-
-	    model.addAttribute("encaissesPage", encaissesPage);
-	    model.addAttribute("selectedAgent", agentId);
-	    model.addAttribute("keyword", keyword);
-
-	    model.addAttribute("periodeType", periodeType);
-	    model.addAttribute("semaine", semaine);
-	    model.addAttribute("mois", mois);
-
-	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement("RECOUV");
-	    model.addAttribute("utilisateurs", utilisateurs);
-
-	    return "recouvrement/list";
-	}*/
-	
+	    return "recouvrement/encaissements";
+	}	
 	
 	@GetMapping("/create")
 	public String showCreateForm(@AuthenticationPrincipal UserPrincipal principal,
@@ -593,7 +488,8 @@ public class EncaisseController {
 		
 		redirectAttrs.addFlashAttribute("successMessage", "Suppression effectuée avec succès !");
 		
-		return "redirect:/recouvrements";
+		//return "redirect:/recouvrements";
+		return "redirect:/recouvrements/a-encaisser";
 	}
 	
 	
@@ -681,7 +577,8 @@ public class EncaisseController {
 	    System.out.println("IS EMPTY = " + (chequeFile == null ? "null" : chequeFile.isEmpty()));
 	    System.out.println("CHEQUE PATH AVANT SAVE = " + form.getChequePath());
 	    
-	    return "redirect:/recouvrements";
+	   // return "redirect:/recouvrements";
+	    return "redirect:/recouvrements/a-encaisser";
 	}
 	
 	
@@ -726,7 +623,8 @@ public class EncaisseController {
 	        redirectAttributes.addFlashAttribute("error", e.getMessage());
 	    }
 
-	    return "redirect:/recouvrements";
+	    //return "redirect:/recouvrements";
+	    return "redirect:/recouvrements/a-encaisser";
 	}
 
 		
@@ -753,7 +651,8 @@ public class EncaisseController {
 	        e.printStackTrace();
 	    }
 
-	    return "redirect:/recouvrements";
+	    //return "redirect:/recouvrements";
+	    return "redirect:/recouvrements/a-encaisser";
 	}
 
 }

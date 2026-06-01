@@ -36,7 +36,7 @@ public class GlobalModelAttributes {
 
         String username = principal.getName();
        // if ("admpg".equalsIgnoreCase(username)) return "Administrateur";
-        if ("super_admin".equalsIgnoreCase(username)) return "Super Administrateur";
+        if ("admin".equalsIgnoreCase(username)) return "Super Administrateur";
 
         List<Utilisateur> users = utilisateurService.findByUsername(username);
         if (users.isEmpty()) return username;
@@ -55,7 +55,7 @@ public class GlobalModelAttributes {
 
         String username = principal.getName();
       //  if ("admpg".equalsIgnoreCase(username)) return Set.of("ADMIN");
-        if ("super_admin".equalsIgnoreCase(username)) return Set.of("SUPER_ADMIN");
+        if ("admin".equalsIgnoreCase(username)) return Set.of("SUPER_ADMIN");
 
         List<Utilisateur> users = utilisateurService.findByUsername(username);
         if (users.isEmpty()) return Set.of();

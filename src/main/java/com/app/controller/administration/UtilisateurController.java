@@ -100,6 +100,7 @@ public class UtilisateurController {
         model.addAttribute("utilisateur", dto);
         model.addAttribute("roles", roleService.findAll());
         model.addAttribute("listTitre", Titre.values());
+        model.addAttribute("agences", agenceService.findAll());// ✅ version DTO
         return "administration/utilisateur/form";
     }
 
@@ -135,7 +136,7 @@ public class UtilisateurController {
                 });
         }
 
-        service.save(user);
+        service.save(user, dto.getAgenceId());
 
 	    String successMessage = messageSource.getMessage(
 	            isNew ? "success.enregistrement" : "success.modification",

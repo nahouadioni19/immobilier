@@ -308,12 +308,7 @@ public abstract class BaseService<T> {
                 ? agence.getId()
                 : null;
     }
-    
-    
-    
-    
-    
-    
+        
     
     public void checkAgenceActive(Agence agence) {
 

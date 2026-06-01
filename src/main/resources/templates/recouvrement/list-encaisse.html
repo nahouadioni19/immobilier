@@ -10,8 +10,8 @@
 				<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
 				    <!-- Titre -->
 				    <h2 class="mb-2 mb-md-0">Gestion des recouvrements</h2>
-				    <!-- Bouton Nouveau -->
-				    <a th:href="@{/recouvrements/create}" class="btn btn-primary ms-2">Nouveau</a>
+				    <!-- Bouton Nouveau 
+				    <a th:href="@{/recouvrements/create}" class="btn btn-primary ms-2">Nouveau</a> -->
 
 				</div>
 				
@@ -19,7 +19,7 @@
 										
 				<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
 					    
-					<form id="filterForm" method="get" th:action="@{/recouvrements/a-encaisser}" class="row g-2 mb-3">
+					<form id="filterForm" method="get" th:action="@{/recouvrements/encaissements}" class="row g-2 mb-3">
 						
 						<input type="hidden" name="page" value="0">
 					    <!-- Période -->
@@ -72,7 +72,7 @@
 												
 					    <!-- Reset -->
 					    <div class="col-md-2">
-					        <a th:href="@{/recouvrements/a-encaisser}" class="btn btn-secondary  ms-2">
+					        <a th:href="@{/recouvrements/encaissements}" class="btn btn-secondary  ms-2">
 					            Réinitialiser
 					        </a>
 					    </div>
@@ -87,7 +87,6 @@
 				            <th>Date</th>
 				            <th style="text-align: center;">Montant recouvré</th>
 							<th>Agent</th>
-							<th>Action</th>
 				        </tr>
 				        </thead>
 				        <tbody>				        
@@ -95,69 +94,7 @@
 				            <td th:text="${encaisse.locataireNom +' '+ encaisse.locatairePrenom}">jule</td>
 							<td th:text="${#temporals.format(encaisse.encDate, 'dd/MM/yyyy')}"></td>
 							<td class="format-fr" th:text="${encaisse.encMontant}" style="text-align: center;">0</td>
-							<td th:text="${encaisse.utilisateurNom +' '+ encaisse.utilisateurPrenoms}">herve</td>
-							<td>
-							    <div class="d-flex justify-content-center">
-							        <div class="dropdown">
-							            <button class="btn" type="button" id="dropdownMenuButton"
-							                    data-bs-toggle="dropdown" aria-expanded="false">
-							                <i class="bi bi-three-dots-vertical"></i>
-							            </button>
-
-										<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-										    <!-- Modifier -->
-										    <!--<li>
-										        <a class="dropdown-item" th:href="@{'/recouvrements/edit/' + ${encaisse.id}}">
-										            <i class="bi bi-pencil me-2"></i>Modifier
-										        </a>
-										    </li>-->
-											
-											
-											<li sec:authorize="hasRole('DIREC')">
-											    <a class="dropdown-item"
-											       th:href="@{'/recouvrements/edit/' + ${encaisse.id}}">
-											        <i class="bi bi-pencil me-2"></i>Modifier
-											    </a>
-											</li>
-
-										    <!-- Supprimer -->
-										    <li th:if="${#sets.contains(userRoles, 'NSI')}">
-										        <a class="dropdown-item del-btn" th:href="@{'/recouvrements/delete/' + ${encaisse.id}}">
-										            <i class="bi bi-trash me-2"></i>Supprimer
-										        </a>
-										    </li>
-
-										    <!-- Transmettre -->
-										    <li>
-										        <form th:action="@{/recouvrements/transmettre/{id}(id=${encaisse.id})}" 
-														method="post" style="margin:0; padding:0;">
-														
-										            <button type="submit" 
-															class="dropdown-item"
-															th:if="${#sets.contains(userRoles, 'RECOUV') or #sets.contains(userRoles, 'SECRET') or #sets.contains(userRoles, 'AGENT')}"
-										                    style="width:100%; text-align:left; border:none; background:none;margin-left: 10%; padding:0;" disabled>
-										                <i class="bi bi-send me-2"></i>Transmettre
-										            </button>
-										        </form>
-										    </li>
-											
-											<!-- Transmettre -->
-											<li>
-											    <form th:action="@{/recouvrements/valider/{id}(id=${encaisse.id})}" 
-											          method="post" style="margin:0; padding:0;">
-											          
-											        <button type="submit" 
-											                class="dropdown-item" 
-											                th:if="${#sets.contains(userRoles, 'DIREC')}"
-											                style="width:100%; text-align:left; border:none; background:none; margin-left: 10%; padding:0;">
-											            <i class="bi bi-check me-2"></i>Valider
-											        </button>
-											    </form>
-											</li>
-										</ul>												
-							        </div>
-							    </div>
-							</td>
+							<td th:text="${encaisse.utilisateurNom +' '+ encaisse.utilisateurPrenoms}">herve</td>							
 				        </tr>
 						<tr th:if="${#lists.isEmpty(encaissesPage.content)}">
 					        <td colspan="4" class="text-center">Aucun recouvrement trouvé.</td>
@@ -174,7 +111,7 @@
 				         <li class="page-item"
 				             th:classappend="${encaissesPage.first} ? 'disabled'">
 				             <a class="page-link"
-				                th:href="@{/recouvrements/a-encaisser(
+				                th:href="@{/recouvrements/encaissements(
 				                     page=${encaissesPage.number - 1},
 				                     agentId=${selectedAgent},
 				                     keyword=${keyword},
@@ -190,7 +127,7 @@
 				         <li class="page-item"
 				             th:if="${encaissesPage.number > 2}">
 				             <a class="page-link"
-				                th:href="@{/recouvrements/a-encaisser(
+				                th:href="@{/recouvrements/encaissements(
 				                     page=0,
 				                     agentId=${selectedAgent},
 				                     keyword=${keyword},
@@ -218,7 +155,7 @@
 
 				             <a class="page-link"
 				                th:text="${i + 1}"
-				                th:href="@{/recouvrements/a-encaisser(
+				                th:href="@{/recouvrements/encaissements(
 				                     page=${i},
 				                     agentId=${selectedAgent},
 				                     keyword=${keyword},
@@ -241,7 +178,7 @@
 				             th:if="${encaissesPage.number < encaissesPage.totalPages - 3}">
 				             <a class="page-link"
 				                th:text="${encaissesPage.totalPages}"
-				                th:href="@{/recouvrements/a-encaisser(
+				                th:href="@{/recouvrements/encaissements(
 				                     page=${encaissesPage.totalPages - 1},
 				                     agentId=${selectedAgent},
 				                     keyword=${keyword},
@@ -256,7 +193,7 @@
 				         <li class="page-item"
 				             th:classappend="${encaissesPage.last} ? 'disabled'">
 				             <a class="page-link"
-				                th:href="@{/recouvrements/a-encaisser(
+				                th:href="@{/recouvrements/encaissements(
 				                     page=${encaissesPage.number + 1},
 				                     agentId=${selectedAgent},
 				                     keyword=${keyword},

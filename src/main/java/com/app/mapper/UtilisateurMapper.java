@@ -36,6 +36,10 @@ public class UtilisateurMapper {
                 }).collect(Collectors.toList())
             );
         }
+        
+        if(user.getAgence() != null) {
+        	dto.setAgenceId(user.getAgence().getId());
+        }
 
         return dto;
     }

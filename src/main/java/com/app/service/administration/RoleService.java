@@ -120,7 +120,5 @@ public class RoleService extends BaseService<Role> {
     public Role saverole(Role role) {
         return repo.save(role);
     }
-
-
 }
 

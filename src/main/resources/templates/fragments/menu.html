@@ -13,9 +13,20 @@
 
     <!-- Dashboard -->
     <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
-        <a class="nav-link" data-bs-toggle="collapse" href="#dashboardMenu">
-            <i class="bi bi-speedometer2"></i> Tableau de bord ▾
-        </a>
+		
+		<a class="nav-link d-flex justify-content-between align-items-center collapsed"
+		   data-bs-toggle="collapse"
+		   href="#dashboardMenu"
+		   role="button">
+		
+		    <span>
+		        <i class="bi bi-building"></i>
+		        Tableau de bord
+		    </span>
+		
+		    <span class="menu-arrow">▸</span>
+		</a>
+		
         <div class="collapse ps-3"
              th:classappend="${currentUri != null and currentUri.startsWith('/dashboards')} ? ' show' : ''"
              id="dashboardMenu">
@@ -25,24 +36,6 @@
             </ul>
         </div>
     </li>
-
-	<!-- Dashboard 
-    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
-        <a class="nav-link"
-           th:href="@{/dashboards/loyers}"
-           th:classappend="${currentUri != null and currentUri.startsWith('/dashboards/loyers')} ? ' active' : ''">
-            ✔ Tableau des paiements
-        </a>
-    </li>
-	
-	
-	<li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
-        <a class="nav-link"
-           th:href="@{/dashboards/loyers-montant}"
-           th:classappend="${currentUri != null and currentUri.startsWith('/dashboards/loyers-montant')} ? ' active' : ''">
-            💰 Tableau des montants
-        </a>
-    </li>-->
 		
     <!-- Banque -->
     <li class="nav-item" sec:authorize="hasRole('DIREC')">
@@ -62,14 +55,49 @@
         </a>
     </li>
 
-    <!-- Recouvrement -->
-    <li class="nav-item" sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN')">
-        <a class="nav-link"
-           th:href="@{/recouvrements}"
-           th:classappend="${currentUri != null and currentUri.startsWith('/recouvrements')} ? ' active' : ''">
-            💰 Recouvrement
-        </a>
-    </li>
+	
+	<li class="nav-item"
+	    sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN')">
+
+		<a class="nav-link d-flex justify-content-between align-items-center"
+		   data-bs-toggle="collapse"
+		   href="#recouvrementMenu"
+		   role="button">
+
+		    <span>
+		        <i class="bi bi-cash-stack"></i>
+		        Recouvrement
+		    </span>
+
+		    <span class="menu-arrow">▸</span>
+		</a>
+
+	    <div class="collapse ps-3"
+	         id="recouvrementMenu"
+	         th:classappend="${currentUri != null and currentUri.startsWith('/recouvrements')} ? ' show' : ''">
+
+	        <ul class="nav flex-column">
+
+	            <li>
+	                <a class="nav-link"
+	                   th:href="@{/recouvrements/a-encaisser}">
+	                    🧾 À encaisser
+	                </a>
+	            </li>
+
+	            <li sec:authorize="hasAnyRole('COMPTABLE','DIREC')">
+	                <a class="nav-link"
+	                   th:href="@{/recouvrements/encaissements}">
+	                    💰 Encaissements
+	                </a>
+	            </li>
+
+	        </ul>
+	    </div>
+	</li>
+
+
+	
 	
 	<li class="nav-item" sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN')">
         <a class="nav-link"
@@ -80,10 +108,21 @@
     </li>
 
     <!-- Bailleur -->
-    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
-        <a class="nav-link" data-bs-toggle="collapse" href="#bailleurMenu">
-            <i class="bi bi-building"></i> Bailleur ▾
-        </a>
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">			
+		
+		<a class="nav-link d-flex justify-content-between align-items-center collapsed"
+		   data-bs-toggle="collapse"
+		   href="#bailleurMenu"
+		   role="button">
+		
+		    <span>
+		        <i class="bi bi-building"></i>
+		        Bailleur
+		    </span>
+		
+		    <span class="menu-arrow">▸</span>
+		</a>
+				
         <div class="collapse ps-3"
              th:classappend="${currentUri != null and currentUri.startsWith('/bailleurs') or currentUri != null and currentUri.startsWith('/patrimoines')} ? ' show' : ''"
              id="bailleurMenu">
@@ -95,10 +134,20 @@
     </li>
 
     <!-- Locataire -->
-    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
-        <a class="nav-link" data-bs-toggle="collapse" href="#locataireMenu">
-            <i class="bi bi-person-vcard"></i> Locataire ▾
-        </a>
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">			
+		<a class="nav-link d-flex justify-content-between align-items-center collapsed"
+		   data-bs-toggle="collapse"
+		   href="#locataireMenu"
+		   role="button">
+		
+		    <span>
+		        <i class="bi bi-building"></i>
+		        Locataire
+		    </span>
+		
+		    <span class="menu-arrow">▸</span>
+		</a>
+		
         <div class="collapse ps-3"
              th:classappend="${currentUri != null and currentUri.startsWith('/locataires') or currentUri != null and currentUri.startsWith('/bails')} ? ' show' : ''"
              id="locataireMenu">
@@ -111,9 +160,19 @@
 
     <!-- SUPER_ADMIN -->
     <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN')">
-        <a class="nav-link" data-bs-toggle="collapse" href="#adminMenu">
-            <i class="bi bi-gear"></i> Administration ▾
-        </a>
+		<a class="nav-link d-flex justify-content-between align-items-center collapsed"
+		   data-bs-toggle="collapse"
+		   href="#adminMenu"
+		   role="button">
+		
+		    <span>
+		        <i class="bi bi-building"></i>
+		        Administration
+		    </span>
+		
+		    <span class="menu-arrow">▸</span>
+		</a>
+		
         <div class="collapse ps-3"
              th:classappend="${currentUri != null and currentUri.startsWith('/roles') or currentUri != null and currentUri.startsWith('/utilisateurs')} ? ' show' : ''"
              id="adminMenu">
@@ -125,10 +184,22 @@
     </li>
 
     <!-- Référentiel -->
-    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
-        <a class="nav-link" data-bs-toggle="collapse" href="#refMenu">
-            <i class="bi bi-archive"></i> Référentiel ▾
-        </a>
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">		
+
+		<a class="nav-link d-flex justify-content-between align-items-center collapsed"
+		   data-bs-toggle="collapse"
+		   href="#refMenu"
+		   role="button">
+		
+		    <span>
+		        <i class="bi bi-building"></i>
+		        Administration
+		    </span>
+		
+		    <span class="menu-arrow">▸</span>
+		</a>
+		
+		
         <div class="collapse ps-3"
              th:classappend="${currentUri != null and currentUri.startsWith('/professions')} ? ' show' : ''"
              id="refMenu">
@@ -138,7 +209,7 @@
         </div>
     </li>
 	
-	<li class="nav-item" sec:authorize="hasRole('SUPER_ADMIN')">
+	<li class="nav-item" sec:authorize="hasRole('ADMIN')">
         <a class="nav-link"
            th:href="@{/agences}"
            th:classappend="${currentUri != null and currentUri.startsWith('/agences')} ? ' active' : ''">
@@ -147,3 +218,40 @@
     </li>
 	
 </ul>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll('.collapse').forEach(menu => {
+
+        const trigger = document.querySelector(
+            `a[href="#${menu.id}"]`
+        );
+
+        if (!trigger) return;
+
+        const arrow = trigger.querySelector('.menu-arrow');
+        if (!arrow) return;
+
+        const update = () => {
+            const isOpen = menu.classList.contains('show');
+            arrow.textContent = isOpen ? '▾' : '▸';
+        };
+
+        // état initial
+        update();
+
+        // 🔥 IMPORTANT : observer le menu local (PAS global)
+        new MutationObserver(update).observe(menu, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+
+        // 🔥 sécurité : sync après bootstrap animation
+        menu.addEventListener('shown.bs.collapse', update);
+        menu.addEventListener('hidden.bs.collapse', update);
+
+    });
+
+});
+</script>
