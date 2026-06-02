@@ -300,7 +300,7 @@ public class EncaisseController {
 
 	   // model.addAttribute("utilisateurs", utilisateurs);
 
-	    return "recouvrement/encaissements";
+	    return "recouvrement/list-encaisse";
 	}	
 	
 	@GetMapping("/create")

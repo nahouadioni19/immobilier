@@ -99,7 +99,7 @@
 
 	
 	
-	<li class="nav-item" sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN')">
+	<li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN')">
         <a class="nav-link"
            th:href="@{/encaissements}"
            th:classappend="${currentUri != null and currentUri.startsWith('/encaissements')} ? ' active' : ''">
@@ -193,7 +193,7 @@
 		
 		    <span>
 		        <i class="bi bi-building"></i>
-		        Administration
+		        Référentiel
 		    </span>
 		
 		    <span class="menu-arrow">▸</span>
