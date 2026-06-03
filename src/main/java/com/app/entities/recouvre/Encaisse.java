@@ -71,31 +71,43 @@ public class Encaisse extends BaseEntity {
     // MONTANTS
     // =========================
     private Long encMontant = 0L;
+    
     private Long encPerdeb = 0L;
+    
     private Long encAndeb = 0L;
+    
     private Long encPerfin = 0L;
+    
     private Long encAnfin = 0L;
+    
     private Long enctotal = 0L;
+    
     private Long encloyer = 0L;
 
     private boolean encvalide;
 
     private Long encmois = 0L;
+    
     private Long encannee = 0L;
 
     private String encStatutRetour;
+    
     private String encMode;
 
     private Long encArriere = 0L;
+    
     private String encDeb;
+    
     private String encFin;
 
     private Long encPenalite = 0L;
+    
     private Long encNet = 0L;
 
     private String encNumChq;
 
     private Long encRepport = 0L;
+    
     private Long encMontReppo = 0L;
 
     // =========================
@@ -108,6 +120,8 @@ public class Encaisse extends BaseEntity {
 
     @Column(length = 255)
     private String chequePath;
+    
+    private Boolean bloque = false;
 }
 
 

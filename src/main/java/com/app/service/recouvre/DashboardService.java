@@ -14,13 +14,11 @@ import org.springframework.data.domain.Pageable;
 
 import com.app.dto.DashboardLoyerDTO;
 import com.app.dto.DashboardLoyerMontantDTO;
-import com.app.entities.administration.Agence;
 import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Loyann;
 import com.app.enums.StatutBail;
 import com.app.repositories.recouvre.BailRepository;
 import com.app.repositories.recouvre.LoyannRepository;
-import com.app.service.base.BaseService;
 
 @Service
 public class DashboardService{
@@ -54,8 +52,25 @@ public class DashboardService{
 
                 int valeur = 0;
 
-                if (l != null && l.getMontantPaye() >= l.getMontantDu()) {
+               /* if (l != null && l.getMontantPaye() >= l.getMontantDu()) {
                     valeur = 1; // payé
+                }*/
+                
+                if (l != null) {
+
+                    Long montantPaye =
+                            l.getMontantPaye() == null
+                                    ? 0L
+                                    : l.getMontantPaye();
+
+                    Long montantDu =
+                            l.getMontantDu() == null
+                                    ? 0L
+                                    : l.getMontantDu();
+
+                    if (montantPaye >= montantDu) {
+                        valeur = 1;
+                    }
                 }
 
                 switch (mois) {

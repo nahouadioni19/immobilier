@@ -56,4 +56,6 @@ public class EncaisseForm {
     private Integer filtreAgentId;
     
     private String chequePath;
+    
+    private Boolean bloque;
 }

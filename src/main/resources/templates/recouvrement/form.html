@@ -85,6 +85,34 @@
 	                <div class="mb-1"><label>Début arriérés</label><input type="text" id="arriereDebutDisplay" class="form-control" disabled></div>
 	                <div class="mb-1"><label>Fin arriérés</label><input type="text" id="arriereFinDisplay" class="form-control" disabled></div>
 	                <div class="mb-1"><label>Loyer FCFA</label><input type="text" id="conloyer" class="form-control" disabled></div>
+					
+					<div class="row" th:if="${userRoles.contains('DIREC')}">
+						<div class="mb-1">	
+							<label class="form-label">
+								<span class="text-danger">
+						        Annule pénalité retard
+								</span>
+						    </label>
+
+						    <div class="form-control d-flex align-items-center"
+						         style="height:40px;border-color: red; background-color: rgb(239, 239, 239);">
+
+						        <div class="form-check m-0">
+						            <input type="checkbox"
+						                   th:field="*{bloque}"
+						                   id="bloquePenalite"
+						                   class="form-check-input" style="border-color: red;"/>
+
+						            <label class="form-check-label ms-2"
+						                   for="bloquePenalite">
+						                Annule
+						            </label>
+						        </div>
+
+						    </div>
+						</div>
+					</div>					
+					
 	                <div class="mb-1"><label>Pénalité retard (FCFA)</label><input type="text" id="penaliteDisplay" class="form-control" disabled></div>
 	                <div class="mb-1"><label>Total à payer (FCFA)</label><input type="text" id="totalDisplay" class="form-control" disabled></div>
 	
@@ -282,14 +310,6 @@
 			    const bailsApiUrl = /*[[@{/bails/api/bails}]]*/ '';
 			    const identApiUrl = /*[[@{/carnets/api/identifications}]]*/ '';
 
-			    
-				
-				
-				
-				
-				
-				
-
 			    // =========================
 			    // SELECT2 BAIL
 			    // =========================
@@ -362,7 +382,7 @@
 			    // =========================
 			    // CALCUL ARRIERES
 			    // =========================
-			    function calculateArrieres(loyer, lastPaymentDate, encDate) {
+			   /* function calculateArrieres(loyer, lastPaymentDate, encDate) {
 
 			        loyer = parseFloat(loyer) || 0;
 
@@ -392,8 +412,17 @@
 			        if (!moisCourantCompte && paiement.getDate() <= 10) {
 			            nbPenalite = Math.max(nbPenalite - 1, 0);
 			        }
+										
+					// checkbox annule pénalité
+					const bloquePenalite = document.getElementById('bloquePenalite');
 
-			        const penalite = nbPenalite * (loyer * 0.1);
+					const annulePenalite =
+					    bloquePenalite ? bloquePenalite.checked : false;
+
+					const penalite = annulePenalite
+					    ? 0
+					    : nbPenalite * (loyer * 0.1);
+						
 			        const total = arrieres + penalite;
 
 			        return {
@@ -403,8 +432,55 @@
 			            debut: lastPayment.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'}),
 			            fin: paiement.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'})
 			        };
-			    }
+			    }*/
 
+				function calculateArrieres(loyer, lastPaymentDate, encDate) {
+
+				    loyer = parseFloat(loyer) || 0;
+
+				    if (!lastPaymentDate || !encDate || loyer === 0)
+				        return {arrieres:0, penalite:0, total:0, debut:'', fin:''};
+
+				    const lastPayment = new Date(lastPaymentDate.split("T")[0] + "T00:00:00");
+				    const paiement = new Date(encDate + "T00:00:00");
+
+				    if (paiement < lastPayment)
+				        return {arrieres:0, penalite:0, total:0, debut:'', fin:''};
+
+				    let nbMois = (paiement.getFullYear() - lastPayment.getFullYear()) * 12
+				               + (paiement.getMonth() - lastPayment.getMonth());
+
+				    let moisCourantCompte = false;
+
+				    if (paiement.getDate() >= 11) {
+				        nbMois += 1;
+				        moisCourantCompte = true;
+				    }
+
+				    const arrieres = nbMois * loyer;
+
+				    let nbPenalite = nbMois;
+
+				    if (!moisCourantCompte && paiement.getDate() <= 10) {
+				        nbPenalite = Math.max(nbPenalite - 1, 0);
+				    }
+
+				    // ✅ IMPORTANT : checkbox ici
+				    const bloque = $('#bloquePenalite').is(':checked');
+
+				    const penalite = bloque ? 0 : (nbPenalite * (loyer * 0.1));
+
+				    const total = arrieres + penalite;
+
+				    return {
+				        arrieres,
+				        penalite,
+				        total,
+				        debut: lastPayment.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'}),
+				        fin: paiement.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'})
+				    };
+				}
+				
 			    function recalcArrieres(){
 
 			        const data = bailSelect.select2('data')[0];
@@ -431,10 +507,15 @@
 			        $('#arriereDebut').val(result.debut);
 			        $('#arriereFin').val(result.fin);
 
-			        if(!montantInput.val()){
+			        /*if(!montantInput.val()){
 			            $('#montantDisplay').val(result.total.toLocaleString('fr-FR'));
 			            montantInput.val(result.total);
-			        }
+			        }*/
+					
+					$('#montantDisplay')
+					    .val(result.total.toLocaleString('fr-FR'));
+
+					montantInput.val(result.total);
 			    }
 
 			    // =========================
@@ -505,11 +586,66 @@
 			    identificationSelect.on('select2:select', function(e){
 			        hiddenIdentification.val(e.params.data.id);
 			    });
+				
+				
+				// =========================
+				// ANNULATION PENALITE
+				// =========================
+				$(document).on('change', '#bloquePenalite', function () {
+
+				    const annule = $(this).is(':checked');
+
+				    // valeurs déjà calculées
+				    const arriere = parseFloat(arriereInput.val()) || 0;
+				    const totalActuel = parseFloat(totalInput.val()) || 0;
+				    const penaliteActuelle = parseFloat(penaliteInput.val()) || 0;
+
+				    let nouvellePenalite;
+				    let nouveauTotal;
+
+				    if (annule) {
+				        nouvellePenalite = 0;
+				        nouveauTotal = arriere;
+				    } else {
+				        // remettre la pénalité calculée
+				        recalcArrieres();
+				        return;
+				    }
+
+				    // affichage UI
+				    $('#penaliteDisplay')
+				        .val(nouvellePenalite.toLocaleString('fr-FR') + ' FCFA');
+
+				    $('#totalDisplay')
+				        .val(nouveauTotal.toLocaleString('fr-FR'));
+
+				    // hidden fields
+				    penaliteInput.val(nouvellePenalite);
+				    totalInput.val(nouveauTotal);
+
+				    // montant payé auto si vide
+				    if (!montantInput.val() || montantInput.val() == totalActuel) {
+				        $('#montantDisplay')
+				            .val(nouveauTotal.toLocaleString('fr-FR'));
+
+				        montantInput.val(nouveauTotal);
+				    }
+
+				    console.log('Pénalité annulée =', annule);
+				});
+
+				// =========================
+				// ANNULATION PENALITE
+				// =========================
+				
+				/*$(document).on('change', '#bloquePenalite', function () {
+				    recalcArrieres();
+				});	*/
 
 			    $('#encDate').on('change', function(){
 			        recalcArrieres();
 			    });
-
+				
 			    // =========================
 			    // GESTION AGENT
 			    // =========================
