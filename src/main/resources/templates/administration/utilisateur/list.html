@@ -10,9 +10,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2>Gestion des utilisateurs</h2>
 				<div class="d-flex align-items-center">
-					<!-- Zone de recherche dynamique -->
-			        <input type="text" id="searchInput" class="form-control me-2"
-			               placeholder="Rechercher..." autocomplete="off">						   
+											   
 	                <a th:href="@{/utilisateurs/create}" class="btn btn-primary">Nouveau</a>
 				</div>
             </div>
@@ -20,9 +18,23 @@
 			<hr style="border: 1px solid rgb(192, 192, 192);">
 												
 		<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
-			<h5>Liste des utilisateurs</h5> <br />
+			
+			<div class="row mb-3">
+			    <div class="col-md-4">
+			        <input type="text" id="searchInput"
+			               class="form-control"
+			               placeholder="Rechercher ..."
+			               autocomplete="off">
+			    </div>
+			</div>
 			
 			<div id="utilisateursTable">
+				
+				<div id="loader" class="text-center my-3 d-none">
+				    <div class="spinner-border text-primary"></div>
+				    <div>Recherche en cours...</div>
+				</div>
+								
 	            <table class="table">
 	                <thead class="table-success">
 	                <tr>
@@ -35,9 +47,9 @@
 	                </thead>
 	                <tbody id="utilisateurTableBody">
 	                <tr th:each="user : ${utilisateursPage.content}">
-						<td class="text-truncate" style="max-width: 250px;" th:text="${user.matricule}">1</td>
-						<td class="text-truncate" style="max-width: 250px;" th:text="${user.username}">1</td>
-	                    <td class="text-truncate" style="max-width: 250px;" th:text="|${user.nom} ${user.prenoms}|">1</td>
+						<td class="text-truncate" style="max-width: 250px;" th:text="${user.matricule}"></td>
+						<td class="text-truncate" style="max-width: 250px;" th:text="${user.username}"></td>
+	                    <td class="text-truncate" style="max-width: 250px;" th:text="|${user.nom} ${user.prenoms}|"></td>
 						<td>
 						    <span th:if="${user.enabled}" class="badge bg-success">Actif</span>
 						    <span th:if="${!user.enabled}" class="badge bg-danger">Inactif</span>
@@ -50,7 +62,7 @@
 	                                        data-bs-toggle="dropdown" aria-expanded="false">
 	                                    <i class="bi bi-three-dots-vertical"></i>
 	                                </button>
-	                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+	                                <ul class="dropdown-menu">
 	                                    <li>
 	                                        <a class="dropdown-item" th:href="@{'/utilisateurs/edit/' + ${user.id}}">
 	                                            <i class="bi bi-pencil me-2"></i>Modifier
@@ -94,124 +106,14 @@
 	                </tbody>
 	            </table>     
 			</div>
-			
-            <!-- Pagination -->
-				<div class="d-flex justify-content-center mt-3" th:if="${utilisateursPage.totalElements > 0}">
-				    <ul class="pagination">
-
-				        <!-- Précédent -->
-				        <li class="page-item"
-				            th:classappend="${utilisateursPage.first} ? 'disabled'">
-				            <a class="page-link"
-				               th:href="@{/utilisateurs(page=${utilisateursPage.number - 1})}">
-				                &laquo;
-				            </a>
-				        </li>
-
-				        <!-- Première page -->
-				        <li class="page-item"
-				            th:if="${utilisateursPage.number > 2}">
-				            <a class="page-link"
-				               th:href="@{/utilisateurs(page=0)}">1</a>
-				        </li>
-
-				        <!-- ... -->
-				        <li class="page-item disabled"
-				            th:if="${utilisateursPage.number > 3}">
-				            <span class="page-link">...</span>
-				        </li>
-
-				        <!-- Pages autour -->
-				        <li class="page-item"
-				            th:each="i : ${#numbers.sequence(
-				                T(java.lang.Math).max(0, utilisateursPage.number - 2),
-				                T(java.lang.Math).min(utilisateursPage.totalPages - 1, utilisateursPage.number + 2)
-				            )}"
-				            th:classappend="${i == utilisateursPage.number} ? 'active'">
-
-				            <a class="page-link"
-				               th:text="${i + 1}"
-				               th:href="@{/utilisateurs(page=${i})}">
-				            </a>
-
-				        </li>
-
-				        <!-- ... -->
-				        <li class="page-item disabled"
-				            th:if="${utilisateursPage.number < utilisateursPage.totalPages - 4}">
-				            <span class="page-link">...</span>
-				        </li>
-
-				        <!-- Dernière page -->
-				        <li class="page-item"
-				            th:if="${utilisateursPage.number < utilisateursPage.totalPages - 3}">
-				            <a class="page-link"
-				               th:href="@{/utilisateurs(page=${utilisateursPage.totalPages - 1})}"
-				               th:text="${utilisateursPage.totalPages}">
-				            </a>
-				        </li>
-
-				        <!-- Suivant -->
-				        <li class="page-item"
-				            th:classappend="${utilisateursPage.last} ? 'disabled'">
-				            <a class="page-link"
-				               th:href="@{/utilisateurs(page=${utilisateursPage.number + 1})}">
-				                &raquo;
-				            </a>
-				        </li>
-
-				    </ul>
+				
+				<!-- Pagination -->
+				<div class="d-flex justify-content-center mt-3">
+				    <ul class="pagination" id="pagination"></ul>
 				</div>
 
 			</fieldset>
 		</div>
-	
-		<script>
-			document.addEventListener("DOMContentLoaded", function () {
-			    const searchInput = document.getElementById("searchInput");
-			    const tableContainer = document.getElementById("utilisateursPage");
-			
-			    searchInput.addEventListener("keyup", function () {
-			        const keyword = this.value;
-			
-			        fetch(`/utilisateurs/search?keyword=${keyword}`)
-			            .then(response => response.text())
-			            .then(html => {
-			                tableContainer.innerHTML = html; // remplacer la table
-			            });
-			    });
-			});
-		</script>
-		
-		<script>
-		const searchInput = document.getElementById('searchInput');
-		const tableBody = document.getElementById('utilisateurTableBody');
-		
-		searchInput.addEventListener('input', function() {
-		    const keyword = this.value;
-		
-		    fetch(`/utilisateurs/search?keyword=${encodeURIComponent(keyword)}`)
-		        .then(response => {
-		            if (!response.ok) throw new Error('Erreur réseau');
-		            return response.json(); // on attend JSON côté backend
-		        })
-		        .then(data => {
-		            // On vide le tableau
-		            tableBody.innerHTML = '';
-		            
-		            // On ajoute les nouvelles lignes
-		            data.forEach(type => {
-		                const row = document.createElement('tr');
-		                row.innerHTML = `
-		                    <td>${type.code}</td>
-		                    <td>${type.libelle}</td>
-		                `;
-		                tableBody.appendChild(row);
-		            });
-		        })
-		        .catch(error => console.error('Erreur:', error));
-		});
-		</script>
 		
 		<!-- SweetAlert2 -->
 	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -281,6 +183,212 @@
 			        });
 			    }
 			});
+		});
+		</script>
+		
+		
+		<script th:inline="javascript">
+		document.addEventListener("DOMContentLoaded", function () {
+
+		    const input = document.getElementById("searchInput");
+		    const tableBody = document.getElementById("utilisateurTableBody");
+		    const loader = document.getElementById("loader");
+			const paginationContainer = document.getElementById("pagination");
+
+		    const contextPath = /*[[@{/}]]*/ "";
+
+		    let timeout = null;
+		    let currentPage = 0;
+		    let currentKeyword = "";
+
+		    // ===================== LOAD DATA =====================
+		    function loadData(keyword, page = 0) {
+
+		        console.log("LOAD PAGE =", page);
+
+		        currentPage = page;        // ✅ IMPORTANT
+		        currentKeyword = keyword;
+
+		        loader.style.display = "block";
+
+		        const url = contextPath + "utilisateurs/api/search"
+		            + "?keyword=" + encodeURIComponent(keyword)
+		            + "&page=" + page;
+
+		        fetch(url)
+		            .then(res => res.json())
+		            .then(data => {
+
+		                loader.style.display = "none";
+
+		                console.log("DATA PAGE =", data.number);
+
+		                tableBody.innerHTML = "";
+
+		                if (!data.content || data.content.length === 0) {
+		                    tableBody.innerHTML = `
+		                        <tr>
+		                            <td colspan="4" class="text-center">
+		                                Aucun utilisateur trouvé.
+		                            </td>
+		                        </tr>`;
+		                    paginationContainer.innerHTML = "";
+		                    return;
+		                }
+
+		                // ===== TABLE =====
+		                data.content.forEach(b => {
+		                    tableBody.innerHTML += `
+		                        <tr>
+		                            <td>${b.matricule ?? ''}</td>
+		                            <td>${b.username ?? ''}</td>
+		                            <td>${b.nom ?? ''} ${b.prenoms ?? ''}</td>
+									<td>
+						                <span class="${b.enabled ? 'badge bg-success' : 'badge bg-danger'}">
+						                    ${b.statut}
+						                </span>
+						            </td>
+									
+		                            <td>
+		                                <div class="dropdown">
+		                                    <button class="btn" data-bs-toggle="dropdown">
+		                                        <i class="bi bi-three-dots-vertical"></i>
+		                                    </button>
+		                                    <ul class="dropdown-menu">
+		                                        <li>
+		                                            <a class="dropdown-item"
+		                                               href="${contextPath}utilisateurs/edit/${b.id}">
+		                                                <i class="bi bi-pencil me-2"></i>Modifier
+		                                            </a>
+		                                        </li>
+												<li>
+												    <a class="dropdown-item reinit-btn"
+												       href="${contextPath}utilisateurs/reinitialise/${b.id}">
+												        <i class="bi bi-arrow-counterclockwise me-2"></i>Réinitialiser
+												    </a>
+												</li>
+												
+												<li>
+												    <a class="dropdown-item text-warning"
+												       href="${contextPath}utilisateurs/desactiver/${b.id}">
+												        <i class="bi bi-person-x me-2"></i>Désactiver
+												    </a>
+												</li>
+												
+												<li>
+												    <a class="dropdown-item text-success"
+												       href="${contextPath}utilisateurs/activer/${b.id}">
+												        <i class="bi bi-person-check me-2"></i>Activer
+												    </a>
+												</li>																								
+																								
+		                                        <li>
+		                                            <a class="dropdown-item del-btn"
+		                                               href="${contextPath}utilisateurs/delete/${b.id}">
+		                                                <i class="bi bi-trash me-2"></i>Supprimer
+		                                            </a>
+		                                        </li>
+		                                    </ul>
+		                                </div>
+		                            </td>
+		                        </tr>`;
+		                });
+
+		                attachDeleteEvents();
+		                buildPagination(data);
+		            })
+		            .catch(err => {
+		                loader.style.display = "none";
+		                console.error("Erreur AJAX :", err);
+		            });
+		    }
+
+		    // ===================== DELETE =====================
+		    function attachDeleteEvents() {
+		        document.querySelectorAll(".del-btn").forEach(btn => {
+		            btn.onclick = function(e) {
+		                e.preventDefault();
+		                const href = this.href;
+
+		                Swal.fire({
+		                    title: 'Confirmation',
+		                    text: "Voulez-vous supprimer cet utilisateur ?",
+		                    icon: 'warning',
+		                    showCancelButton: true,
+		                    confirmButtonText: 'Oui',
+		                    cancelButtonText: 'Non'
+		                }).then(result => {
+		                    if (result.isConfirmed) {
+		                        window.location.href = href;
+		                    }
+		                });
+		            };
+		        });
+		    }
+
+		    // ===================== PAGINATION =====================
+			function buildPagination(data) {
+
+			    paginationContainer.innerHTML = "";
+
+			    const totalPages = data.totalPages;
+			    const page = data.number;
+
+			    if (!totalPages || totalPages <= 1) return;
+
+			    // ⬅ PREVIOUS
+			    paginationContainer.innerHTML += `
+			        <li class="page-item ${page === 0 ? 'disabled' : ''}">
+			            <a class="page-link" href="#" data-page="${page - 1}">&laquo;</a>
+			        </li>`;
+
+			    let start = Math.max(0, page - 2);
+			    let end = Math.min(totalPages - 1, page + 2);
+
+			    for (let i = start; i <= end; i++) {
+			        paginationContainer.innerHTML += `
+			            <li class="page-item ${i === page ? 'active' : ''}">
+			                <a class="page-link" href="#" data-page="${i}">
+			                    ${i + 1}
+			                </a>
+			            </li>`;
+			    }
+
+			    // ➡ NEXT
+			    paginationContainer.innerHTML += `
+			        <li class="page-item ${page === totalPages - 1 ? 'disabled' : ''}">
+			            <a class="page-link" href="#" data-page="${page + 1}">&raquo;</a>
+			        </li>`;
+
+			    // EVENTS
+			    paginationContainer.querySelectorAll(".page-link").forEach(link => {
+			        link.onclick = function(e) {
+			            e.preventDefault();
+
+			            const targetPage = parseInt(this.dataset.page);
+
+			            if (!isNaN(targetPage) &&
+			                targetPage >= 0 &&
+			                targetPage < totalPages) {
+
+			                loadData(currentKeyword, targetPage);
+			            }
+			        };
+			    });
+			}
+
+		    // ===================== SEARCH =====================
+		    input.addEventListener("input", function () {
+		        clearTimeout(timeout);
+
+		        timeout = setTimeout(() => {
+		            loadData(input.value, 0);
+		        }, 400);
+		    });
+
+		    // ===================== INIT =====================
+		    loadData("", 0);
+
 		});
 		</script>
 	

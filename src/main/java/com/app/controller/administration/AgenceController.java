@@ -1,8 +1,15 @@
 package com.app.controller.administration;
 
+import com.app.controller.common.Routes;
+
+import java.util.Map;
+
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,47 +18,41 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.app.dto.AgenceDTO;
 import com.app.dto.AgenceForm;
+import com.app.dto.BailleurDTO;
 import com.app.entities.administration.Agence;
-import com.app.entities.administration.Banque;
-import com.app.entities.administration.Role;
+import com.app.security.UserPrincipal;
 import com.app.service.administration.AgenceService;
-import com.app.service.common.PaginationService;
-import com.app.service.recouvre.AppartementService;
-import com.app.service.recouvre.BailService;
-import com.app.service.recouvre.LocataireService;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
-@RequestMapping("agences")
+@RequestMapping(Routes.ROUTE_AGENCE)
 public class AgenceController {
 
-	private final AgenceService service;	
-	private final PaginationService paginationService;
+	private final AgenceService service;
 	    
-    public AgenceController(AgenceService service, PaginationService paginationService) {
+    public AgenceController(AgenceService service) {
 		this.service = service;
-		this.paginationService = paginationService;
 	}
-
+    
+    
     @GetMapping
-	public String listBanques(Model model, @RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		String username = auth.getName();
+    public String listAgences(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String keyword,
+            Model model) {
 
-		// Pagination via PaginationService
-		Page<Agence> agencesPage = paginationService.getPage(service::findAll, page, 8);
+        Page<AgenceDTO> agencesPage = service.search(keyword,PageRequest.of(page, 8));
 
-		model.addAttribute("currentUri", request.getRequestURI());
-		model.addAttribute("agencesPage", agencesPage);
-		model.addAttribute("agences", agencesPage.getContent()); // la liste pour Thymeleaf
-		model.addAttribute("currentPage", page);
-		model.addAttribute("totalPages", agencesPage.getTotalPages());
+        model.addAttribute("agencesPage", agencesPage);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("currentPage", page);
 
-		return "agence/list";
-	}
+        return "agence/list";
+    }
+    
     
 	@GetMapping("/create")
     public String showForm(Model model) {
@@ -105,6 +106,37 @@ public class AgenceController {
 
 	    service.save(agence);
 
-	    return "redirect:/agences";
+	    return "redirect:"+Routes.ROUTE_AGENCE;
 	}
+	
+	/*@GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+	public Page<Agence> search(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 8) Pageable pageable) {
+
+        return service.search(keyword, pageable);
+    }*/
+	
+	@GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> search(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 8) Pageable pageable) {
+
+        Page<AgenceDTO> page =
+                service.search(keyword, pageable);
+        
+        System.out.println("TOTAL PAGES = " + page.getTotalPages()); // 👈 AJOUTE ÇA
+
+        return Map.of(
+                "content", page.getContent(),
+                "number", page.getNumber(),
+                "size", page.getSize(),
+                "totalElements", page.getTotalElements(),
+                "totalPages", page.getTotalPages(),
+                "last", page.isLast(),
+                "first", page.isFirst()
+        );
+    }
 }

@@ -12,12 +12,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.app.entities.administration.Banque;
-import com.app.entities.recouvre.Bailleur;
-import com.app.entities.referentiel.Pays;
 import com.app.entities.referentiel.Profession;
-//import com.app.entities.referentiel.Profession;
-import com.app.repositories.referentiel.PaysRepository;
 import com.app.repositories.referentiel.ProfessionRepository;
 import com.app.service.base.BaseService;
 import com.app.service.common.CacheUtils;

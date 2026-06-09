@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,9 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.app.dto.BailleurDTO;
 import com.app.entities.administration.Agence;
-import com.app.entities.administration.Banque;
 import com.app.entities.recouvre.Bailleur;
-import com.app.entities.recouvre.Locataire;
 import com.app.repositories.recouvre.BailleurRepository;
 import com.app.service.base.BaseService;
 
@@ -146,8 +143,6 @@ public class BailleurService extends BaseService<Bailleur>{
 
             entity.setFactureCiePath(filePath.toString());
         }
-
-      //  return repo.save(entity);
         
         return entity;
     }

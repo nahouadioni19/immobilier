@@ -23,8 +23,12 @@ public class UtilisateurDTO {
     private String titre;
     private Integer version;
     private Integer agenceId;
-    private boolean enabled;
+    private boolean enabled;    
     
-    private List<AssignationDTO> assignations = new ArrayList<>();
+    private List<AssignationDTO> assignations = new ArrayList<>();    
+
+    public String getStatut() {
+        return enabled ? "Actif" : "Inactif";
+    }
 
 }

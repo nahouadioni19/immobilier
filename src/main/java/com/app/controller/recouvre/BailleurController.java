@@ -184,8 +184,6 @@ public class BailleurController {
             @PageableDefault(size = 8) Pageable pageable,
             @AuthenticationPrincipal UserPrincipal principal) {
 
-      //  Integer agenceId = principal.getUtilisateur().getAgence().getId();
-
         Page<BailleurDTO> page =
                 service.search(keyword, pageable);
         

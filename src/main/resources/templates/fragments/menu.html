@@ -220,38 +220,32 @@
 </ul>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+	document.addEventListener("DOMContentLoaded", () => {
 
-    document.querySelectorAll('.collapse').forEach(menu => {
+	    document.querySelectorAll('.collapse').forEach(menu => {
 
-        const trigger = document.querySelector(
-            `a[href="#${menu.id}"]`
-        );
+	        const trigger =
+	            document.querySelector(`a[href="#${menu.id}"]`);
 
-        if (!trigger) return;
+	        if (!trigger) return;
 
-        const arrow = trigger.querySelector('.menu-arrow');
-        if (!arrow) return;
+	        const arrow =
+	            trigger.querySelector('.menu-arrow');
 
-        const update = () => {
-            const isOpen = menu.classList.contains('show');
-            arrow.textContent = isOpen ? '▾' : '▸';
-        };
+	        if (!arrow) return;
 
-        // état initial
-        update();
+	        const update = () => {
+	            arrow.classList.toggle(
+	                'rotate',
+	                menu.classList.contains('show')
+	            );
+	        };
 
-        // 🔥 IMPORTANT : observer le menu local (PAS global)
-        new MutationObserver(update).observe(menu, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
+	        update();
 
-        // 🔥 sécurité : sync après bootstrap animation
-        menu.addEventListener('shown.bs.collapse', update);
-        menu.addEventListener('hidden.bs.collapse', update);
+	        menu.addEventListener('shown.bs.collapse', update);
+	        menu.addEventListener('hidden.bs.collapse', update);
+	    });
 
-    });
-
-});
+	});
 </script>

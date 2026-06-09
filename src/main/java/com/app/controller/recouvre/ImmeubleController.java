@@ -359,7 +359,7 @@ public class ImmeubleController{
                             a.getLibelle() +" - " +
                             a.getImmeuble().getNomImmeuble() +" - "+ 
                             a.getImmeuble().getBailleur().getNom()+" - "+
-                            a.getImmeuble().getBailleur().getPrenom()+
+                            a.getImmeuble().getBailleur().getPrenom()+" - "+a.getImmeuble().getAdresse()+
                             " (" + a.getLoyerMensuel() + " F CFA)");
                     m.put("libelle", a.getLibelle());   // ✅ AJOUTÉ
                     m.put("loyerMensuel", a.getLoyerMensuel());

@@ -46,12 +46,14 @@ public class Bail extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agence_id", nullable = false)
     private Agence agence;
-
-    @NotNull
+    
+    @NotNull(message = "La date de début du bail est obligatoire")
+    @DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
     @Column(nullable = false)
     private LocalDate dateDebut;
 
-    @NotNull
+    @NotNull(message = "La date de début de paiement est obligatoire")
+    @DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
     @Column(nullable = false)
     private LocalDate dateFin;
 
@@ -122,8 +124,7 @@ public class Bail extends BaseEntity {
     	long duree = getDureeEnMois();
     	
         this.total =
-                safe(montantLoyer)
-              + safe(montantCharges)
+                safe(montantCharges)
               + safe(caution)
               + safe(avance)
               + safe(honoraire);

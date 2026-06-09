@@ -1,5 +1,6 @@
 package com.app.controller.referentiel;
 
+import com.app.controller.common.Routes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,8 +14,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,15 +25,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.app.entities.recouvre.Bailleur;
 import com.app.entities.referentiel.Profession;
 import com.app.service.common.PaginationService;
 import com.app.service.referentiel.ProfessionService;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 @Controller
-@RequestMapping("professions")
+@RequestMapping(Routes.ROUTE_PROFESSION)
 public class ProfessionController {
 
 	private final ProfessionService service;
@@ -90,7 +86,7 @@ public class ProfessionController {
 
 	    redirectAttrs.addFlashAttribute("successMessage", successMessage);
 
-	    return "redirect:/professions";
+	    return "redirect:"+Routes.ROUTE_PROFESSION;
 	}
 
 	@GetMapping("/edit/{id}")
@@ -109,7 +105,7 @@ public class ProfessionController {
 
 		redirectAttrs.addFlashAttribute("successMessage", "Suppression effectuée avec succès !");
 
-		return "redirect:/professions";
+		return "redirect:"+Routes.ROUTE_PROFESSION;
 	}
 
 	@GetMapping(value = "/api/professions", produces = MediaType.APPLICATION_JSON_VALUE)

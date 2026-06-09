@@ -8,7 +8,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.app.entities.BaseEntity;
 import com.app.entities.administration.Agence;
-import com.app.entities.administration.Site;
 import com.app.entities.administration.Utilisateur;
 import com.app.utils.Constants;
 
@@ -18,7 +17,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -121,7 +119,7 @@ public class Encaisse extends BaseEntity {
     @Column(length = 255)
     private String chequePath;
     
-    private Boolean bloque = false;
+    private Boolean bloque = false; // qui permet d'annuler la pénalité sur un encaissement
 }
 
 

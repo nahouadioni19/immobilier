@@ -2,12 +2,16 @@ package com.app.controller.administration;
 
 import java.security.Principal;
 import java.time.LocalDate;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.app.controller.common.Routes;
@@ -29,6 +34,7 @@ import com.app.dto.PasswordForm;
 import com.app.dto.UtilisateurDTO;
 import com.app.entities.administration.Assignation;
 import com.app.entities.administration.Utilisateur;
+import com.app.entities.referentiel.Profession;
 import com.app.enums.Titre;
 import com.app.mapper.UtilisateurMapper;
 import com.app.security.UserPrincipal;
@@ -228,5 +234,30 @@ public class UtilisateurController {
 
         return "redirect:/utilisateurs";
     }
+    
+    @GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> search(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 8) Pageable pageable,
+            @AuthenticationPrincipal UserPrincipal principal) {
 
+      //  Integer agenceId = principal.getUtilisateur().getAgence().getId();
+
+        Page<UtilisateurDTO> page =
+                service.search(keyword, pageable);
+        
+        System.out.println("TOTAL PAGES = " + page.getTotalPages()); // 👈 AJOUTE ÇA
+
+        return Map.of(
+                "content", page.getContent(),
+                "number", page.getNumber(),
+                "size", page.getSize(),
+                "totalElements", page.getTotalElements(),
+                "totalPages", page.getTotalPages(),
+                "last", page.isLast(),
+                "first", page.isFirst()
+        );
+    }
+    
 }

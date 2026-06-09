@@ -45,6 +45,10 @@
 					<input type="hidden" th:field="*{chequePath}">
 					<input type="hidden" name="removeCheque" id="removeCheque">
 					
+					<!--<input type="hidden" id="initLoyer" th:value="${encaissement.encloyer}">
+					<input type="hidden" id="initDateDebut" th:value="${dateDebutBail}">
+					<input type="hidden" id="initLastPayment" th:value="${derniereDatePaiement}">-->
+					
 	                <!-- Agent -->
 					<div class="row" th:if="! ${userRoles.contains('RECOUV')}">
 		                <div class="mb-1">
@@ -86,7 +90,7 @@
 	                <div class="mb-1"><label>Fin arriérés</label><input type="text" id="arriereFinDisplay" class="form-control" disabled></div>
 	                <div class="mb-1"><label>Loyer FCFA</label><input type="text" id="conloyer" class="form-control" disabled></div>
 					
-					<div class="row" th:if="${userRoles.contains('ADMIN')}">
+					<div class="row" th:if="${userRoles.contains('DIREC')}">
 						<div class="mb-1">	
 							<label class="form-label">
 								<span class="text-danger">
@@ -217,15 +221,11 @@
 
 					    </div>
 					</div>
-					
-					<hr>
-	                
-					<!-- Boutons -->
+	
+	                <!-- Boutons -->
 	                <div class="mt-3 row g-2">
 	                    <div class="col-12 col-md-2">
-	                        <button type="submit" class="btn btn-primary w-100">
-								<span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
-							</button>
+	                        <button type="submit" class="btn btn-primary w-100">Enregistrer</button>
 	                    </div>
 	                    <div class="col-12 col-md-2">
 	                        <a th:href="@{/recouvrements/a-encaisser}" class="btn btn-danger w-100">Retour à la liste</a>
@@ -386,60 +386,106 @@
 			    // =========================
 			    // CALCUL ARRIERES
 			    // =========================
-			    function calculateArrieres(loyer, lastPaymentDate, encDate) {
+				
 
-			        loyer = parseFloat(loyer) || 0;
+				/*function calculateArrieres(loyer, lastPaymentDate, encDate) {
 
-			        if (!lastPaymentDate || !encDate || loyer === 0)
-			            return {arrieres:0, penalite:0, total:0, debut:'', fin:''};
+				    loyer = parseFloat(loyer) || 0;
 
-			        const lastPayment = new Date(lastPaymentDate.split("T")[0] + "T00:00:00");
-			        const paiement = new Date(encDate + "T00:00:00");
+				    if (!lastPaymentDate || !encDate || loyer === 0)
+				        return {arrieres:0, penalite:0, total:0, debut:'', fin:''};
 
-			        if (paiement < lastPayment)
-			            return {arrieres:0, penalite:0, total:0, debut:'', fin:''};
+				    const lastPayment = new Date(lastPaymentDate.split("T")[0] + "T00:00:00");
+				    const paiement = new Date(encDate + "T00:00:00");
 
-			        let nbMois = (paiement.getFullYear() - lastPayment.getFullYear()) * 12
-			                   + (paiement.getMonth() - lastPayment.getMonth());
+				    if (paiement < lastPayment)
+				        return {arrieres:0, penalite:0, total:0, debut:'', fin:''};
 
-			        let moisCourantCompte = false;
+				    let nbMois = (paiement.getFullYear() - lastPayment.getFullYear()) * 12
+				               + (paiement.getMonth() - lastPayment.getMonth());
 
-			        if (paiement.getDate() >= 11) {
-			            nbMois += 1;
-			            moisCourantCompte = true;
-			        }
+				    let moisCourantCompte = false;
 
-			        const arrieres = nbMois * loyer;
+				    if (paiement.getDate() >= 11) {
+				        nbMois += 1;
+				        moisCourantCompte = true;
+				    }
 
-			        let nbPenalite = nbMois;
+				    const arrieres = nbMois * loyer;
 
-			        if (!moisCourantCompte && paiement.getDate() <= 10) {
-			            nbPenalite = Math.max(nbPenalite - 1, 0);
-			        }
-										
-					// checkbox annule pénalité
-					const bloquePenalite = document.getElementById('bloquePenalite');
+				    let nbPenalite = nbMois;
 
-					const annulePenalite =
-					    bloquePenalite ? bloquePenalite.checked : false;
+				    if (!moisCourantCompte && paiement.getDate() <= 10) {
+				        nbPenalite = Math.max(nbPenalite - 1, 0);
+				    }
 
-					const penalite = annulePenalite
-					    ? 0
-					    : nbPenalite * (loyer * 0.1);
+				    // ✅ IMPORTANT : checkbox ici
+				    const bloque = $('#bloquePenalite').is(':checked');
+
+				    const penalite = bloque ? 0 : (nbPenalite * (loyer * 0.1));
+
+				    const total = arrieres + penalite;
+
+				    return {
+				        arrieres,
+				        penalite,
+				        total,
+				        debut: lastPayment.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'}),
+				        fin: paiement.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'})
+				    };
+					
+					
+					console.log(
+					    "Bloqué =",
+					    $('#bloquePenalite').is(':checked'),
+					    "Pénalité =",
+					    penalite
+					);
+					
+				}*/
+				
+				
+				function calculateArrieres(loyer, lastPaymentDate, encDate, bloque) {
+
+				    loyer = Number(loyer) || 0;
+
+				    if (!lastPaymentDate || !encDate || loyer <= 0) {
+				        return {arrieres:0, penalite:0, total:0, debut:'', fin:''};
+				    }
+
+				    const lastPayment = new Date(lastPaymentDate + "T00:00:00");
+				    const paiement = new Date(encDate + "T00:00:00");
+
+				    let nbMois = (paiement.getFullYear() - lastPayment.getFullYear()) * 12
+				               + (paiement.getMonth() - lastPayment.getMonth());
+
+				    const arrieres = nbMois * loyer;
+
+				    const penalite = bloque
+				        ? 0
+				        : nbMois * (loyer * 0.1);
+
+						console.log({
+						    loyer,
+						    nbMois,
+						    nbPenalite,
+						    bloque,
+						    penalite,
+						    total
+						});
 						
-			        const total = arrieres + penalite;
-
-			        return {
-			            arrieres: arrieres,
-			            penalite: penalite,
-			            total: total,
-			            debut: lastPayment.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'}),
-			            fin: paiement.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'})
-			        };
-			    }
-
-								
-			    function recalcArrieres(){
+				    return {
+				        arrieres,
+				        penalite,
+				        total: arrieres + penalite,
+				        debut: lastPayment.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'}),
+				        fin: paiement.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'})
+				    };
+				}
+				
+				
+				
+			  /*  function recalcArrieres(){
 
 			        const data = bailSelect.select2('data')[0];
 			        if(!data) return;
@@ -469,8 +515,71 @@
 					    .val(result.total.toLocaleString('fr-FR'));
 
 					montantInput.val(result.total);
-			    }
+			    }*/
+				
+				
+				function recalcArrieres(){
 
+					const data = bailSelect.select2('data')[0];
+					    console.log("data =", data);
+
+					    if(!data) {
+					        console.log("Aucun bail sélectionné");
+					        return;
+					    }
+
+					    const encDate = $('#encDate').val();
+					    console.log("encDate =", encDate);
+
+					    //let lastPayment = data.lastpayment || data.datedebut;
+						
+						let loyer =
+						    data.loyer ||
+						    Number($('#initLoyer').val());
+
+						let lastPayment =
+						    data.lastpayment ||
+						    $('#initLastPayment').val() ||
+						    data.datedebut ||
+						    $('#initDateDebut').val();
+							
+					    console.log("lastPayment avant split =", lastPayment);
+
+					    if(lastPayment) {
+					        lastPayment = lastPayment.split("T")[0];
+					    }
+
+					    console.log("lastPayment =", lastPayment);
+
+					    console.log("checkbox =", $('#bloquePenalite').is(':checked'));
+						
+						console.log({
+						    loyer: data.loyer,
+						    lastpayment: data.lastpayment,
+						    datedebut: data.datedebut
+						});
+
+					    const result = calculateArrieres(data.loyer, lastPayment, encDate);
+
+					    console.log("result =", result);
+					
+				    const bloque = $('#bloquePenalite').is(':checked');
+
+				    $('#conloyer').val(data.loyer.toLocaleString('fr-FR')+" FCFA");
+				    $('#arriereDisplay').val(result.arrieres.toLocaleString('fr-FR')+" FCFA");
+				    $('#penaliteDisplay').val(result.penalite.toLocaleString('fr-FR')+" FCFA");
+				    $('#totalDisplay').val(result.total.toLocaleString('fr-FR'));
+
+				    conloyerInput.val(data.loyer);
+				    arriereInput.val(result.arrieres);
+				    penaliteInput.val(result.penalite);
+				    totalInput.val(result.total);
+
+				    $('#montantDisplay').val(result.total.toLocaleString('fr-FR'));
+				    montantInput.val(result.total);
+				}
+				
+				
 			    // =========================
 			    // INIT EDIT BAIL
 			    // =========================
@@ -544,7 +653,7 @@
 				// =========================
 				// ANNULATION PENALITE
 				// =========================
-				$(document).on('change', '#bloquePenalite', function () {
+				/*$(document).on('change', '#bloquePenalite', function () {
 
 				    const annule = $(this).is(':checked');
 
@@ -585,14 +694,45 @@
 				    }
 
 				    console.log('Pénalité annulée =', annule);
-				});
+				});*/
 
+				$(document).on('change', '#bloquePenalite', function () {
+
+				    const annule = $(this).is(':checked');
+
+				    if (annule) {
+
+				        const arriere = parseFloat(arriereInput.val()) || 0;
+
+				        const nouvellePenalite = 0;
+				        const nouveauTotal = arriere;
+
+				        $('#penaliteDisplay')
+				            .val(nouvellePenalite.toLocaleString('fr-FR') + ' FCFA');
+
+				        $('#totalDisplay')
+				            .val(nouveauTotal.toLocaleString('fr-FR'));
+
+				        penaliteInput.val(nouvellePenalite);
+				        totalInput.val(nouveauTotal);
+
+				        console.log('Pénalité annulée = true');
+
+				    } else {
+
+				        console.log('Recalcul pénalité activé');
+
+				        recalcArrieres();
+
+				    }
+				});
 				// =========================
 				// ANNULATION PENALITE
 				// =========================
 				
 				/*$(document).on('change', '#bloquePenalite', function () {
 				    recalcArrieres();
+					
 				});	*/
 
 			    $('#encDate').on('change', function(){
@@ -643,7 +783,7 @@
 			    const removeInput = document.getElementById("removeCheque");
 
 			    // =========================
-			    // TOGGLE CHEQUE BLOCK
+			    // 🔥 TOGGLE CHEQUE BLOCK
 			    // =========================
 			    function toggleCheque() {
 			        if (!modeSelect) return;
@@ -660,7 +800,7 @@
 			    }
 
 			    // =========================
-			    // PREVIEW FILE
+			    // 🔥 PREVIEW FILE
 			    // =========================
 			    function handlePreview(file) {
 
@@ -692,7 +832,7 @@
 			    }
 
 			    // =========================
-			    // DELETE CHEQUE
+			    // 🔥 DELETE CHEQUE
 			    // =========================
 			    window.confirmDeleteCheque = function () {
 

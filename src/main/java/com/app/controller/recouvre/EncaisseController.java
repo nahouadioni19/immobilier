@@ -17,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,19 +61,7 @@ public class EncaisseController {
 	private final FileStorageService fileStorageService;
 	
 	@Autowired
-	private MessageSource messageSource;
-	
-	/*public EncaisseController(EncaisseService service,
-				BailService bailService, UtilisateurService utilisateurService, 
-				IdentificationService identificationService, FileStorageService fileStorageService) {
-		
-		this.service = service;
-		this.bailService = bailService;
-		this.utilisateurService = utilisateurService;
-		this.identificationService = identificationService;
-		this.fileStorageService = fileStorageService;
-	}*/
-	
+	private MessageSource messageSource;	
 	
 	@GetMapping("/a-encaisser")
 	public String listEncaisses(

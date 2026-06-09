@@ -13,6 +13,7 @@ import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Locataire;
 import com.app.enums.StatutAbonnement;
 import com.app.utils.Constants;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,6 +48,7 @@ public class Agence extends BaseEntity {
     /* ===== CONTACT ===== */
 
     private String telephone;
+    
     private String email;
 
     @Column(length = 500)
@@ -79,15 +81,19 @@ public class Agence extends BaseEntity {
 
     /* ===== RELATIONS ===== */
 
+    @JsonIgnore
     @OneToMany(mappedBy = "agence")
     private List<Utilisateur> utilisateurs;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "agence")
     private List<Appartement> appartements;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "agence")
     private List<Locataire> locataires;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "agence")
     private List<Bail> baux;
 

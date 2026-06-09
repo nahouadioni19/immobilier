@@ -20,6 +20,7 @@ import com.app.dto.UtilisateurDTO;
 import com.app.entities.administration.Agence;
 import com.app.entities.administration.Assignation;
 import com.app.entities.administration.Utilisateur;
+import com.app.entities.referentiel.Profession;
 import com.app.repositories.administration.AgenceRepository;
 import com.app.repositories.administration.UserRepository;
 import com.app.repositories.administration.UtilisateurRepository;
@@ -442,4 +443,10 @@ public class UtilisateurService extends BaseService<Utilisateur> {
                 .anyMatch(a -> a.getAuthority()
                 .equals("ROLE_ADMIN"));
     }
+    
+	/*
+	 * public Page<Utilisateur> search(String keyword, Pageable pageable) { if
+	 * (keyword == null || keyword.trim().isEmpty()) { return
+	 * repo.findAll(pageable); } return repo.search(keyword.trim(), pageable); }
+	 */
 }
