@@ -8,7 +8,8 @@
     <div class="container-fluid p-4">
 		<div class="container mt-4">
 			
-			<div th:if="${#sets.contains(userRoles, 'SUPER_ADMIN')}">
+	 <!--<div th:if="${#sets.contains(userRoles, 'SUPER_ADMIN')}">-->
+	 <div th:if="${userRoles.contains('DIREC') or userRoles.contains('SUPER_ADMIN')}">
 			
         <h1 class="mb-4">Tableau de bord</h1>
 
