@@ -73,7 +73,7 @@
 			            <!-- Précédent -->
 			            <li th:classappend="${rolesPage.first} ? 'disabled'" class="page-item">
 			                <a class="page-link"
-			                   th:href="@{/roles(page=${rolesPage.number - 1})}"><==</a>
+			                   th:href="@{/roles(page=${rolesPage.number - 1})}"><=</a>
 			            </li>
 
 			            <!-- Numéros de page -->
@@ -88,7 +88,7 @@
 			            <!-- Suivant -->
 			            <li th:classappend="${rolesPage.last} ? 'disabled'" class="page-item">
 			                <a class="page-link"
-			                   th:href="@{/roles(page=${rolesPage.number + 1})}">==></a>
+			                   th:href="@{/roles(page=${rolesPage.number + 1})}">=></a>
 			            </li>
 
 			        </ul>

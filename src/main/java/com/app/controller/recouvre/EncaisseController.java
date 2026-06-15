@@ -36,8 +36,6 @@ import com.app.entities.recouvre.Encaisse;
 import com.app.repositories.BailSelectProjection;
 import com.app.security.UserPrincipal;
 import com.app.service.FileStorageService;
-import com.app.service.administration.AgenceService;
-import com.app.service.administration.RoleService;
 import com.app.service.administration.UtilisateurService;
 import com.app.service.recouvre.BailService;
 import com.app.service.recouvre.EncaisseService;

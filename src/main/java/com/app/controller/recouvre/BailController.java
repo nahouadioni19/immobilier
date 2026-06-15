@@ -77,6 +77,8 @@ public class BailController {
 
         return "locataire/bail/list";
     }
+    
+    
     /*@GetMapping
     public String listImmeubs(
             Model model,

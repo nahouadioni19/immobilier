@@ -3,7 +3,7 @@
 <ul class="nav flex-column" th:fragment="menu" id="sidebarAccordion">
 
     <!-- Accueil -->
-    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">
+    <li class="nav-item" sec:authorize="hasAnyRole('DIREC','AGT')">
         <a class="nav-link" th:href="@{/}">🏠 Accueil</a>
     </li>
 	
@@ -278,19 +278,19 @@
 			 
             <ul class="nav flex-column">
 				
-				<li>
-				    <a class="nav-link" th:href="@{/roles}">
-				        <i class="bi bi-shield-lock me-2"></i>
-				        Rôle
-				    </a>
-				</li>
-
-				<li>
-				    <a class="nav-link" th:href="@{/utilisateurs}">
-				        <i class="bi bi-person-badge me-2"></i>
-				        Utilisateur
-				    </a>
-				</li>
+					<li>
+					    <a class="nav-link" th:href="@{/roles}">
+					        <i class="bi bi-shield-lock me-2"></i>
+					        Rôle
+					    </a>
+					</li>
+	
+					<li>
+					    <a class="nav-link" th:href="@{/utilisateurs}">
+					        <i class="bi bi-person-badge me-2"></i>
+					        Utilisateur
+					    </a>
+					</li>
 				
             </ul>
         </div>
