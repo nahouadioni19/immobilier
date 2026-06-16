@@ -45,11 +45,6 @@
 					<input type="hidden" th:field="*{chequePath}">
 					<input type="hidden" name="removeCheque" id="removeCheque">
 					
-					<!-- DONNEES DU 16/06/2026 -->
-					<input type="hidden" id="initLoyer" th:value="${initLoyer}">
-					<input type="hidden" id="initLastPayment" th:value="${initLastPayment}">
-					<input type="hidden" id="initDateDebut" th:value="${initDateDebut}">
-					
 	                <!-- Agent -->
 					<div class="row" th:if="! ${userRoles.contains('RECOUV')}">
 		                <div class="mb-1">
@@ -91,7 +86,7 @@
 	                <div class="mb-1"><label>Fin arriérés</label><input type="text" id="arriereFinDisplay" class="form-control" disabled></div>
 	                <div class="mb-1"><label>Loyer FCFA</label><input type="text" id="conloyer" class="form-control" disabled></div>
 					
-					<div class="row" th:if="${userRoles.contains('DIREC')}">
+					<div class="row" th:if="${userRoles.contains('ADMIN')}">
 						<div class="mb-1">	
 							<label class="form-label">
 								<span class="text-danger">
@@ -427,9 +422,6 @@
 
 					const annulePenalite =
 					    bloquePenalite ? bloquePenalite.checked : false;
-						
-						
-					console.log("Annule pénalité :", annulePenalite);
 
 					const penalite = annulePenalite
 					    ? 0
@@ -446,50 +438,8 @@
 			        };
 			    }
 
-				
-				function recalcArrieres(){
-
-				    const data = bailSelect.select2('data')[0];
-					
-					console.log("DATA =", data);
-					
-				    if(!data) return;
-
-				    const encDate = $('#encDate').val();
-
-				    let lastPayment = data.lastpayment || data.datedebut;
-				    if(lastPayment) {
-				        lastPayment = lastPayment.split("T")[0];
-				    }
-
-				    const result = calculateArrieres(
-				        data.loyer,
-				        lastPayment,
-				        encDate
-				    );
-
-				    //$('#conloyer').val(data.loyer.toLocaleString('fr-FR') + " FCFA");
-					const loyer = Number(data.loyer || 0);
-
-					$('#conloyer').val(
-					    loyer.toLocaleString('fr-FR') + " FCFA"
-					);
-					
-				    $('#arriereDisplay').val(result.arrieres.toLocaleString('fr-FR') + " FCFA");
-				    $('#penaliteDisplay').val(result.penalite.toLocaleString('fr-FR') + " FCFA");
-				    $('#totalDisplay').val(result.total.toLocaleString('fr-FR'));
-
-				    conloyerInput.val(data.loyer);
-				    arriereInput.val(result.arrieres);
-				    penaliteInput.val(result.penalite);
-				    totalInput.val(result.total);
-
-				    // IMPORTANT
-				    $('#montantDisplay').val(result.total.toLocaleString('fr-FR'));
-				    montantInput.val(result.total);
-				}
 								
-			    /*function recalcArrieres(){
+			    function recalcArrieres(){
 
 			        const data = bailSelect.select2('data')[0];
 			        if(!data) return;
@@ -519,12 +469,12 @@
 					    .val(result.total.toLocaleString('fr-FR'));
 
 					montantInput.val(result.total);
-			    }*/
+			    }
 
 			    // =========================
 			    // INIT EDIT BAIL
 			    // =========================
-			    /*const initBailId = $('#initBailId').val();
+			    const initBailId = $('#initBailId').val();
 			    const initBailText = $('#initBailText').val();
 
 			    if (initBailId && initBailText) {
@@ -533,43 +483,8 @@
 			        hiddenBail.val(initBailId);
 
 			        setTimeout(() => recalcArrieres(), 200);
-			    }*/
+			    }
 
-				// =========================
-				// INIT EDIT BAIL
-				// =========================
-				const initBailId = $('#initBailId').val();
-				const initBailText = $('#initBailText').val();
-
-				const initLoyer = $('#initLoyer').val();
-				const initLastPayment = $('#initLastPayment').val();
-				const initDateDebut = $('#initDateDebut').val();
-
-				if (initBailId && initBailText) {
-
-				    const option = new Option(
-				        initBailText,
-				        initBailId,
-				        true,
-				        true
-				    );
-
-				    $(option).data('data', {
-				        id: initBailId,
-				        text: initBailText,
-				        loyer: Number(initLoyer) || 0,
-				        lastpayment: initLastPayment,
-				        datedebut: initDateDebut
-				    });
-
-				    bailSelect.append(option).trigger('change');
-
-				    hiddenBail.val(initBailId);
-
-				    setTimeout(() => {
-				        recalcArrieres();
-				    }, 200);
-				}
 			    // =========================
 			    // INIT EDIT QUITTANCE
 			    // =========================
@@ -629,12 +544,7 @@
 				// =========================
 				// ANNULATION PENALITE
 				// =========================
-				
 				$(document).on('change', '#bloquePenalite', function () {
-				    recalcArrieres();
-				});
-				
-				/*$(document).on('change', '#bloquePenalite', function () {
 
 				    const annule = $(this).is(':checked');
 
@@ -675,7 +585,7 @@
 				    }
 
 				    console.log('Pénalité annulée =', annule);
-				});*/
+				});
 
 				// =========================
 				// ANNULATION PENALITE

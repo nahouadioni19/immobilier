@@ -32,6 +32,7 @@ import com.app.dto.EncaisseDTO;
 import com.app.dto.EncaisseForm;
 import com.app.dto.IdentificationProjection;
 import com.app.entities.administration.Utilisateur;
+import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Encaisse;
 import com.app.repositories.BailSelectProjection;
 import com.app.security.UserPrincipal;
@@ -407,7 +408,7 @@ public class EncaisseController {
 	    // =========================
 	    // 🏠 INIT BAIL (Select2)
 	    // =========================
-	    if (encaisse.getBail() != null) {
+	    /*if (encaisse.getBail() != null) {
 
 	        model.addAttribute("initBailId", encaisse.getBail().getId());
 
@@ -416,6 +417,25 @@ public class EncaisseController {
 	                + " | " + encaisse.getBail().getAppartement().getNumAppart();
 
 	        model.addAttribute("initBailText", bailText);
+	    }*/
+	    
+	    if (encaisse.getBail() != null) {
+
+	        Bail bail = encaisse.getBail();
+
+	        model.addAttribute("initBailId", bail.getId());
+
+	        String bailText =
+	                bail.getLocataire().getNom() + " "
+	              + bail.getLocataire().getPrenom()
+	              + " | " + bail.getAppartement().getNumAppart();
+
+	        model.addAttribute("initBailText", bailText);
+
+	        // IMPORTANT
+	        model.addAttribute("initLoyer", bail.getMontantLoyer());
+	        model.addAttribute("initLastPayment", bail.getDerniereDatePaiement());
+	        model.addAttribute("initDateDebut", bail.getDateFin());
 	    }
 
 	    // =========================

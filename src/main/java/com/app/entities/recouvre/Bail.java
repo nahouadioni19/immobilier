@@ -15,7 +15,6 @@ import com.app.enums.StatutBail;
 import com.app.enums.UsageBail;
 import com.app.utils.Constants;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 import jakarta.persistence.Column;
