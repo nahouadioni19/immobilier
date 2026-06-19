@@ -17,6 +17,7 @@ import com.app.controller.common.Pages;
 import com.app.controller.common.Routes;
 import com.app.controller.common.SetupPage;
 import com.app.dto.DashboardDTO;
+import com.app.dto.DashboardGlobalDTO;
 import com.app.enums.StatutBail;
 import com.app.repositories.recouvre.BailRepository;
 import com.app.repositories.recouvre.EncaisseRepository;
@@ -24,6 +25,7 @@ import com.app.repositories.recouvre.LocataireRepository;
 import com.app.security.UserPrincipal;
 import com.app.service.DashboardRecouvreService;
 import com.app.service.common.CredentialsService;
+import com.app.service.recouvre.DashboardService;
 import com.app.utils.Constants;
 
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,7 @@ public class HomeController {
     private final EncaisseRepository encaisseRepository;
     
     private final DashboardRecouvreService dashboardRecouvreService;
+    private final DashboardService dashboardService;
 
     private static final String BACK_URL = "BACK_URL";
     private static final String AGRO = "AGRO";
@@ -55,7 +58,15 @@ public class HomeController {
     }
 
     @GetMapping(value = Routes.ROUTE_HOME)
-    public String accueil(Model model, @RequestParam Map<String, String> params) {
+    public String accueil(Model model, 
+    					  @RequestParam Map<String, String> params,
+    					  @AuthenticationPrincipal UserPrincipal principal) {
+    	
+    	Integer agenceId =
+                principal.getUtilisateur()
+                         .getAgence()
+                         .getId();
+    	
         setup.getPages().doStack(setup.getPages().getData(), AGRO, BACK_URL, Routes.ROUTE_HOME);
 
         model.addAttribute(Constants.CURR_PAGE, "home");
@@ -79,6 +90,14 @@ public class HomeController {
         DashboardDTO stats = dashboardRecouvreService.getDashboard();
 
         model.addAttribute("stats", stats);
+        
+       /* model.addAttribute("dashboard",
+                new DashboardGlobalDTO());*/
+        
+        DashboardGlobalDTO dashboard =
+                dashboardService.getDashboardGlobal(agenceId);
+        
+        model.addAttribute("dashboard", dashboard);
 
         setup.allCommon(model);
 
@@ -86,8 +105,9 @@ public class HomeController {
     }
 
     @GetMapping("/accueil")
-    public String accueilAlias(Model model, @RequestParam Map<String, String> params) {
-        return accueil(model, params);
+    public String accueilAlias(Model model, @RequestParam Map<String, String> params,
+    		@AuthenticationPrincipal UserPrincipal principal) {
+        return accueil(model, params, principal);
     }
     
     @ModelAttribute("currentUserFullName")

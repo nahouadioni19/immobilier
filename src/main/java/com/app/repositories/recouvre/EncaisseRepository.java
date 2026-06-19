@@ -349,4 +349,29 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        Pageable pageable
     	);
     
+    //par mois
+    @Query("""
+    	    SELECT COALESCE(SUM(e.encMontant), 0)
+    	    FROM Encaisse e
+    	    WHERE e.agence.id = :agenceId
+    	      AND EXTRACT(YEAR FROM e.encDate) = :annee
+    	      AND EXTRACT(MONTH FROM e.encDate) = :mois
+    	""")
+    	Long totalEncaisseMois(
+    	        @Param("agenceId") Integer agenceId,
+    	        @Param("annee") Integer annee,
+    	        @Param("mois") Integer mois
+    	);
+    
+    //par année
+    @Query("""
+    	    SELECT COALESCE(SUM(e.encMontant), 0)
+    	    FROM Encaisse e
+    	    WHERE e.agence.id = :agenceId
+    	      AND EXTRACT(YEAR FROM e.encDate) = :annee
+    	""")
+    	Long totalEncaisseAnnee(
+    	        @Param("agenceId") Integer agenceId,
+    	        @Param("annee") Integer annee
+    	);    
 }

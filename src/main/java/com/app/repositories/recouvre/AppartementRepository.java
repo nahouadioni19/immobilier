@@ -121,5 +121,19 @@ public interface AppartementRepository extends JpaRepository<Appartement, Intege
     
     //
     List<Appartement> findByStatut(StatutAppartement statut);
+       
+    Long countByAgenceId(Integer agenceId);
+    
+    @Query("""
+    	       SELECT COUNT(a)
+    	       FROM Appartement a
+    	       WHERE a.agence.id = :agenceId
+    	       AND a.statut = 'OCCUPE'
+    	       """)
+    long countAppartementsOccupes(@Param("agenceId") Integer agenceId);
+    
+    long countByAgenceIdAndStatut(
+            Integer agenceId,
+            StatutAppartement statut);
 
 }

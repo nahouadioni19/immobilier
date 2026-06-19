@@ -4,7 +4,12 @@
 
     <!-- Accueil -->
     <li class="nav-item" sec:authorize="hasAnyRole('DIREC','AGT')">
-        <a class="nav-link" th:href="@{/}">🏠 Accueil</a>
+        <a class="nav-link" th:href="@{/}">
+			<span>
+			    <i class="bi bi-speedometer2 me-2"></i>
+			    Tableau de bord
+			</span>
+		</a>
     </li>
 	
     <!-- Dashboard -->
@@ -23,8 +28,8 @@
 		    role="button">
 
 		     <span>
-				<i class="bi bi-speedometer2 me-2"></i>
-				Tableau de bord
+				<i class="bi bi-house-door-fill me-2"></i>
+				Suivi des loyers
 		     </span>
 
 		     <i class="bi bi-chevron-right menu-arrow"></i>

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.app.dto.BailDTO;
 import com.app.entities.recouvre.Bail;
+import com.app.enums.StatutAppartement;
 import com.app.enums.StatutBail;
 import com.app.repositories.BailSelectProjection;
 
@@ -388,5 +389,19 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
     List<Bail> searchBauxNoPage(
             @Param("search") String search,
             @Param("agenceId") Integer agenceId);
+    
+    
+    long countByAgenceIdAndStatut(
+            Integer agenceId,
+            StatutBail statut);
+    
+    //en retard
+    @Query("""
+    	    SELECT COALESCE(SUM(b.total), 0)
+    	    FROM Bail b
+    	    WHERE b.agence.id = :agenceId
+    	      AND b.statut = com.app.enums.StatutBail.EN_RETARD
+    	""")
+    	Long totalImpayes(@Param("agenceId") Integer agenceId);
 
 }

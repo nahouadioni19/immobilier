@@ -30,19 +30,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.app.controller.common.Routes;
-import com.app.controller.common.SetupPage;
 import com.app.dto.BailDTO;
-import com.app.dto.ImmeubleDTO;
 import com.app.entities.recouvre.Appartement;
 import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Locataire;
 import com.app.repositories.BailSelectProjection;
-import com.app.service.common.PaginationService;
 import com.app.service.recouvre.AppartementService;
 import com.app.service.recouvre.BailService;
 import com.app.service.recouvre.LocataireService;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping(Routes.ROUTE_BAIL)

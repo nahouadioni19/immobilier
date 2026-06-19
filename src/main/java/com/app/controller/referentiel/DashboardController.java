@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.lowagie.text.Document;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.app.dto.DashboardGlobalDTO;
 import com.app.dto.DashboardLoyerDTO;
 import com.app.dto.DashboardLoyerMontantDTO;
 import com.app.security.UserPrincipal;
@@ -45,20 +49,19 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping("/dashboards")
 public class DashboardController {
 
-    private final BailService bailService;
     private final DashboardService dashboardService;
 
     @Autowired
-    public DashboardController(BailService bailService,
-                               DashboardService dashboardService) {
-        this.bailService = bailService;
+    public DashboardController(DashboardService dashboardService) {
         this.dashboardService = dashboardService;
     }
 
+    private static final Logger log =
+            LoggerFactory.getLogger(DashboardController.class);
     /* =========================
        📊 DASHBOARD GLOBAL
        ========================= */
-    @GetMapping
+    /*@GetMapping
     public String dashboardGlobal(Model model) {
 
         model.addAttribute("bailsActifs", bailService.countBailsActifs());
@@ -70,6 +73,26 @@ public class DashboardController {
 
         model.addAttribute("mois", mois);
         model.addAttribute("loyers", loyers);
+
+        return "dashboard/form";
+    }*/
+    
+    @GetMapping
+    public String dashboardGlobal(
+            Model model,
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+        log.info("===== DASHBOARD GLOBAL =====");
+
+        Integer agenceId =
+                principal.getUtilisateur().getAgence().getId();
+
+        DashboardGlobalDTO dto =
+                dashboardService.getDashboardGlobal(agenceId);
+
+        log.info("DTO = {}", dto);
+
+        model.addAttribute("dashboard", dto);
 
         return "dashboard/form";
     }
@@ -105,79 +128,7 @@ public class DashboardController {
         return String.format("%,d", montant).replace(',', ' ');
     }
     
- // 💰 FCFA
-  /*  @GetMapping("/loyers-montant")
-    public String dashboardLoyersMontant(Model model,
-                                         @RequestParam(required = false) Integer annee,
-                                         @RequestParam(required = false) String search,
-                                         @RequestParam(defaultValue = "0") int page) {
-
-        if (annee == null) {
-            annee = Year.now().getValue();
-        }
-
-        Page<DashboardLoyerMontantDTO> pageData =
-                dashboardService.getDashboardMontant(annee, search, PageRequest.of(page, 10));
-
-        List<DashboardLoyerMontantDTO> dashboard = pageData.getContent();
-
-        // ================= TOTALS =================
-        model.addAttribute("totalJan", dashboard.stream().mapToLong(d -> d.getJan() == null ? 0 : d.getJan()).sum());
-        model.addAttribute("totalFev", dashboard.stream().mapToLong(d -> d.getFev() == null ? 0 : d.getFev()).sum());
-        model.addAttribute("totalMar", dashboard.stream().mapToLong(d -> d.getMar() == null ? 0 : d.getMar()).sum());
-        model.addAttribute("totalAvr", dashboard.stream().mapToLong(d -> d.getAvr() == null ? 0 : d.getAvr()).sum());
-        model.addAttribute("totalMai", dashboard.stream().mapToLong(d -> d.getMai() == null ? 0 : d.getMai()).sum());
-        model.addAttribute("totalJui", dashboard.stream().mapToLong(d -> d.getJui() == null ? 0 : d.getJui()).sum());
-        model.addAttribute("totalJul", dashboard.stream().mapToLong(d -> d.getJul() == null ? 0 : d.getJul()).sum());
-        model.addAttribute("totalAou", dashboard.stream().mapToLong(d -> d.getAou() == null ? 0 : d.getAou()).sum());
-        model.addAttribute("totalSep", dashboard.stream().mapToLong(d -> d.getSep() == null ? 0 : d.getSep()).sum());
-        model.addAttribute("totalOct", dashboard.stream().mapToLong(d -> d.getOct() == null ? 0 : d.getOct()).sum());
-        model.addAttribute("totalNov", dashboard.stream().mapToLong(d -> d.getNov() == null ? 0 : d.getNov()).sum());
-        model.addAttribute("totalDec", dashboard.stream().mapToLong(d -> d.getDec() == null ? 0 : d.getDec()).sum());
-
-     // ================= CALCUL DES TOTAUX =================
-        long totalJan = dashboard.stream().mapToLong(d -> d.getJan() == null ? 0 : d.getJan()).sum();
-        long totalFev = dashboard.stream().mapToLong(d -> d.getFev() == null ? 0 : d.getFev()).sum();
-        long totalMar = dashboard.stream().mapToLong(d -> d.getMar() == null ? 0 : d.getMar()).sum();
-        long totalAvr = dashboard.stream().mapToLong(d -> d.getAvr() == null ? 0 : d.getAvr()).sum();
-        long totalMai = dashboard.stream().mapToLong(d -> d.getMai() == null ? 0 : d.getMai()).sum();
-        long totalJui = dashboard.stream().mapToLong(d -> d.getJui() == null ? 0 : d.getJui()).sum();
-        long totalJul = dashboard.stream().mapToLong(d -> d.getJul() == null ? 0 : d.getJul()).sum();
-        long totalAou = dashboard.stream().mapToLong(d -> d.getAou() == null ? 0 : d.getAou()).sum();
-        long totalSep = dashboard.stream().mapToLong(d -> d.getSep() == null ? 0 : d.getSep()).sum();
-        long totalOct = dashboard.stream().mapToLong(d -> d.getOct() == null ? 0 : d.getOct()).sum();
-        long totalNov = dashboard.stream().mapToLong(d -> d.getNov() == null ? 0 : d.getNov()).sum();
-        long totalDec = dashboard.stream().mapToLong(d -> d.getDec() == null ? 0 : d.getDec()).sum();
-        
-        long totalGlobal = dashboard.stream()
-        	    .mapToLong(DashboardLoyerMontantDTO::getTotal)
-        	    .sum();
-
-       // model.addAttribute("totalGlobal", totalGlobal);
-        model.addAttribute("totalJanFormatted", formatMontant(totalJan));
-        model.addAttribute("totalFevFormatted", formatMontant(totalFev));        
-        model.addAttribute("totalMarFormatted", formatMontant(totalMar));
-        model.addAttribute("totalAvrFormatted", formatMontant(totalAvr)); 
-        model.addAttribute("totalMaiFormatted", formatMontant(totalMai));
-        model.addAttribute("totalJuiFormatted", formatMontant(totalJui));
-        model.addAttribute("totalJulFormatted", formatMontant(totalJul));
-        model.addAttribute("totalAouFormatted", formatMontant(totalAou));
-        model.addAttribute("totalSepFormatted", formatMontant(totalSep));        
-        model.addAttribute("totalOctFormatted", formatMontant(totalOct));
-        model.addAttribute("totalNovFormatted", formatMontant(totalNov));        
-        model.addAttribute("totalDecFormatted", formatMontant(totalDec));
-        
-        model.addAttribute("totalGlobalFormatted", formatMontant(totalGlobal));
-        // ================= MODEL =================
-        model.addAttribute("dashboard", dashboard);
-        model.addAttribute("annee", annee);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", pageData.getTotalPages());
-        model.addAttribute("search", search);
-        
-        return "dashboard/loyers-montant";
-    }*/
-    
+     
  // 💰 FCFA
     @GetMapping("/loyers-montant")
     public String dashboardLoyersMontant(Model model,
@@ -244,28 +195,7 @@ public class DashboardController {
     private long safe(Long value) {
         return value == null ? 0L : value;
     }
-        
-   /* @GetMapping(value ="/loyers-montant/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public Map<String, Object> searchDashboard(
-            @RequestParam int annee,
-            @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "0") int page) {
 
-        Page<DashboardLoyerMontantDTO> pageData =
-                dashboardService.getDashboardMontant(
-                        annee,
-                        search,
-                        PageRequest.of(page, 10)
-                );
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", pageData.getContent());
-        response.put("totalPages", pageData.getTotalPages());
-        response.put("page", pageData.getNumber());
-
-        return response;
-    }*/
     
     @GetMapping(value ="/loyers-montant/search", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -455,173 +385,5 @@ public class DashboardController {
 
         return totals;
     }
-
-    
-        
-   /* @GetMapping("/search")
-    public Map<String, Object> search(
-            @RequestParam int annee,
-            @RequestParam(required = false) String search,
-            @RequestParam int page
-    ) {
-
-        Pageable pageable = PageRequest.of(page, 10);
-
-        Page<DashboardLoyerMontantDTO> result =
-        		dashboardService.getDashboardMontant(annee, search, pageable);
-
-        Map<String, Long> totals = dashboardService.getTotals(annee, search);
-
-        return Map.of(
-            "content", result.getContent(),
-            "number", result.getNumber(),
-            "totalPages", result.getTotalPages(),
-            "totals", totals
-        );
-    }*/
-    
-   /* @GetMapping("/loyers-montant/pdf")
-    public void exportPdf(
-            @RequestParam int annee,
-            @RequestParam(required = false) String search,
-            HttpServletResponse response) throws Exception {
-
-        response.setContentType("application/pdf");
-        response.setHeader("Content-Disposition", "attachment; filename=loyers.pdf");
-
-        List<DashboardLoyerMontantDTO> data = dashboardService.getDashboard(annee, search);
-        Map<String, Long> totals = dashboardService.getTotals(annee, search);
-
-        Document document = new Document(PageSize.A4.rotate(), 20, 20, 20, 20);
-        PdfWriter.getInstance(document, response.getOutputStream());
-
-        document.open();
-
-        Font titleFont = new Font(Font.HELVETICA, 16, Font.BOLD);
-        Paragraph title = new Paragraph("TABLEAU DES LOYERS - " + annee, titleFont);
-        title.setAlignment(Element.ALIGN_CENTER);
-        title.setSpacingAfter(10);
-        document.add(title);
-
-        PdfPTable table = new PdfPTable(14);
-        table.setWidthPercentage(100);
-
-        table.setWidths(new float[]{
-                3f,
-                1f,1f,1f,1f,1f,1f,
-                1f,1f,1f,1f,1f,1f,
-                1.5f
-        });
-
-        Font headerFont = new Font(Font.HELVETICA, 10, Font.BOLD);
-      //  Color headerColor = new Color(200, 230, 200);
-        BaseColor headerColor = new BaseColor(200, 230, 200);
-
-        String[] headers = {
-                "Locataire","Jan","Fev","Mar","Avr","Mai","Juin",
-                "Juil","Aout","Sep","Oct","Nov","Dec","Total"
-        };
-
-        for (String h : headers) {
-            PdfPCell cell = new PdfPCell(new Phrase(h, headerFont));
-            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-            cell.setBackgroundColor(headerColor);
-            cell.setPadding(5);
-            table.addCell(cell);
-        }
-
-        boolean alternate = false;
-
-        for (DashboardLoyerMontantDTO row : data) {
-
-          /*  Color rowColor = alternate
-                    ? new Color(245, 245, 245)
-                    : Color.WHITE;
-            BaseColor rowColor = alternate ? new BaseColor(245, 245, 245) : BaseColor.WHITE;
-            alternate = !alternate;
-
-            table.addCell(createCell(row.getLocataireCourt(), rowColor, Element.ALIGN_LEFT));
-
-            table.addCell(createCell(row.getJanFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getFevFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getMarFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getAvrFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getMaiFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getJuiFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getJulFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getAouFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getSepFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getOctFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getNovFormatted(), rowColor, Element.ALIGN_RIGHT));
-            table.addCell(createCell(row.getDecFormatted(), rowColor, Element.ALIGN_RIGHT));
-
-            Font boldFont = new Font(Font.HELVETICA, 10, Font.BOLD);
-            PdfPCell totalCell = new PdfPCell(new Phrase(row.getTotalFormatted(), boldFont));
-            totalCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            totalCell.setBackgroundColor(rowColor);
-            totalCell.setPadding(4);
-            table.addCell(totalCell);
-        }
-
-        Font totalFont = new Font(Font.HELVETICA, 10, Font.BOLD);
-       // Color totalColor = new Color(220, 220, 220);
-        BaseColor totalColor = new BaseColor(220, 220, 220);
-
-        table.addCell(createHeaderCell("TOTAL", totalFont, totalColor));
-
-        table.addCell(createCell(format(totals.get("m1")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m2")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m3")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m4")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m5")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m6")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m7")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m8")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m9")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m10")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m11")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("m12")), totalColor, Element.ALIGN_RIGHT));
-        table.addCell(createCell(format(totals.get("total")), totalColor, Element.ALIGN_RIGHT));
-
-        document.add(table);
-        document.close();
-    }
-    
-    private PdfPCell createCell(String value, java.awt.Color color, int align) {
-
-        BaseColor baseColor = new BaseColor(
-                color.getRed(),
-                color.getGreen(),
-                color.getBlue()
-        );
-
-        PdfPCell cell = new PdfPCell(new Phrase(value));
-        cell.setHorizontalAlignment(align);
-        cell.setBackgroundColor(baseColor);
-        cell.setPadding(4);
-
-        return cell;
-    }
-
-    private PdfPCell createHeaderCell(String value, Font font, java.awt.Color color) {
-
-        BaseColor baseColor = new BaseColor(
-                color.getRed(),
-                color.getGreen(),
-                color.getBlue()
-        );
-
-        PdfPCell cell = new PdfPCell(new Phrase(value, font));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setBackgroundColor(baseColor);
-        cell.setPadding(5);
-
-        return cell;
-    }
-
-    private String format(Long val) {
-        if (val == null || val == 0) return "0";
-        return String.format("%,d", val).replace(',', ' ');
-    }*/
     
 }

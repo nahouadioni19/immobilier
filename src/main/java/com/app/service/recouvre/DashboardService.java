@@ -6,19 +6,26 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.text.Normalizer;
+import java.time.LocalDate;
 import java.util.HashMap;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.app.dto.DashboardGlobalDTO;
 import com.app.dto.DashboardLoyerDTO;
 import com.app.dto.DashboardLoyerMontantDTO;
 import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Loyann;
+import com.app.enums.StatutAppartement;
 import com.app.enums.StatutBail;
+import com.app.repositories.recouvre.AppartementRepository;
 import com.app.repositories.recouvre.BailRepository;
+import com.app.repositories.recouvre.EncaisseRepository;
+import com.app.repositories.recouvre.LocataireRepository;
 import com.app.repositories.recouvre.LoyannRepository;
+import com.app.service.base.BaseService;
 
 @Service
 public class DashboardService{
@@ -28,6 +35,16 @@ public class DashboardService{
 
     @Autowired
     private LoyannRepository loyannRepository;
+    
+    @Autowired
+    private AppartementRepository appartementRepository;
+    
+    @Autowired
+    private LocataireRepository locataireRepository;
+    
+    @Autowired
+    private EncaisseRepository encaisseRepository;
+    
 
     public Page<DashboardLoyerDTO> getDashboard(int annee, Pageable pageable) {
 
@@ -298,5 +315,68 @@ public class DashboardService{
                 return dto;
             })
             .toList();
+    }
+    
+    public DashboardGlobalDTO getDashboardGlobal(Integer agenceId) {
+
+        long totalAppartements = appartementRepository.countByAgenceId(agenceId);
+
+        long occupes = appartementRepository.countByAgenceIdAndStatut(
+                agenceId,
+                StatutAppartement.OCCUPE
+        );
+
+        long libres = appartementRepository.countByAgenceIdAndStatut(
+                agenceId,
+                StatutAppartement.LIBRE
+        );
+
+        long disponibles = libres;
+
+        long locataires = locataireRepository.countByAgenceId(agenceId);
+
+        long bauxActifs = bailRepository.countByAgenceIdAndStatut(
+                agenceId,
+                StatutBail.ACTIF
+        );
+
+        long bauxResilies = bailRepository.countByAgenceIdAndStatut(
+                agenceId,
+                StatutBail.RESILIE
+        );
+
+        double tauxOccupation = (totalAppartements == 0)
+                ? 0.0
+                : (occupes * 100.0) / totalAppartements;
+
+        LocalDate today = LocalDate.now();
+
+        Long encaisseMois = encaisseRepository.totalEncaisseMois(
+                agenceId,
+                today.getYear(),
+                today.getMonthValue()
+        );
+
+        Long encaisseAnnee = encaisseRepository.totalEncaisseAnnee(
+                agenceId,
+                today.getYear()
+        );
+
+        Long impayes = bailRepository.totalImpayes(agenceId);
+
+        return DashboardGlobalDTO.builder()
+                .totalAppartements(totalAppartements)
+                .appartementsOccupes(occupes)
+                .appartementsDisponibles(disponibles)
+                .totalLocataires(locataires)
+                .bauxActifs(bauxActifs)
+                .bauxResilies(bauxResilies)
+                .montantLoyersMensuels(0L)
+                .montantLoyersAnnee(0L)
+                .tauxOccupation(tauxOccupation)
+                .montantEncaisseMois(encaisseMois)
+                .montantEncaisseAnnee(encaisseAnnee)
+                .montantImpayes(impayes)
+                .build();
     }
 }

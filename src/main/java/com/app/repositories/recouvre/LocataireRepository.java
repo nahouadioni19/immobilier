@@ -55,5 +55,7 @@ public interface LocataireRepository extends JpaRepository<Locataire, Integer>{
 	
 	//
 	Page<Locataire> findByAgenceId(Integer agenceId, Pageable pageable);
+	
+	Long countByAgenceId(Integer agenceId);
 
 }
