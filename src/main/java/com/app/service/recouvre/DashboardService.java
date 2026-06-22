@@ -1,5 +1,7 @@
 package com.app.service.recouvre;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -7,12 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.text.Normalizer;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.app.controller.referentiel.DashboardController;
 import com.app.dto.DashboardGlobalDTO;
 import com.app.dto.DashboardLoyerDTO;
 import com.app.dto.DashboardLoyerMontantDTO;
@@ -45,6 +50,8 @@ public class DashboardService{
     @Autowired
     private EncaisseRepository encaisseRepository;
     
+    private static final Logger log =
+            LoggerFactory.getLogger(DashboardController.class);
 
     public Page<DashboardLoyerDTO> getDashboard(int annee, Pageable pageable) {
 
@@ -351,19 +358,34 @@ public class DashboardService{
 
         LocalDate today = LocalDate.now();
 
+        log.info("===== DASHBOARD =====");
+        log.info("agenceId = {}", agenceId);
+        log.info("annee = {}", today.getYear());
+        log.info("mois = {}", today.getMonthValue());
+        
         Long encaisseMois = encaisseRepository.totalEncaisseMois(
                 agenceId,
                 today.getYear(),
                 today.getMonthValue()
         );
 
+        log.info("encaisseMois = {}", encaisseMois);
+        
         Long encaisseAnnee = encaisseRepository.totalEncaisseAnnee(
                 agenceId,
                 today.getYear()
         );
+        
+        Long nbRetards =
+                bailRepository.countBauxEnRetard(agenceId);
 
         Long impayes = bailRepository.totalImpayes(agenceId);
 
+        encaisseMois = encaisseMois == null ? 0L : encaisseMois;
+        encaisseAnnee = encaisseAnnee == null ? 0L : encaisseAnnee;
+        nbRetards = nbRetards == null ? 0L : nbRetards;
+        impayes = impayes == null ? 0L : impayes;
+                
         return DashboardGlobalDTO.builder()
                 .totalAppartements(totalAppartements)
                 .appartementsOccupes(occupes)
@@ -376,7 +398,52 @@ public class DashboardService{
                 .tauxOccupation(tauxOccupation)
                 .montantEncaisseMois(encaisseMois)
                 .montantEncaisseAnnee(encaisseAnnee)
+                .nombreBauxEnRetard(nbRetards)
                 .montantImpayes(impayes)
                 .build();
     }
+    
+    
+    /*public Long calculerArriere(Bail bail) {
+
+        LocalDate debut = bail.getDateDebut();
+
+        LocalDate aujourdHui = LocalDate.now();
+
+        long nbMois =
+                ChronoUnit.MONTHS.between(
+                        YearMonth.from(debut),
+                        YearMonth.from(aujourdHui)
+                ) + 1;
+
+        long montantDu =
+                nbMois * bail.getMontantLoyer();
+
+        Long encaisse =
+                encaisseRepository.totalEncaisseByBail(
+                        bail.getId());
+
+        encaisse = encaisse == null ? 0L : encaisse;
+
+        long arriere = montantDu - encaisse;
+
+        return Math.max(arriere, 0);
+    }
+    
+    
+    public Long totalImpayes(Integer agenceId) {
+
+        List<Bail> baux =
+                bailRepository.findByAgenceIdAndStatut(
+                        agenceId,
+                        StatutBail.ACTIF);
+
+        long total = 0;
+
+        for (Bail bail : baux) {
+            total += calculerArriere(bail);
+        }
+
+        return total;
+    }*/
 }

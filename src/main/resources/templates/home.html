@@ -14,137 +14,200 @@
 		            Vue globale de votre activité immobilière
 		        </p>
 		    </div>
-		
+			
+			<!-- =========================
+				LIGNE 0
+			===========================-->
+			<div th:if="${agences != null}" class="card mb-3">
+			    <div class="card-body">
+
+			        <form method="get" th:action="@{/}">
+
+			            <div class="row">
+
+			                <div class="col-md-4">
+			                    <label class="form-label">
+			                        Agence
+			                    </label>
+
+			                    <select name="agenceId"
+			                            class="form-select">
+
+			                        <option value="">
+			                            -- Sélectionner une agence --
+			                        </option>
+
+			                        <option th:each="agence : ${agences}"
+			                                th:value="${agence.id}"
+			                                th:text="${agence.nom}"
+			                                th:selected="${selectedAgenceId == agence.id.toString()}">
+			                        </option>
+
+			                    </select>
+			                </div>
+
+			                <div class="col-md-2 align-self-end">
+			                    <button class="btn btn-primary w-100">
+			                        Filtrer
+			                    </button>
+			                </div>
+
+			            </div>
+
+			        </form>
+
+			    </div>
+			</div>
+			
 		    <!-- =========================
 		         LIGNE 1
 		    ========================== -->
-		    <div class="row g-3">
-		
-		        <div class="col-md-3">
-		            <div class="card dashboard-card bg-primary text-white">
-		                <div class="card-body text-center">
-		                    <h6>Appartements</h6>
-		                    <div class="stat-number"
-		                         th:text="${dashboard.totalAppartements}">
-		                    </div>
-		                </div>
-		            </div>
-		        </div>
-		
-		        <div class="col-md-3">
-		            <div class="card dashboard-card bg-success text-white">
-		                <div class="card-body text-center">
-		                    <h6>Occupés</h6>
-		                    <div class="stat-number"
-		                         th:text="${dashboard.appartementsOccupes}">
-		                    </div>
-		                </div>
-		            </div>
-		        </div>
-		
-		        <div class="col-md-3">
-		            <div class="card dashboard-card bg-warning text-dark">
-		                <div class="card-body text-center">
-		                    <h6>Disponibles</h6>
-		                    <div class="stat-number"
-		                         th:text="${dashboard.appartementsDisponibles}">
-		                    </div>
-		                </div>
-		            </div>
-		        </div>
-		
-		        <div class="col-md-3">
-		            <div class="card dashboard-card bg-info text-white">
-		                <div class="card-body text-center">
-		                    <h6>Taux occupation</h6>
-		                    <div class="stat-number">
-		                        <span th:text="${#numbers.formatDecimal(dashboard.tauxOccupation,1,2)}"></span>%
-		                    </div>
-		                </div>
-		            </div>
-		        </div>
-		
-		    </div>
+		    <div class="row g-3 mt-2">
+			
+			    <div class="col-md-3">
+			        <div class="card bg-primary text-white">
+			            <div class="card-body text-center">
+			                <h6>🏢 Appartements</h6>
+			                <h2 th:text="${dashboard.totalAppartements}"></h2>
+			            </div>
+			        </div>
+			    </div>
+			
+			    <div class="col-md-3">
+			        <div class="card bg-success text-white">
+			            <div class="card-body text-center">
+			                <h6>🏠 Occupés</h6>
+			                <h2 th:text="${dashboard.appartementsOccupes}"></h2>
+			            </div>
+			        </div>
+			    </div>
+			
+			    <div class="col-md-3">
+			        <div class="card bg-warning text-dark">
+			            <div class="card-body text-center">
+			                <h6>🔓 Disponibles</h6>
+			                <h2 th:text="${dashboard.appartementsDisponibles}"></h2>
+			            </div>
+			        </div>
+			    </div>
+			
+			    <div class="col-md-3">
+			        <div class="card bg-info text-white">
+			            <div class="card-body text-center">
+			                <h6>📊 Taux d'occupation</h6>
+			                <h2>
+			                    <span th:text="${#numbers.formatDecimal(dashboard.tauxOccupation,1,2)}"></span>%
+			                </h2>
+			            </div>
+			        </div>
+			    </div>
+			
+			</div>
 		
 		    <!-- =========================
 		         LIGNE 2
 		    ========================== -->
 		
-		    <div class="row g-3 mt-2">
-		
-		        <div class="col-md-4">
-		            <div class="card dashboard-card">
-		                <div class="card-body text-center">
-		                    <h6>Baux actifs</h6>
-		                    <h2 class="text-success"
-		                        th:text="${dashboard.bauxActifs}">
-		                    </h2>
-		                </div>
-		            </div>
-		        </div>
-		
-		        <div class="col-md-4">
-		            <div class="card dashboard-card">
-		                <div class="card-body text-center">
-		                    <h6>Baux résiliés</h6>
-		                    <h2 class="text-danger"
-		                        th:text="${dashboard.bauxResilies}">
-		                    </h2>
-		                </div>
-		            </div>
-		        </div>
-		
-		        <div class="col-md-4">
-		            <div class="card dashboard-card">
-		                <div class="card-body text-center">
-		                    <h6>Locataires</h6>
-		                    <h2 class="text-primary"
-		                        th:text="${dashboard.totalLocataires}">
-		                    </h2>
-		                </div>
-		            </div>
-		        </div>
-		
-		    </div>
-			
+			<div class="row g-3 mt-2">
+
+			    <div class="col-md-3">
+			        <div class="card bg-success text-white">
+			            <div class="card-body text-center">
+			                <h6>📄 Baux actifs</h6>
+			                <h2 th:text="${dashboard.bauxActifs}"></h2>
+			            </div>
+			        </div>
+			    </div>
+
+			    <div class="col-md-3">
+			        <div class="card bg-secondary text-white">
+			            <div class="card-body text-center">
+			                <h6>📁 Baux résiliés</h6>
+			                <h2 th:text="${dashboard.bauxResilies}"></h2>
+			            </div>
+			        </div>
+			    </div>
+
+			    <div class="col-md-3">
+			        <div class="card bg-danger text-white">
+			            <div class="card-body text-center">
+			                <h6>🚨 Baux en retard</h6>
+			                <h2 th:text="${dashboard.nombreBauxEnRetard}"></h2>
+			            </div>
+			        </div>
+			    </div>
+
+			    <div class="col-md-3">
+			        <div class="card bg-primary text-white">
+			            <div class="card-body text-center">
+			                <h6>👥 Locataires</h6>
+			                <h2 th:text="${dashboard.totalLocataires}"></h2>
+			            </div>
+			        </div>
+			    </div>
+
+			</div>			
 			<!-- ============================
 				LIGNE3
 			==============================-->
 			<div class="row g-3 mt-2">
-				<div class="col-md-4">
-				    <div class="card dashboard-card bg-success text-white">
-				        <div class="card-body text-center">
-				            <h6>Encaissé ce mois</h6>
-				            <h2 th:text="${#numbers.formatInteger(dashboard.montantLoyersMensuels,0,'WHITESPACE')} + ' FCFA'"></h2>
-				        </div>
-				    </div>
-				</div>
-				
-				<div class="col-md-4">
-				    <div class="card dashboard-card bg-primary text-white">
-				        <div class="card-body text-center">
-				            <h6>Encaissé cette année</h6>
-				            <h2 th:text="${#numbers.formatInteger(dashboard.montantLoyersAnnee,0,'WHITESPACE')} + ' FCFA'"></h2>
-				        </div>
-				    </div>
-				</div>
-				
-				<div class="col-md-4">
-				    <div class="card dashboard-card bg-danger text-white">
-				        <div class="card-body text-center">
-				            <h6>Impayés</h6>
-				            <h2 th:text="${#numbers.formatInteger(dashboard.montantImpayes,0,'WHITESPACE')} + ' FCFA'"></h2>
-				        </div>
-				    </div>
-				</div>
-				
+
+			    <div class="col-md-4">
+			        <div class="card bg-success text-white">
+			            <div class="card-body text-center">
+			                <h6>💰 Encaissé ce mois</h6>
+			                <h2 th:text="${#numbers.formatInteger(dashboard.montantEncaisseMois,0,'WHITESPACE')} + ' FCFA'"></h2>
+			            </div>
+			        </div>
+			    </div>
+
+			    <div class="col-md-4">
+			        <div class="card bg-primary text-white">
+			            <div class="card-body text-center">
+			                <h6>💵 Encaissé cette année</h6>
+			                <h2 th:text="${#numbers.formatInteger(dashboard.montantEncaisseAnnee,0,'WHITESPACE')} + ' FCFA'"></h2>
+			            </div>
+			        </div>
+			    </div>
+
+			    <div class="col-md-4">
+			        <div class="card bg-danger text-white">
+			            <div class="card-body text-center">
+			                <h6>⚠️ Impayés</h6>
+			                <h2 th:text="${#numbers.formatInteger(dashboard.montantImpayes,0,'WHITESPACE')} + ' FCFA'"></h2>
+			            </div>
+			        </div>
+			    </div>
+
 			</div>
-		
+<!--			
+			<div class="row g-3 mt-2">
+
+			    <div class="col-md-3">
+			        <div class="card bg-danger text-white">
+			            <div class="card-body text-center">
+			                <h6>Baux en retard</h6>
+			                <h2 th:text="${dashboard.nombreBauxEnRetard}"></h2>
+			            </div>
+			        </div>
+			    </div>
+
+			    <div class="col-md-3">
+			        <div class="card bg-warning">
+			            <div class="card-body text-center">
+			                <h6>Impayés</h6>
+			                <h2 th:text="${#numbers.formatInteger(dashboard.montantImpayes,0,'WHITESPACE')} + ' FCFA'"></h2>
+			            </div>
+			        </div>
+			    </div>
+
+			</div>
+		-->
 		    <!-- =========================
 		         GRAPHIQUE
 		    ========================== -->
 		
-		    <div class="row mt-4">
+		    <!--<div class="row mt-4">
 		
 		        <div class="col-md-6">
 		            <div class="card dashboard-card">
@@ -203,7 +266,43 @@
 		            </div>
 		        </div>
 		
-		    </div>
+		    </div>-->
+			
+			
+			<div class="row mt-4">
+
+			    <!-- Répartition des appartements -->
+			    <div class="col-md-6">
+			        <div class="card shadow-sm">
+			            <div class="card-header">
+			                🏠 Répartition des appartements
+			            </div>
+
+			            <div class="card-body">
+			                <div style="height:350px;">
+			                    <canvas id="occupationChart"></canvas>
+			                </div>
+			            </div>
+			        </div>
+			    </div>
+
+			    <!-- Encaissements mensuels -->
+			    <div class="col-md-6">
+			        <div class="card shadow-sm">
+			            <div class="card-header">
+			                💰 Évolution des encaissements mensuels
+			            </div>
+
+			            <div class="card-body">
+			                <div style="height:350px;">
+			                    <canvas id="encaissementChart"></canvas>
+			                </div>
+			            </div>
+			        </div>
+			    </div>
+
+			</div>
+			
 		
 		</div>
 	

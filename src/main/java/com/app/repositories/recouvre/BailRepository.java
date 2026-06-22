@@ -396,12 +396,71 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
             StatutBail statut);
     
     //en retard
-    @Query("""
+  /*  @Query("""
     	    SELECT COALESCE(SUM(b.total), 0)
     	    FROM Bail b
     	    WHERE b.agence.id = :agenceId
     	      AND b.statut = com.app.enums.StatutBail.EN_RETARD
     	""")
+    	Long totalImpayes(@Param("agenceId") Integer agenceId);*/
+    
+    //RETARD
+    @Query("""
+    	    SELECT COUNT(DISTINCT e.bail.id)
+    	    FROM Encaisse e
+    	    WHERE e.agence.id = :agenceId
+    	      AND e.encArriere > 0
+    	""")
+    	Long countBauxEnRetard(
+    	        @Param("agenceId") Integer agenceId
+    	);
+    
+    //22062026
+    @Query(value = """
+    	    SELECT COALESCE(
+    	        SUM(
+    	            GREATEST(
+    	                (
+    	                    (
+    	                        EXTRACT(YEAR FROM CURRENT_DATE) * 12
+    	                        + EXTRACT(MONTH FROM CURRENT_DATE)
+    	                    )
+    	                    -
+    	                    (
+    	                        EXTRACT(YEAR FROM COALESCE(derniere_date_paiement, date_debut)) * 12
+    	                        + EXTRACT(MONTH FROM COALESCE(derniere_date_paiement, date_debut))
+    	                    )
+    	                ) * montant_loyer,
+    	                0
+    	            )
+    	        ),
+    	        0
+    	    )
+    	    FROM immonet.t_bail
+    	    WHERE agence_id = :agenceId
+    	      AND statut = 'ACTIF'
+    	""", nativeQuery = true)
     	Long totalImpayes(@Param("agenceId") Integer agenceId);
+    
+    //
+    @Query(value = """
+    	    SELECT COUNT(*)
+    	    FROM immonet.t_bail
+    	    WHERE agence_id = :agenceId
+    	      AND statut = 'ACTIF'
+    	      AND (
+    	          (
+    	              EXTRACT(YEAR FROM CURRENT_DATE) * 12
+    	              + EXTRACT(MONTH FROM CURRENT_DATE)
+    	          )
+    	          -
+    	          (
+    	              EXTRACT(YEAR FROM COALESCE(derniere_date_paiement, date_debut)) * 12
+    	              + EXTRACT(MONTH FROM COALESCE(derniere_date_paiement, date_debut))
+    	          )
+    	      ) > 0
+    	""", nativeQuery = true)
+    	Long nombreBauxEnRetard(@Param("agenceId") Integer agenceId);
+    
 
 }

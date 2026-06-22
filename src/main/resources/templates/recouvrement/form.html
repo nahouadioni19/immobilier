@@ -489,52 +489,7 @@
 				    montantInput.val(result.total);
 				}
 								
-			    /*function recalcArrieres(){
-
-			        const data = bailSelect.select2('data')[0];
-			        if(!data) return;
-
-			        const encDate = $('#encDate').val();
-
-			        let lastPayment = data.lastpayment || data.datedebut;
-			        if(lastPayment) lastPayment = lastPayment.split("T")[0];
-
-			        const result = calculateArrieres(data.loyer, lastPayment, encDate);
-
-			        $('#conloyer').val(data.loyer.toLocaleString('fr-FR')+" FCFA");
-			        $('#arriereDisplay').val(result.arrieres.toLocaleString('fr-FR')+" FCFA");
-			        $('#penaliteDisplay').val(result.penalite.toLocaleString('fr-FR')+" FCFA");
-			        $('#totalDisplay').val(result.total.toLocaleString('fr-FR'));
-			        $('#arriereDebutDisplay').val(result.debut);
-			        $('#arriereFinDisplay').val(result.fin);
-
-			        conloyerInput.val(data.loyer);
-			        arriereInput.val(result.arrieres);
-			        penaliteInput.val(result.penalite);
-			        totalInput.val(result.total);
-			        $('#arriereDebut').val(result.debut);
-			        $('#arriereFin').val(result.fin);
-					
-					$('#montantDisplay')
-					    .val(result.total.toLocaleString('fr-FR'));
-
-					montantInput.val(result.total);
-			    }*/
-
-			    // =========================
-			    // INIT EDIT BAIL
-			    // =========================
-			    /*const initBailId = $('#initBailId').val();
-			    const initBailText = $('#initBailText').val();
-
-			    if (initBailId && initBailText) {
-			        const option = new Option(initBailText, initBailId, true, true);
-			        bailSelect.append(option).trigger('change');
-			        hiddenBail.val(initBailId);
-
-			        setTimeout(() => recalcArrieres(), 200);
-			    }*/
-
+			    
 				// =========================
 				// INIT EDIT BAIL
 				// =========================
@@ -634,56 +589,7 @@
 				    recalcArrieres();
 				});
 				
-				/*$(document).on('change', '#bloquePenalite', function () {
-
-				    const annule = $(this).is(':checked');
-
-				    // valeurs déjà calculées
-				    const arriere = parseFloat(arriereInput.val()) || 0;
-				    const totalActuel = parseFloat(totalInput.val()) || 0;
-				    const penaliteActuelle = parseFloat(penaliteInput.val()) || 0;
-
-				    let nouvellePenalite;
-				    let nouveauTotal;
-
-				    if (annule) {
-				        nouvellePenalite = 0;
-				        nouveauTotal = arriere;
-				    } else {
-				        // remettre la pénalité calculée
-				        recalcArrieres();
-				        return;
-				    }
-
-				    // affichage UI
-				    $('#penaliteDisplay')
-				        .val(nouvellePenalite.toLocaleString('fr-FR') + ' FCFA');
-
-				    $('#totalDisplay')
-				        .val(nouveauTotal.toLocaleString('fr-FR'));
-
-				    // hidden fields
-				    penaliteInput.val(nouvellePenalite);
-				    totalInput.val(nouveauTotal);
-
-				    // montant payé auto si vide
-				    if (!montantInput.val() || montantInput.val() == totalActuel) {
-				        $('#montantDisplay')
-				            .val(nouveauTotal.toLocaleString('fr-FR'));
-
-				        montantInput.val(nouveauTotal);
-				    }
-
-				    console.log('Pénalité annulée =', annule);
-				});*/
-
-				// =========================
-				// ANNULATION PENALITE
-				// =========================
 				
-				/*$(document).on('change', '#bloquePenalite', function () {
-				    recalcArrieres();
-				});	*/
 
 			    $('#encDate').on('change', function(){
 			        recalcArrieres();

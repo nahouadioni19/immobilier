@@ -374,4 +374,14 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        @Param("agenceId") Integer agenceId,
     	        @Param("annee") Integer annee
     	);    
+    
+    //RETARD
+    @Query("""
+    	    SELECT COALESCE(SUM(e.encArriere), 0)
+    	    FROM Encaisse e
+    	    WHERE e.agence.id = :agenceId
+    	""")
+    	Long totalImpayes(
+    	        @Param("agenceId") Integer agenceId
+    	);
 }
