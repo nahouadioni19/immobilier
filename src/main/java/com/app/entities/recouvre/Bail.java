@@ -56,6 +56,7 @@ public class Bail extends BaseEntity {
     @Column(nullable = false)
     private LocalDate dateFin;
 
+    @DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
     private LocalDate dateResiliation;
 
     @Column(nullable = false)

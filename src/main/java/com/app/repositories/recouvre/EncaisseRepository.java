@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.app.dto.EncaisseDTO;
 import com.app.dto.EncaisseListDto;
+import com.app.dto.EncaissementMensuelDTO;
 import com.app.entities.administration.Utilisateur;
 import com.app.entities.recouvre.Encaisse;
 
@@ -43,7 +44,7 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
 		        l.email AS locemail,
 		        t.utilite AS usglibelle,
 		        t.loyer AS conloyer,
-		        p.libelle AS bailibelle,p.num_appart AS numero, t.der_paye_date AS derniereDate
+		        p.libelle AS bailibelle,p.num_appart AS numero, t.derniere_date_paiement AS derniereDate
 		    FROM t_bail t
 		    JOIN t_locataire l ON l.idt = t.locataire_id
 		    JOIN t_appartement p ON p.idt = t.appartement_id
@@ -383,5 +384,22 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	""")
     	Long totalImpayes(
     	        @Param("agenceId") Integer agenceId
+    	);
+    
+    ///
+    @Query("""
+    	    SELECT new com.app.dto.EncaissementMensuelDTO(
+    	        MONTH(e.encDate),
+    	        COALESCE(SUM(e.encMontant),0)
+    	    )
+    	    FROM Encaisse e
+    	    WHERE e.agence.id = :agenceId
+    	      AND YEAR(e.encDate) = :annee
+    	    GROUP BY MONTH(e.encDate)
+    	    ORDER BY MONTH(e.encDate)
+    	""")
+    	List<EncaissementMensuelDTO> montantParMois(
+    	        @Param("agenceId") Integer agenceId,
+    	        @Param("annee") Integer annee
     	);
 }

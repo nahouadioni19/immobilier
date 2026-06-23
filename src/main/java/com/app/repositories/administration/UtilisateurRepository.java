@@ -187,4 +187,9 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Intege
 		Page<Utilisateur> searchWithoutAgence(
 		        @Param("keyword") String keyword,
 		        Pageable pageable);
+	
+	//la liste des utilisateurs par agence et qui sont actifs
+	List<Utilisateur> findByAgenceIdOrderByNomAsc(Integer agenceId);
+	
+	//List<Utilisateur> findByAgenceIdAndActifTrueOrderByNomAsc(Integer agenceId);
 }

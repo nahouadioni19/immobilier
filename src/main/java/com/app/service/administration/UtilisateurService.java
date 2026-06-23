@@ -449,4 +449,12 @@ public class UtilisateurService extends BaseService<Utilisateur> {
 	 * (keyword == null || keyword.trim().isEmpty()) { return
 	 * repo.findAll(pageable); } return repo.search(keyword.trim(), pageable); }
 	 */
+    
+    public List<Utilisateur> findByAgence() {
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+       // return repo.findByAgenceIdAndActifTrueOrderByNomAsc(agenceId);
+        return repo.findByAgenceIdOrderByNomAsc(agenceId);
+    }
 }

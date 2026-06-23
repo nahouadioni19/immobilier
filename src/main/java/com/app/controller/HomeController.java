@@ -1,5 +1,6 @@
 package com.app.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -212,6 +213,37 @@ public class HomeController {
                         : DashboardGlobalDTO.empty();
 
         model.addAttribute("dashboard", dashboard);
+        
+        
+        if (agenceId != null) {
+
+            Map<String, Object> graphData =
+                    dashboardService.getEncaissementsMensuels(agenceId);
+
+            model.addAttribute(
+                    "moisLabels",
+                    graphData.get("labels"));
+
+            model.addAttribute(
+                    "encaissements",
+                    graphData.get("montants"));
+
+        } else {
+
+            model.addAttribute(
+                    "moisLabels",
+                    List.of(
+                            "Jan","Fév","Mar","Avr",
+                            "Mai","Juin","Juil","Août",
+                            "Sep","Oct","Nov","Déc"));
+
+            model.addAttribute(
+                    "encaissements",
+                    List.of(
+                            0,0,0,0,0,0,
+                            0,0,0,0,0,0));
+        }
+        
         
         setup.allCommon(model);
 

@@ -307,6 +307,8 @@ public class LoyannService extends BaseService<Loyann>{
                     loyers.add(dernierExist);
 
                     bail.setDateFin(current.plusMonths(1));
+                    bail.setDerniereDatePaiement(current.plusMonths(1));
+                   // bail.setDerPayeDate(current.plusMonths(1));
                     bailRepository.save(bail);
 
                     repo.saveAll(toSave);
@@ -356,6 +358,7 @@ public class LoyannService extends BaseService<Loyann>{
             Loyann dernier = loyers.get(loyers.size() - 1);
             LocalDate fin = LocalDate.of(dernier.getAnnee(), dernier.getMois(), 1).plusMonths(1);
             bail.setDateFin(fin);
+            bail.setDerniereDatePaiement(fin);
             bailRepository.save(bail);
         }
 

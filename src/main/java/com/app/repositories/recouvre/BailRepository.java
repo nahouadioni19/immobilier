@@ -34,7 +34,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 t.statut as statut,
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
-                t.der_paye_date AS derniereDatePaiement,
+                t.derniere_date_paiement AS derniereDatePaiement,
                 t.date_fin AS dateDebut
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
@@ -66,7 +66,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 t.statut as statut,
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
-                t.der_paye_date AS derniereDatePaiement,
+                t.derniere_date_paiement AS derniereDatePaiement,
                 t.date_fin AS dateDebut
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
@@ -98,7 +98,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 t.statut as statut,
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
-                t.der_paye_date AS derniereDatePaiement,
+                t.derniere_date_paiement AS derniereDatePaiement,
                 t.date_fin AS dateDebut
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
@@ -238,7 +238,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                     t.statut as statut,
                     p.libelle AS bailibelle,
                     p.num_appart AS numero, 
-                    t.der_paye_date AS derniereDatePaiement,
+                    t.derniere_date_paiement AS derniereDatePaiement,
                     t.date_fin AS dateDebut
             FROM t_bail t
             JOIN t_locataire l ON l.idt = t.locataire_id
@@ -273,7 +273,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 t.statut as statut,
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
-                t.der_paye_date AS derniereDatePaiement,
+                t.derniere_date_paiement AS derniereDatePaiement,
                 t.date_fin AS dateDebut
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
@@ -300,7 +300,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 t.statut as statut,
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
-                t.der_paye_date AS derniereDatePaiement,
+                t.derniere_date_paiement AS derniereDatePaiement,
                 t.date_fin AS dateDebut
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
@@ -348,7 +348,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 t.statut as statut,
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
-                t.der_paye_date AS derniereDatePaiement,
+                t.derniere_date_paiement AS derniereDatePaiement,
                 t.date_fin AS dateDebut
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
@@ -427,8 +427,8 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
     	                    )
     	                    -
     	                    (
-    	                        EXTRACT(YEAR FROM COALESCE(derniere_date_paiement, date_debut)) * 12
-    	                        + EXTRACT(MONTH FROM COALESCE(derniere_date_paiement, date_debut))
+    	                        EXTRACT(YEAR FROM COALESCE(derniere_date_paiement, date_fin)) * 12
+    	                        + EXTRACT(MONTH FROM COALESCE(derniere_date_paiement, date_fin))
     	                    )
     	                ) * montant_loyer,
     	                0
@@ -455,8 +455,8 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
     	          )
     	          -
     	          (
-    	              EXTRACT(YEAR FROM COALESCE(derniere_date_paiement, date_debut)) * 12
-    	              + EXTRACT(MONTH FROM COALESCE(derniere_date_paiement, date_debut))
+    	              EXTRACT(YEAR FROM COALESCE(derniere_date_paiement, date_fin)) * 12
+    	              + EXTRACT(MONTH FROM COALESCE(derniere_date_paiement, date_fin))
     	          )
     	      ) > 0
     	""", nativeQuery = true)

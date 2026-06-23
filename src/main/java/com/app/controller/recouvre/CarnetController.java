@@ -27,15 +27,12 @@ import com.app.dto.CarnetDTO;
 import com.app.dto.IdentificationProjection;
 import com.app.entities.administration.Utilisateur;
 import com.app.entities.recouvre.Carnet;
-import com.app.repositories.BailSelectProjection;
 import com.app.security.UserPrincipal;
 import com.app.service.administration.UtilisateurService;
-import com.app.service.common.PaginationService;
 import com.app.service.recouvre.CarnetService;
 import com.app.service.recouvre.IdentificationService;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping(Routes.ROUTE_CARNET)
@@ -93,7 +90,7 @@ public class CarnetController {
 	@GetMapping("/create")
     public String showCreateForm(Model model) {
         model.addAttribute("carnetDto", new CarnetDTO());
-        model.addAttribute("utilisateurs", utilisateurService.findAll());
+        model.addAttribute("utilisateurs", utilisateurService.findByAgence());
         return "carnet/form";
     }
 
@@ -113,7 +110,7 @@ public class CarnetController {
         }
 
         if (result.hasErrors()) {
-            model.addAttribute("utilisateurs", utilisateurService.findAll());
+            model.addAttribute("utilisateurs", utilisateurService.findByAgence());
             return "carnet/form";
         }
 
@@ -164,7 +161,7 @@ public class CarnetController {
 	    model.addAttribute("carnetDto", carnetDto);
 
 	    // Ajouter la liste des utilisateurs pour le select
-	    List<Utilisateur> utilisateurs = utilisateurService.findAll();
+	    List<Utilisateur> utilisateurs = utilisateurService.findByAgence();
 	    model.addAttribute("utilisateurs", utilisateurs);
 
 	    return "carnet/form";

@@ -5,12 +5,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+
 import java.util.List;
 import java.util.Map;
 import java.text.Normalizer;
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 import org.springframework.data.domain.Page;
@@ -21,6 +23,7 @@ import com.app.controller.referentiel.DashboardController;
 import com.app.dto.DashboardGlobalDTO;
 import com.app.dto.DashboardLoyerDTO;
 import com.app.dto.DashboardLoyerMontantDTO;
+import com.app.dto.EncaissementMensuelDTO;
 import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Loyann;
 import com.app.enums.StatutAppartement;
@@ -30,7 +33,6 @@ import com.app.repositories.recouvre.BailRepository;
 import com.app.repositories.recouvre.EncaisseRepository;
 import com.app.repositories.recouvre.LocataireRepository;
 import com.app.repositories.recouvre.LoyannRepository;
-import com.app.service.base.BaseService;
 
 @Service
 public class DashboardService{
@@ -376,8 +378,11 @@ public class DashboardService{
                 today.getYear()
         );
         
+       /* Long nbRetards =
+                bailRepository.countBauxEnRetard(agenceId);*/
+        
         Long nbRetards =
-                bailRepository.countBauxEnRetard(agenceId);
+                bailRepository.nombreBauxEnRetard(agenceId);
 
         Long impayes = bailRepository.totalImpayes(agenceId);
 
@@ -446,4 +451,35 @@ public class DashboardService{
 
         return total;
     }*/
+    
+    
+    public Map<String, Object> getEncaissementsMensuels(Integer agenceId) {
+
+        int annee = LocalDate.now().getYear();
+
+        List<EncaissementMensuelDTO> data =
+                encaisseRepository.montantParMois(
+                        agenceId,
+                        annee);
+
+        String[] moisLabels = {
+                "Jan","Fév","Mar","Avr",
+                "Mai","Juin","Juil","Août",
+                "Sep","Oct","Nov","Déc"
+        };
+
+        List<Long> montants = new ArrayList<>(
+                Collections.nCopies(12, 0L));
+
+        for (EncaissementMensuelDTO dto : data) {
+            montants.set(dto.mois() - 1, dto.montant());
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("labels", Arrays.asList(moisLabels));
+        result.put("montants", montants);
+
+        return result;
+    }
+    
 }

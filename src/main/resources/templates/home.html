@@ -180,94 +180,10 @@
 			    </div>
 
 			</div>
-<!--			
-			<div class="row g-3 mt-2">
 
-			    <div class="col-md-3">
-			        <div class="card bg-danger text-white">
-			            <div class="card-body text-center">
-			                <h6>Baux en retard</h6>
-			                <h2 th:text="${dashboard.nombreBauxEnRetard}"></h2>
-			            </div>
-			        </div>
-			    </div>
-
-			    <div class="col-md-3">
-			        <div class="card bg-warning">
-			            <div class="card-body text-center">
-			                <h6>Impayés</h6>
-			                <h2 th:text="${#numbers.formatInteger(dashboard.montantImpayes,0,'WHITESPACE')} + ' FCFA'"></h2>
-			            </div>
-			        </div>
-			    </div>
-
-			</div>
-		-->
 		    <!-- =========================
 		         GRAPHIQUE
 		    ========================== -->
-		
-		    <!--<div class="row mt-4">
-		
-		        <div class="col-md-6">
-		            <div class="card dashboard-card">
-		                <div class="card-header">
-		                    Répartition des appartements
-		                </div>
-		                <div class="card-body">
-		                    <div class="chart-container">
-		                        <canvas id="occupationChart"></canvas>
-		                    </div>
-		                </div>
-		            </div>
-		        </div>
-		
-		        <div class="col-md-6">
-		            <div class="card dashboard-card">
-		                <div class="card-header">
-		                    Résumé
-		                </div>
-		                <div class="card-body">
-		
-		                    <table class="table table-bordered">
-		                        <tr>
-		                            <th>Appartements</th>
-		                            <td th:text="${dashboard.totalAppartements}"></td>
-		                        </tr>
-		
-		                        <tr>
-		                            <th>Occupés</th>
-		                            <td th:text="${dashboard.appartementsOccupes}"></td>
-		                        </tr>
-		
-		                        <tr>
-		                            <th>Disponibles</th>
-		                            <td th:text="${dashboard.appartementsDisponibles}"></td>
-		                        </tr>
-		
-		                        <tr>
-		                            <th>Locataires</th>
-		                            <td th:text="${dashboard.totalLocataires}"></td>
-		                        </tr>
-		
-		                        <tr>
-		                            <th>Baux actifs</th>
-		                            <td th:text="${dashboard.bauxActifs}"></td>
-		                        </tr>
-		
-		                        <tr>
-		                            <th>Baux résiliés</th>
-		                            <td th:text="${dashboard.bauxResilies}"></td>
-		                        </tr>
-		
-		                    </table>
-		
-		                </div>
-		            </div>
-		        </div>
-		
-		    </div>-->
-			
 			
 			<div class="row mt-4">
 
@@ -305,35 +221,78 @@
 			
 		
 		</div>
+		
+		<!-- Chart.js -->
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+			
+			<script th:inline="javascript">
+			document.addEventListener("DOMContentLoaded", function () {
+
+			    console.log("Dashboard chargé");
+
+			    const occupes =
+			        /*[[${dashboard.appartementsOccupes}]]*/ 0;
+
+			    const disponibles =
+			        /*[[${dashboard.appartementsDisponibles}]]*/ 0;
+
+			    const mois =
+			        /*[[${moisLabels}]]*/ [];
+
+			    const encaissements =
+			        /*[[${encaissements}]]*/ [];
+
+			    console.log("occupes =", occupes);
+			    console.log("disponibles =", disponibles);
+			    console.log("mois =", mois);
+			    console.log("encaissements =", encaissements);
+				
+				console.log(
+				    document.getElementById("occupationChart")
+				);
+
+				console.log(
+				    document.getElementById("encaissementChart")
+				);
+
+			    new Chart(
+			        document.getElementById('occupationChart'),
+			        {
+			            type: 'doughnut',
+			            data: {
+			                labels: ['Occupés', 'Disponibles'],
+			                datasets: [{
+			                    data: [occupes, disponibles]
+			                }]
+			            }
+			        }
+			    );
+
+			    new Chart(
+			        document.getElementById('encaissementChart'),
+			        {
+			            type: 'bar',
+			            data: {
+			                labels: mois,
+			                datasets: [{
+			                    label: 'Encaissements',
+			                    data: encaissements
+			                }]
+			            }
+			        }
+			    );
+
+			});
+			</script>
+
 	
 </section>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-	<script th:inline="javascript">
 	
-		const occupes = /*[[${dashboard.appartementsOccupes}]]*/ 0;
-		const disponibles = /*[[${dashboard.appartementsDisponibles}]]*/ 0;
 	
-	new Chart(
-	    document.getElementById('occupationChart'),
-	    {
-	        type: 'doughnut',
-	        data: {
-	            labels: ['Occupés', 'Disponibles'],
-	            datasets: [{
-	                data: [occupes, disponibles]
-	            }]
-	        },
-	        options: {
-	            responsive: true,
-	            maintainAspectRatio: false
-	        }
-	    }
-	);
 	
-	</script>
-
+	
+	
 </body>
 </html>
