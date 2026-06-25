@@ -139,4 +139,20 @@ public class UserPrincipal extends User {
         return null;
     }
     
+    public String getRoleActif() {
+
+        return assignationCourant != null
+                && assignationCourant.getRole() != null
+            ? assignationCourant.getRole().getCode()
+            : null;
+    }
+    
+    public Assignation getAssignationCourant() {
+        return assignationCourant;
+    }
+
+    public void setAssignationCourant(Assignation assignationCourant) {
+        this.assignationCourant = assignationCourant;
+    }
+    
 }

@@ -13,12 +13,19 @@ import lombok.Setter;
 @Setter
 public class AssignationDTO {
     private Integer id;
+    
     private Integer roleId;
+    
     private String roleCode;
+    
     private String roleLibelle;
+    
     @DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
     private LocalDate dateDebut;
+    
     @DateTimeFormat(pattern = Constants.FORMAT_DATE_DEFAULT)
     private LocalDate dateFin;
+    
+    private boolean courant;
     
 }

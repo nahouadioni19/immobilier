@@ -111,7 +111,7 @@ public class RoleService extends BaseService<Role> {
     
     @Transactional(readOnly = true)
     public List<RoleDTO> findAllLight() {
-        return repo.findAll()
+        return repo.findAllNotLikeAdmin()
                    .stream()
                    .map(r -> new RoleDTO(r.getId(), r.getCode(), r.getLibelle()))
                    .toList();

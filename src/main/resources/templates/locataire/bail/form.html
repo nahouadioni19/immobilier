@@ -361,8 +361,8 @@
 		                text: isEdit ? "Voulez-vous modifier ?" : "Voulez-vous enregistrer ?",
 		                icon: "question",
 		                showCancelButton: true,
-		                confirmButtonText: "Oui",
-		                cancelButtonText: "Non"
+		                cancelButtonText: "Non",
+						confirmButtonText: "Oui"
 		            }).then((result) => {
 		                if (result.isConfirmed) {
 		                    form.submit();

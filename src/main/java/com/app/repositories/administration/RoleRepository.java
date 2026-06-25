@@ -120,4 +120,13 @@ public interface RoleRepository extends BaseRepository<Role, Integer> {
         where r.id = :id
     """)
     Optional<Role> findByIdWithAssignations(@Param("id") int id);
+    
+    
+    @Query("""
+            select r
+            from Role r
+            where r.code not like'%ADMIN%'
+            order by r.libelle asc, r.code asc
+        """)
+        List<Role> findAllNotLikeAdmin();
 }

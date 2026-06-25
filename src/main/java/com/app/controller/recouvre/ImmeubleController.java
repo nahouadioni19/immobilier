@@ -79,26 +79,22 @@ public class ImmeubleController{
     
  // FORMULAIRE CREATION
     @GetMapping("/create")
-    public String showCreateForm(Model model, String code) {
+    public String showCreateForm(Model model) {
         ImmeubForm form = new ImmeubForm();
         form.setImmeuble(new Immeuble()); // 🔹 Toujours initialiser pour éviter NPE
         form.getAppartements().add(new Appartement());
-
-        code = "RECOUV";
         
         model.addAttribute("immeubForm", form);
-        model.addAttribute("utilisateurs", utilisateurService.findByAgentRecouvrement(code));
+        model.addAttribute("utilisateurs", utilisateurService.findByAgentRecouvrement());
 
         return "bailleur/patrimoine/form";
     }
     
     // FORMULAIRE EDIT
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes, String code) {
+    public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
         Immeuble immeuble = service.findByIdAppartements(id).orElse(null);
-        
-        code = "RECOUV";
-        
+                
         if (immeuble == null) {
             redirectAttributes.addFlashAttribute("error", "Immeuble introuvable");
             return "redirect:" + Routes.ROUTE_IMMEUB;
@@ -114,7 +110,7 @@ public class ImmeubleController{
                 : new ArrayList<>());
 
         model.addAttribute("immeubForm", form);
-        model.addAttribute("utilisateurs", utilisateurService.findByAgentRecouvrement(code));
+        model.addAttribute("utilisateurs", utilisateurService.findByAgentRecouvrement());
 
         // 🔹 Préparer le bailleur pour Select2
         if (immeuble.getBailleur() != null) {

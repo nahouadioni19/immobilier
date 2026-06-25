@@ -423,7 +423,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
     	                (
     	                    (
     	                        EXTRACT(YEAR FROM CURRENT_DATE) * 12
-    	                        + EXTRACT(MONTH FROM CURRENT_DATE)
+    	                        + EXTRACT(MONTH FROM CURRENT_DATE) + 1
     	                    )
     	                    -
     	                    (

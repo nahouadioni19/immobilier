@@ -200,8 +200,11 @@ public class UtilisateurService extends BaseService<Utilisateur> {
         return repo.findAll(pageable);
     }
     
-    public List<Utilisateur> findByAgentRecouvrement(String code) {    	
-        return repo.findByUtilisateurRecouvrement(code);
+    public List<Utilisateur> findByAgentRecouvrement() {   
+    	
+    	String code="RECOUV";
+    	Integer agenceId = getCurrentAgenceId();
+        return repo.findByUtilisateurRecouvrement(code, agenceId);
     }
     
     @Transactional
@@ -430,6 +433,15 @@ public class UtilisateurService extends BaseService<Utilisateur> {
             // ADMIN → site imposé
             entity.setAgence(getCurrentAgence());
         }
+
+        /*repo.save(entity);*/
+        
+        entity.getAssignations().clear();
+
+        user.getAssignations().forEach(a -> {
+            a.setUtilisateur(entity);
+            entity.getAssignations().add(a);
+        });
 
         repo.save(entity);
     }

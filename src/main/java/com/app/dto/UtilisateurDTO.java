@@ -25,6 +25,8 @@ public class UtilisateurDTO {
     private Integer agenceId;
     private boolean enabled;    
     
+    private Integer profilDefautIndex;
+    
     private List<AssignationDTO> assignations = new ArrayList<>();    
 
     public String getStatut() {

@@ -2,6 +2,7 @@ package com.app.controller.administration;
 
 import java.security.Principal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,22 +30,19 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.app.controller.common.Routes;
 import com.app.controller.common.SetupPage;
 import com.app.dto.AssignationDTO;
-import com.app.dto.BailleurDTO;
+
 import com.app.dto.PasswordForm;
 import com.app.dto.UtilisateurDTO;
 import com.app.entities.administration.Assignation;
 import com.app.entities.administration.Utilisateur;
-import com.app.entities.referentiel.Profession;
 import com.app.enums.Titre;
 import com.app.mapper.UtilisateurMapper;
 import com.app.security.UserPrincipal;
 import com.app.service.administration.AgenceService;
 import com.app.service.administration.RoleService;
 import com.app.service.administration.UtilisateurService;
-import com.app.service.common.PaginationService;
 import com.app.utils.Constants;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -104,7 +102,7 @@ public class UtilisateurController {
                                   .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + id));
         UtilisateurDTO dto = UtilisateurMapper.toDTO(user);
         model.addAttribute("utilisateur", dto);
-        model.addAttribute("roles", roleService.findAll());
+        model.addAttribute("roles", roleService.findAllLight());
         model.addAttribute("listTitre", Titre.values());
         model.addAttribute("agences", agenceService.findAll());// ✅ version DTO
         return "administration/utilisateur/form";
@@ -113,7 +111,7 @@ public class UtilisateurController {
     // -----------------------
     // ENREGISTREMENT
     // -----------------------   
-    @PostMapping("/save")
+    /*@PostMapping("/save")
     public String saveUtilisateur(@ModelAttribute UtilisateurDTO dto, RedirectAttributes redirectAttrs) {
         boolean isNew = dto.getId() == null;
         Utilisateur user = isNew 
@@ -141,6 +139,14 @@ public class UtilisateurController {
                     user.getAssignations().add(assign);
                 });
         }
+        
+        for (Assignation a : utilisateur.getAssignations()) {
+            a.setCourant(false);
+        }
+
+        utilisateur.getAssignations()
+                   .get(indexSelectionne)
+                   .setCourant(true);
 
         service.save(user, dto.getAgenceId());
 
@@ -153,8 +159,198 @@ public class UtilisateurController {
     	redirectAttrs.addFlashAttribute("successMessage", successMessage);
     	
         return "redirect:" + Routes.ROUTE_UTILISATEUR;
-    }
+    }*/
+    
+    
+    /*@PostMapping("/save")
+    public String saveUtilisateur(@ModelAttribute UtilisateurDTO dto,
+                                  RedirectAttributes redirectAttrs) {
 
+        boolean isNew = dto.getId() == null;
+
+        Utilisateur user = isNew
+                ? new Utilisateur()
+                : service.findByIdWithAssignations(dto.getId())
+                         .orElse(new Utilisateur());
+
+        UtilisateurMapper.updateEntity(user, dto);
+
+        if (isNew) {
+            user.setPassword(passwordEncoder.encode(Constants.DEFAULT_PASSWORD));
+        }
+
+        user.getAssignations().clear();
+
+        boolean profilDefautTrouve = false;
+
+        if (dto.getAssignations() != null) {
+
+            for (AssignationDTO adto : dto.getAssignations()) {
+
+                if (adto.getRoleId() == null) {
+                    continue;
+                }
+
+                Assignation assign = new Assignation();
+
+                assign.setRole(
+                    roleService.findById(adto.getRoleId())
+                               .orElseThrow(() ->
+                                   new IllegalArgumentException(
+                                       "Rôle introuvable : " + adto.getRoleId()))
+                );
+
+                assign.setDateDebut(
+                    adto.getDateDebut() != null
+                        ? adto.getDateDebut()
+                        : LocalDate.now()
+                );
+
+                assign.setDateFin(
+                    adto.getDateFin() != null
+                        ? adto.getDateFin()
+                        : LocalDate.of(9999, 12, 31)
+                );
+
+                assign.setCourant(adto.isCourant());
+
+                assign.setUtilisateur(user);
+
+                user.getAssignations().add(assign);
+            }
+        }
+        
+        long nbCourants = user.getAssignations()
+                .stream()
+                .filter(Assignation::isCourant)
+                .count();
+
+			if (nbCourants == 0 && !user.getAssignations().isEmpty()) {
+			user.getAssignations().get(0).setCourant(true);
+			}
+			
+			if (nbCourants > 1) {
+			
+			boolean premierTrouve = false;
+			
+			for (Assignation a : user.getAssignations()) {
+			
+			  if (a.isCourant()) {
+			
+			      if (!premierTrouve) {
+			          premierTrouve = true;
+			      } else {
+			          a.setCourant(false);
+			      }
+			  }
+			}
+		}
+        
+        
+        service.save(user, dto.getAgenceId());
+
+        String successMessage = messageSource.getMessage(
+                isNew ? "success.enregistrement" : "success.modification",
+                null,
+                LocaleContextHolder.getLocale()
+        );
+
+        redirectAttrs.addFlashAttribute("successMessage", successMessage);
+
+        return "redirect:" + Routes.ROUTE_UTILISATEUR;
+    }*/
+    
+    
+    @PostMapping("/save")
+    public String saveUtilisateur(@ModelAttribute UtilisateurDTO dto,
+                                  RedirectAttributes redirectAttrs) {
+
+        boolean isNew = dto.getId() == null;
+
+        Utilisateur user = isNew
+                ? new Utilisateur()
+                : service.findByIdWithAssignations(dto.getId())
+                         .orElse(new Utilisateur());
+
+        UtilisateurMapper.updateEntity(user, dto);
+
+        if (isNew) {
+            user.setPassword(passwordEncoder.encode(Constants.DEFAULT_PASSWORD));
+        }
+
+        // Reconstruction des assignations
+        user.getAssignations().clear();
+
+        if (dto.getAssignations() != null) {
+
+            for (AssignationDTO adto : dto.getAssignations()) {
+
+                if (adto.getRoleId() == null) {
+                    continue;
+                }
+
+                Assignation assign = new Assignation();
+
+                assign.setRole(
+                    roleService.findById(adto.getRoleId())
+                               .orElseThrow(() ->
+                                   new IllegalArgumentException(
+                                       "Rôle introuvable : " + adto.getRoleId()))
+                );
+
+                assign.setDateDebut(
+                    adto.getDateDebut() != null
+                        ? adto.getDateDebut()
+                        : LocalDate.now()
+                );
+
+                assign.setDateFin(
+                    adto.getDateFin() != null
+                        ? adto.getDateFin()
+                        : LocalDate.of(9999, 12, 31)
+                );
+
+                // Tous les profils sont initialement non courants
+                assign.setCourant(false);
+
+                assign.setUtilisateur(user);
+
+                user.getAssignations().add(assign);
+            }
+        }
+
+        // Définition du profil par défaut sélectionné par radio button
+        Integer profilDefautIndex = dto.getProfilDefautIndex();
+
+        if (profilDefautIndex != null
+                && profilDefautIndex >= 0
+                && profilDefautIndex < user.getAssignations().size()) {
+
+            user.getAssignations()
+                .get(profilDefautIndex)
+                .setCourant(true);
+
+        } else if (!user.getAssignations().isEmpty()) {
+
+            // Sécurité : si aucun profil n'est sélectionné
+            user.getAssignations()
+                .get(0)
+                .setCourant(true);
+        }
+
+        service.save(user, dto.getAgenceId());
+
+        String successMessage = messageSource.getMessage(
+                isNew ? "success.enregistrement" : "success.modification",
+                null,
+                LocaleContextHolder.getLocale()
+        );
+
+        redirectAttrs.addFlashAttribute("successMessage", successMessage);
+
+        return "redirect:" + Routes.ROUTE_UTILISATEUR;
+    }
+    
     // -----------------------
     // SUPPRESSION
     // -----------------------

@@ -111,4 +111,12 @@ public class Assignation extends BaseEntity {
         }
         return "";
     }
+    
+    public boolean isCourant() {
+        return courant;
+    }
+
+    public void setCourant(boolean courant) {
+        this.courant = courant;
+    }
 }

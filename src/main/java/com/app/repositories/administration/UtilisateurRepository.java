@@ -135,7 +135,8 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Intege
         join a.role r
         where r.code = :code
     """)
-    List<Utilisateur> findByUtilisateurRecouvrement(@Param("code") String code);
+    List<Utilisateur> findByUtilisateurRecouvrement(@Param("code") String code,
+    												@Param("agenceId") Integer agenceId);
     
     //
     @Query("""

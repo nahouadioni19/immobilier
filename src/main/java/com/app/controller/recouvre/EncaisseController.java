@@ -45,7 +45,6 @@ import com.app.service.recouvre.IdentificationService;
 import lombok.RequiredArgsConstructor;
 
 import com.app.controller.common.Routes;
-import com.app.controller.common.SetupPage;
 
 @Controller
 @RequestMapping(Routes.ROUTE_RECOUVRE)
@@ -168,7 +167,7 @@ public class EncaisseController {
 	    model.addAttribute("semaines", semaines);
 	    
 	    List<Utilisateur> utilisateurs =
-	            utilisateurService.findByAgentRecouvrement("RECOUV");
+	            utilisateurService.findByAgentRecouvrement();
 
 	   // model.addAttribute("utilisateurs", utilisateurs);
 
@@ -282,7 +281,7 @@ public class EncaisseController {
 	    model.addAttribute("semaines", semaines);
 	    
 	    List<Utilisateur> utilisateurs =
-	            utilisateurService.findByAgentRecouvrement("RECOUV");
+	            utilisateurService.findByAgentRecouvrement();
 
 	   // model.addAttribute("utilisateurs", utilisateurs);
 
@@ -321,8 +320,8 @@ public class EncaisseController {
 	    model.addAttribute("encaisse", form);
 
 	    // ✅ Liste des agents recouvrement
-	    String code = "RECOUV";
-	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement(code);
+	    
+	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement();
 	    model.addAttribute("utilisateurs", utilisateurs);
 
 	    // ✅ Agent sélectionné (utile pour JS / select)
@@ -392,7 +391,7 @@ public class EncaisseController {
 	    // =========================
 	    // 👥 LISTE AGENTS
 	    // =========================
-	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement("RECOUV");
+	    List<Utilisateur> utilisateurs = utilisateurService.findByAgentRecouvrement();
 	    model.addAttribute("utilisateurs", utilisateurs);
 
 	    // =========================
@@ -593,8 +592,8 @@ public class EncaisseController {
 	    // Charger les listes pour le formulaire
 	    model.addAttribute("bails", bailService.findBailDetailsNative(principal,null,keyword,null));
 
-	    String code = "RECOUV";
-	    model.addAttribute("utilisateurs", utilisateurService.findByAgentRecouvrement(code));
+	    
+	    model.addAttribute("utilisateurs", utilisateurService.findByAgentRecouvrement());
 	}
 
 	@PostMapping("/transmettre/{id}")

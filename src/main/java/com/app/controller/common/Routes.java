@@ -41,4 +41,6 @@ public class Routes {
 
     public static final String ROUTE_AJAX_POST = "/ajax-post";
     public static final String ROUTE_REDIRECT_ERROR_500 = "redirect:/error/500";
+    
+    public static final String ROUTE_DASHBOARD = "'DIREC','COMPTABLE','GESTIONNAIRE'";
 }

@@ -271,8 +271,8 @@
 		                text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
 		                icon: 'question',
 		                showCancelButton: true,
-		                confirmButtonText: 'Oui',
 		                cancelButtonText: 'Non',
+						confirmButtonText: 'Oui',
 		                reverseButtons: true
 		            }).then((result) => {
 		                if (result.isConfirmed) {
@@ -319,6 +319,7 @@
 			    const bailsApiUrl = /*[[@{/bails/api/bails}]]*/ '';
 			    const identApiUrl = /*[[@{/carnets/api/identifications}]]*/ '';
 
+				
 			    // =========================
 			    // SELECT2 BAIL
 			    // =========================
@@ -479,6 +480,12 @@
 				    $('#penaliteDisplay').val(result.penalite.toLocaleString('fr-FR') + " FCFA");
 				    $('#totalDisplay').val(result.total.toLocaleString('fr-FR'));
 
+					$('#arriereDebutDisplay').val(result.debut);
+					$('#arriereFinDisplay').val(result.fin);
+
+					$('#arriereDebut').val(result.debut);
+					$('#arriereFin').val(result.fin);
+					
 				    conloyerInput.val(data.loyer);
 				    arriereInput.val(result.arrieres);
 				    penaliteInput.val(result.penalite);
@@ -563,7 +570,7 @@
 			    if ($('#arriereDebut').val()) {
 			        $('#arriereDebutDisplay').val($('#arriereDebut').val());
 			    }
-
+				
 			    if ($('#arriereFin').val()) {
 			        $('#arriereFinDisplay').val($('#arriereFin').val());
 			    }

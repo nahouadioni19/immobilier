@@ -1,6 +1,5 @@
 package com.app.service.security;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,8 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.app.entities.administration.Assignation;
 import com.app.entities.administration.Utilisateur;
-import com.app.exceptions.AbonnementExpireException;
 import com.app.security.UserPrincipal;
 import com.app.service.AgenceSecurityService;
 import com.app.service.administration.UtilisateurService;
@@ -44,60 +43,74 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // 🔹 ADMIN TECHNIQUE (hors BDD)
         if (Constants.DEFAULT_USER_NAME.equalsIgnoreCase(username)) {
+
             utilisateur = createDefaultAdminUser();
 
             authorities = List.of(
-                new SimpleGrantedAuthority("ROLE_" + Constants.ROLE_ADMIN), // ROLE_ADMIN
+                new SimpleGrantedAuthority("ROLE_" + Constants.ROLE_ADMIN),
                 new SimpleGrantedAuthority("ROLE_APP_USER")
             );
 
         } else {
-            // 🔹 Utilisateur BDD avec assignations et rôles chargés
+
+            // 🔹 Chargement utilisateur BDD
             utilisateur = userService.findByUsernameIgnoreCaseWithRoles(username)
                 .orElseThrow(() ->
                     new UsernameNotFoundException("Utilisateur introuvable : " + username)
                 );
-            
-	         // 🔐 CHECK AGENCE
-	            if (utilisateur.getAgence() != null) {
-	
-	                if (Boolean.TRUE.equals(utilisateur.getAgence().getBloque())) {
-	                    throw new LockedException("Agence bloquée");
-	                }
-	
-	               /* if (utilisateur.getAgence().getDateFinAbonnement() != null &&
-	                    LocalDate.now().isAfter(utilisateur.getAgence().getDateFinAbonnement())) {
-	
-	                   // throw new DisabledException("Abonnement expiré");
-	                	//throw new AbonnementExpireException("ABONNEMENT_EXPIRE");
-	                		                	
-	                }*/
-	            }
-	            
-	         // 🔐 ICI
-	         //   agenceSecurityService.checkAgenceActive(utilisateur.getAgence());
 
-            // 🔹 Rôles depuis la BDD
-            authorities = utilisateur.getAssignations().stream()
-                .filter(a -> a.isCourant()) // prendre seulement les assignations en cours
+            // 🔐 VALIDATIONS AVANT AUTHENTIFICATION
+            if (!utilisateur.isEnabled()) {
+                throw new DisabledException("Compte désactivé");
+            }
+
+            if (utilisateur.getAgence() != null) {
+
+                if (Boolean.TRUE.equals(utilisateur.getAgence().getBloque())) {
+                    throw new LockedException("Agence bloquée");
+                }
+
+                agenceSecurityService.checkAgenceActive(utilisateur.getAgence());
+            }
+
+            // 🔹 Rôles utilisateur
+            /*authorities = utilisateur.getAssignations().stream()
+                .filter(a -> Boolean.TRUE.equals(a.isCourant()))
                 .map(a -> new SimpleGrantedAuthority("ROLE_" + a.getRole().getCode()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
+            
+            authorities = utilisateur.getAssignations().stream()
+            	    .filter(a -> Boolean.TRUE.equals(a.isCourant()))
+            	    .filter(a -> a.getRole() != null)
+            	    .map(a -> new SimpleGrantedAuthority(
+            	            "ROLE_" + a.getRole().getCode().toUpperCase()))
+            	    .collect(Collectors.toList());
 
-            // Si aucun rôle trouvé, on ajoute ROLE_APP_USER par défaut
+            // 🔹 Rôle par défaut si aucun rôle
             if (authorities.isEmpty()) {
                 authorities = List.of(new SimpleGrantedAuthority("ROLE_APP_USER"));
             }
         }
 
-        // 🔹 Création UserPrincipal
+        // 🔹 Création principal
         UserPrincipal principal = new UserPrincipal(utilisateur, authorities);
 
-        // 🔹 Stockage en session pour réutilisation côté app
+        //AJOUTER CE 25/06/2026 A 11:47
+        utilisateur.getAssignations()
+					        .stream()
+					        .filter(a -> Boolean.TRUE.equals(a.isCourant()))
+					        .findFirst()
+					        .ifPresent(principal::setAssignationCourant);
+        
+        // 🔹 Stockage session (après validation complète)
         httpSession.setAttribute(Constants.APP_CREDENTIALS, principal);
 
         return principal;
     }
 
+    /**
+     * Création utilisateur admin technique (hors base de données)
+     */
     private Utilisateur createDefaultAdminUser() {
         Utilisateur admin = new Utilisateur();
         admin.setUsername(Constants.DEFAULT_USER_NAME);
@@ -105,6 +118,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         admin.setNom("ADMIN");
         admin.setPrenoms("TECHNIQUE");
         admin.setAssignations(new ArrayList<>());
+        admin.setEnabled(true);
         return admin;
     }
 }

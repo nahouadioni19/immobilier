@@ -69,53 +69,6 @@ public class HomeController {
                                      @RequestHeader(value = "referer", required = false) final String referer) {
         return credentialsService.loggedUserRoleHandler(request);
     }
-
-   /* @GetMapping(value = Routes.ROUTE_HOME)
-    public String accueil(Model model, 
-    					  @RequestParam Map<String, String> params,
-    					  @AuthenticationPrincipal UserPrincipal principal) {
-    	
-    	Integer agenceId =
-                principal.getUtilisateur()
-                         .getAgence()
-                         .getId();
-    	
-    	log.info("agenceId = {}", agenceId);
-    	
-        setup.getPages().doStack(setup.getPages().getData(), AGRO, BACK_URL, Routes.ROUTE_HOME);
-
-        model.addAttribute(Constants.CURR_PAGE, "home");
-        model.addAttribute("context", appContext);
-
-        // Chargement des stats tableau de bord
-        long totalBaux = bailRepository.count();
-        long totalLocataires = locataireRepository.count();
-        long totalRecouvrements = encaisseRepository.count();
-        long totalArrieres = bailRepository.countByStatut(StatutBail.EN_RETARD); // exemple
-
-        model.addAttribute("totalBaux", totalBaux);
-        model.addAttribute("totalLocataires", totalLocataires);
-        model.addAttribute("totalRecouvrements", totalRecouvrements);
-        model.addAttribute("totalArrieres", totalArrieres);
-
-        // Exemple données pour le graphique
-        model.addAttribute("mois", new String[]{"Jan", "Fév", "Mar", "Avr", "Mai", "Juin"});
-        model.addAttribute("loyers", new int[]{200000, 180000, 220000, 250000, 210000, 230000});
-        
-        DashboardDTO stats = dashboardRecouvreService.getDashboard();
-
-        model.addAttribute("stats", stats);
-                
-        DashboardGlobalDTO dashboard =
-                dashboardService.getDashboardGlobal(agenceId);
-        
-        model.addAttribute("dashboard", dashboard);
-
-        setup.allCommon(model);
-
-        return Pages.PAGE_HOME; // correspond à home.html via ton Pages
-    }*/
-    
     
     @GetMapping(value = Routes.ROUTE_HOME)
     public String accueil(Model model,
@@ -194,18 +147,6 @@ public class HomeController {
 
         DashboardDTO stats = dashboardRecouvreService.getDashboard();
         model.addAttribute("stats", stats);
-
-        // Dashboard immobilier
-       // DashboardGlobalDTO dashboard;
-
-        /*if (agenceId != null) {
-
-            dashboard = dashboardService.getDashboardGlobal(agenceId);
-
-        } else {
-
-            dashboard = new DashboardGlobalDTO();
-        }*/
         
         DashboardGlobalDTO dashboard =
                 (agenceId != null)
