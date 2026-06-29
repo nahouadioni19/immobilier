@@ -3,7 +3,7 @@
 <ul class="nav flex-column" th:fragment="menu" id="sidebarAccordion">
 
     <!-- Accueil -->
-    <li class="nav-item" sec:authorize="hasAnyRole('DIREC','COMPTABLE','GESTIONNAIRE')">
+    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','DIREC','COMPTA','GESTION')">
         <a class="nav-link" th:href="@{/}">
 			<span>
 			    <i class="bi bi-speedometer2 me-2"></i>
@@ -64,7 +64,7 @@
     </li>
 
     <!-- Carnet -->
-    <li class="nav-item" sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN','ADMIN_AGENCE')">
+    <li class="nav-item" sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN','ADMIN_AG')">
         <a class="nav-link"
            th:href="@{/carnets}"
            th:classappend="${currentUri != null and currentUri.startsWith('/carnets')} ? ' active' : ''">
@@ -74,7 +74,7 @@
 
 	
 	<li class="nav-item"
-	    sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN','ADMIN_AGENCE')">
+	    sec:authorize="!hasAnyRole('SUPER_ADMIN','ADMIN','ADMIN_AG')">
 			 
 			 <a class="nav-link d-flex justify-content-between align-items-center"
 			    th:classappend="${
@@ -247,7 +247,7 @@
     </li>
 
     <!-- SUPER_ADMIN -->
-    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','ADMIN_AGENCE')">
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','ADMIN_AG')">
 					 
 		 <a class="nav-link d-flex justify-content-between align-items-center"
 		    th:classappend="${
@@ -302,7 +302,7 @@
     </li>
 
     <!-- Référentiel -->
-    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC','ADMIN_AGENCE')">		
+    <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC','ADMIN_AG')">		
 			 
 		 <a class="nav-link d-flex justify-content-between align-items-center"
 		    th:classappend="${

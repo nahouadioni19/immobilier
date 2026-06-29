@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+	<!-- Fragment spécifique à cette page -->
+	 <section layout:fragment="content">
+			<div class="container my-2">
+				<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+				    <!-- Titre -->
+				    <h2 class="mb-2 mb-md-0">Gestion des recouvrements</h2>
+				    <!-- Bouton Nouveau 
+				    <a th:href="@{/recouvrements/create}" class="btn btn-primary ms-2">Nouveau</a> -->
+
+				</div>
+				
+				<hr style="border: 1px solid rgb(192, 192, 192);">
+										
+				<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+					    
+					<form id="filterForm" method="get" th:action="@{/recouvrements/encaissements}" class="row g-2 mb-3">
+						
+						<input type="hidden" name="page" value="0">
+					    <!-- Période -->
+					    <div class="col-md-2">
+					        <select name="periodeType" class="form-select" id="periodeType">
+					            <option value="">-- Période --</option>
+					            <option value="SEMAINE" th:selected="${periodeType == 'SEMAINE'}">Semaine</option>
+					            <option value="MOIS" th:selected="${periodeType == 'MOIS'}">Mois</option>
+					        </select>
+					    </div>
+
+					    <!-- SEMAINE -->
+						<div class="col-md-3" id="semaineBlock" style="display:none;">
+							<select name="dateSemaine" class="form-select">
+							    <option value="">Sélectionner une semaine</option>
+
+							    <option th:each="s : ${semaines}"
+							            th:value="${s.dateDebut}"
+							            th:text="${s.libelle}"
+							            th:selected="${dateSemaine != null and s.dateDebut.equals(dateSemaine)}">
+							    </option>
+							</select>
+						</div>						
+
+					    <!-- MOIS -->
+					    <div class="col-md-3" id="moisBlock" style="display:none;">
+					        <input type="month" name="mois" class="form-control" th:value="${mois}">
+					    </div>
+
+					    <!-- Agent -->
+					    <!--<div class="col-md-2" th:if="${#sets.contains(userRoles, 'DIREC') or #sets.contains(userRoles, 'CONTRO')}">
+					        <select name="agentId" class="form-select">
+					            <option value="">Tous les agents</option>
+					            <option th:each="u : ${utilisateurs}"
+					                    th:value="${u.id}"
+					                    th:text="|${u.prenoms} ${u.nom}|"
+					                    th:selected="${u.id == selectedAgent}">
+					            </option>
+					        </select>
+					    </div>-->
+
+					    <!-- Keyword -->
+					    <div class="col-md-3">
+					        <input type="text"
+					               name="keyword"
+					               class="form-control"
+					               placeholder="Nom ou prénom locataire"
+					               th:value="${keyword}">
+					    </div>
+												
+					    <!-- Reset -->
+					    <div class="col-md-2">
+					        <a th:href="@{/recouvrements/encaissements}" class="btn btn-secondary  ms-2">
+					            Réinitialiser
+					        </a>
+					    </div>
+
+					</form>
+					
+					<br/>
+				    <table class="table">
+				        <thead class="table-success">
+				        <tr>
+				            <th>locataire</th>
+				            <th>Date</th>
+				            <th style="text-align: center;">Montant recouvré</th>
+							<th>Agent</th>
+				        </tr>
+				        </thead>
+				        <tbody>				        
+						<tr th:each="encaisse : ${encaissesPage.content}">
+				            <td th:text="${encaisse.locataireNom +' '+ encaisse.locatairePrenom}">jule</td>
+							<td th:text="${#temporals.format(encaisse.encDate, 'dd/MM/yyyy')}"></td>
+							<td class="format-fr" th:text="${encaisse.encMontant}" style="text-align: center;">0</td>
+							<td th:text="${encaisse.utilisateurNom +' '+ encaisse.utilisateurPrenoms}">herve</td>							
+				        </tr>
+						<tr th:if="${#lists.isEmpty(encaissesPage.content)}">
+					        <td colspan="4" class="text-center">Aucun recouvrement trouvé.</td>
+					    </tr>
+				    </tbody>
+				 </table>
+				 
+				 
+				 <!-- Pagination -->
+				 <div class="d-flex justify-content-center mt-3" th:if="${encaissesPage.totalElements > 0}">
+				     <ul class="pagination">
+
+				         <!-- Précédent -->
+				         <li class="page-item"
+				             th:classappend="${encaissesPage.first} ? 'disabled'">
+				             <a class="page-link"
+				                th:href="@{/recouvrements/encaissements(
+				                     page=${encaissesPage.number - 1},
+				                     agentId=${selectedAgent},
+				                     keyword=${keyword},
+				                     periodeType=${periodeType},
+				                     dateSemaine=${dateSemaine},
+				                     mois=${mois}
+				                )}">
+				                 &laquo;
+				             </a>
+				         </li>
+
+				         <!-- Première page -->
+				         <li class="page-item"
+				             th:if="${encaissesPage.number > 2}">
+				             <a class="page-link"
+				                th:href="@{/recouvrements/encaissements(
+				                     page=0,
+				                     agentId=${selectedAgent},
+				                     keyword=${keyword},
+				                     periodeType=${periodeType},
+				                     dateSemaine=${dateSemaine},
+				                     mois=${mois}
+				                )}">
+				                 1
+				             </a>
+				         </li>
+
+				         <!-- ... -->
+				         <li class="page-item disabled"
+				             th:if="${encaissesPage.number > 3}">
+				             <span class="page-link">...</span>
+				         </li>
+
+				         <!-- Pages autour -->
+				         <li class="page-item"
+				             th:each="i : ${#numbers.sequence(
+				                 T(java.lang.Math).max(0, encaissesPage.number - 2),
+				                 T(java.lang.Math).min(encaissesPage.totalPages - 1, encaissesPage.number + 2)
+				             )}"
+				             th:classappend="${i == encaissesPage.number} ? 'active'">
+
+				             <a class="page-link"
+				                th:text="${i + 1}"
+				                th:href="@{/recouvrements/encaissements(
+				                     page=${i},
+				                     agentId=${selectedAgent},
+				                     keyword=${keyword},
+				                     periodeType=${periodeType},
+				                     dateSemaine=${dateSemaine},
+				                     mois=${mois}
+				                )}">
+				             </a>
+
+				         </li>
+
+				         <!-- ... -->
+				         <li class="page-item disabled"
+				             th:if="${encaissesPage.number < encaissesPage.totalPages - 4}">
+				             <span class="page-link">...</span>
+				         </li>
+
+				         <!-- Dernière page -->
+				         <li class="page-item"
+				             th:if="${encaissesPage.number < encaissesPage.totalPages - 3}">
+				             <a class="page-link"
+				                th:text="${encaissesPage.totalPages}"
+				                th:href="@{/recouvrements/encaissements(
+				                     page=${encaissesPage.totalPages - 1},
+				                     agentId=${selectedAgent},
+				                     keyword=${keyword},
+				                     periodeType=${periodeType},
+				                     dateSemaine=${dateSemaine},
+				                     mois=${mois}
+				                )}">
+				             </a>
+				         </li>
+
+				         <!-- Suivant -->
+				         <li class="page-item"
+				             th:classappend="${encaissesPage.last} ? 'disabled'">
+				             <a class="page-link"
+				                th:href="@{/recouvrements/encaissements(
+				                     page=${encaissesPage.number + 1},
+				                     agentId=${selectedAgent},
+				                     keyword=${keyword},
+				                     periodeType=${periodeType},
+				                     dateSemaine=${dateSemaine},
+				                     mois=${mois}
+				                )}">
+				                 &raquo;
+				             </a>
+				         </li>
+
+				     </ul>
+				 </div>
+
+				
+				</fieldset> 
+			</div>
+			
+			<script>
+				document.querySelectorAll('.format-fr').forEach(td => {
+			    const value = parseFloat(td.textContent.replace(/\s/g,'')); // supprime espaces éventuels
+			    if (!isNaN(value)) {
+			        td.textContent = value.toLocaleString('fr-FR');
+			    }
+			});
+			</script>
+			
+			<!-- SweetAlert2 -->
+		    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+			
+			<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+					
+			<script>
+				document.addEventListener('DOMContentLoaded', function() {
+
+				    // DELETE
+				    document.querySelectorAll('.del-btn').forEach(btn => {
+				        btn.addEventListener('click', function(e) {
+				            e.preventDefault();
+
+				            const href = this.href;
+
+				            Swal.fire({
+				                title: 'Confirmation',
+				                text: "Voulez-vous supprimer ?",
+				                icon: 'warning',
+				                showCancelButton: true,
+				                confirmButtonText: 'Oui',
+				                cancelButtonText: 'Non'
+				            }).then((result) => {
+				                if (result.isConfirmed) {
+				                    window.location.href = href;
+				                }
+				            });
+				        });
+				    });
+
+				    // SUCCESS MESSAGE (en dehors !)
+				    const successDiv = document.getElementById('successMessage');
+				    if (successDiv && successDiv.textContent.trim() !== '') {
+				        Swal.fire({
+				            icon: 'success',
+				            title: 'Succès !',
+				            text: successDiv.textContent.trim()
+				        });
+				    }
+
+				});
+			</script>
+			
+			<script>
+			document.addEventListener("DOMContentLoaded", function () {
+
+			    const form = document.getElementById("filterForm");
+
+			    const periode = document.getElementById("periodeType");
+			    const semaineBlock = document.getElementById("semaineBlock");
+			    const moisBlock = document.getElementById("moisBlock");
+
+			    const dateSemaine = document.querySelector("select[name='dateSemaine']");
+			    const mois = document.querySelector("input[name='mois']");
+			    const keyword = document.querySelector("input[name='keyword']");
+			    const agent = document.querySelector("select[name='agentId']");
+
+			    // =====================
+			    // AFFICHAGE
+			    // =====================
+			    function toggle() {
+
+			        if (periode.value === "SEMAINE") {
+			            semaineBlock.style.display = "block";
+			            moisBlock.style.display = "none";
+
+			        } else if (periode.value === "MOIS") {
+			            semaineBlock.style.display = "none";
+			            moisBlock.style.display = "block";
+
+			        } else {
+			            semaineBlock.style.display = "none";
+			            moisBlock.style.display = "none";
+			        }
+			    }
+
+			    // =====================
+			    // AUTO SELECTION SEMAINE
+			    // =====================
+			    function autoSelectWeek() {
+
+			        if (periode.value === "SEMAINE" && dateSemaine && !dateSemaine.value) {
+
+			            const today = new Date();
+
+			            const start = new Date(today);
+			            start.setDate(today.getDate() - today.getDay() + 1); // lundi
+
+			            const yyyy = start.getFullYear();
+			            const mm = String(start.getMonth() + 1).padStart(2, '0');
+			            const dd = String(start.getDate()).padStart(2, '0');
+
+			            const value = `${yyyy}-${mm}-${dd}`;
+
+			            for (let opt of dateSemaine.options) {
+			                if (opt.value === value) {
+			                    dateSemaine.value = value;
+			                    break;
+			                }
+			            }
+			        }
+			    }
+
+			    // =====================
+			    // INIT
+			    // =====================
+			    toggle();
+			    autoSelectWeek();
+
+			    // =====================
+			    // EVENTS
+			    // =====================
+
+			    periode.addEventListener("change", function () {
+
+			        toggle();
+			        autoSelectWeek();
+
+			        if (periode.value !== "SEMAINE") {
+			            dateSemaine.value = "";
+			        }
+
+			        if (periode.value !== "MOIS") {
+			            mois.value = "";
+			        }
+
+			        form.submit();
+			    });
+
+			    if (dateSemaine) {
+			        dateSemaine.addEventListener("change", () => form.submit());
+			    }
+
+			    if (mois) {
+			        mois.addEventListener("change", () => form.submit());
+			    }
+
+			    if (agent) {
+			        agent.addEventListener("change", () => form.submit());
+			    }
+
+			    let timer;
+			    keyword.addEventListener("input", function () {
+
+			        clearTimeout(timer);
+
+			        timer = setTimeout(() => form.submit(), 500);
+			    });
+
+			});
+			</script>
+	   
+	 </section>
+
+</body>
+</html>

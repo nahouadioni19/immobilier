@@ -49,7 +49,7 @@ public class UserPrincipal extends User {
         this.loggedIn = true;
     }*/
     
-    public UserPrincipal(Utilisateur utilisateur,
+    /*public UserPrincipal(Utilisateur utilisateur,
             Collection<? extends GrantedAuthority> authorities) {
 
 		super(
@@ -64,6 +64,31 @@ public class UserPrincipal extends User {
 		
 		this.utilisateur = utilisateur;
 		this.loggedIn = true;
+	}*/
+    
+    public UserPrincipal(Utilisateur utilisateur,
+            Collection<? extends GrantedAuthority> authorities) {
+
+		super(
+		   utilisateur.getUsername(),
+		   utilisateur.getPassword(),
+		   utilisateur.isEnabled(),
+		   true,
+		   true,
+		   true,
+		   authorities
+		);
+		
+		this.utilisateur = utilisateur;
+		this.loggedIn = true;
+		
+		// Initialisation du profil courant
+		this.assignationCourant = utilisateur.getAssignations()
+		   .stream()
+		   .filter(Assignation::isCourant)
+		   .findFirst()
+		   .orElseGet(() ->
+		           utilisateur.getAssignations().stream().findFirst().orElse(null));
 	}
 
 

@@ -2,11 +2,42 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
+	  
+	  <style>
+		
+		.dashboard-card{
+		    border:none;
+		    border-radius:14px;
+		    transition:.25s;
+		    background:#fff;
+		}
+
+		.dashboard-card:hover{
+		    transform:translateY(-4px);
+		    box-shadow:0 .75rem 1.5rem rgba(0,0,0,.12)!important;
+		}
+
+		.dashboard-icon{
+		    font-size:2rem;
+		    margin-bottom:10px;
+		}
+
+		.dashboard-card h2{
+		    font-size:2rem;
+		    margin-bottom:0;
+		}
+
+		.dashboard-card h6{
+		    font-weight:600;
+		    letter-spacing:.3px;
+		}
+		
+	  </style>
 
 <body>
 <section layout:fragment="content">
 	
-	<div class="container-fluid py-4" sec:authorize="hasAnyRole('DIREC','ADMIN')">
+		<div class="container-fluid py-4" sec:authorize="hasAnyRole('DIREC','ADMIN','COMPTA','GESTION')">
 		
 		    <div class="mb-4">
 		        <h2>🏢 Tableau de bord immobilier</h2>
@@ -59,122 +90,141 @@
 			    </div>
 			</div>
 			
-		    <!-- =========================
-		         LIGNE 1
-		    ========================== -->
-		    <div class="row g-3 mt-2">
-			
+			<!-- =========================
+			     LIGNE 1
+			========================= -->
+			<div class="row g-4 mt-2">
+
 			    <div class="col-md-3">
-			        <div class="card bg-primary text-white">
+			        <div class="card dashboard-card border-start border-primary border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>🏢 Appartements</h6>
-			                <h2 th:text="${dashboard.totalAppartements}"></h2>
+			                <div class="dashboard-icon text-primary">🏢</div>
+			                <h6 class="text-muted mb-2">Appartements</h6>
+			                <h2 class="fw-bold" th:text="${dashboard.totalAppartements}"></h2>
 			            </div>
 			        </div>
 			    </div>
-			
+
 			    <div class="col-md-3">
-			        <div class="card bg-success text-white">
+			        <div class="card dashboard-card border-start border-success border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>🏠 Occupés</h6>
-			                <h2 th:text="${dashboard.appartementsOccupes}"></h2>
+			                <div class="dashboard-icon text-success">🏠</div>
+			                <h6 class="text-muted mb-2">Occupés</h6>
+			                <h2 class="fw-bold" th:text="${dashboard.appartementsOccupes}"></h2>
 			            </div>
 			        </div>
 			    </div>
-			
+
 			    <div class="col-md-3">
-			        <div class="card bg-warning text-dark">
+			        <div class="card dashboard-card border-start border-warning border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>🔓 Disponibles</h6>
-			                <h2 th:text="${dashboard.appartementsDisponibles}"></h2>
+			                <div class="dashboard-icon text-warning">🔓</div>
+			                <h6 class="text-muted mb-2">Disponibles</h6>
+			                <h2 class="fw-bold" th:text="${dashboard.appartementsDisponibles}"></h2>
 			            </div>
 			        </div>
 			    </div>
-			
+
 			    <div class="col-md-3">
-			        <div class="card bg-info text-white">
+			        <div class="card dashboard-card border-start border-info border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>📊 Taux d'occupation</h6>
-			                <h2>
+			                <div class="dashboard-icon text-info">📊</div>
+			                <h6 class="text-muted mb-2">Taux d'occupation</h6>
+			                <h2 class="fw-bold">
 			                    <span th:text="${#numbers.formatDecimal(dashboard.tauxOccupation,1,2)}"></span>%
 			                </h2>
 			            </div>
 			        </div>
 			    </div>
-			
+
 			</div>
-		
-		    <!-- =========================
-		         LIGNE 2
-		    ========================== -->
-		
-			<div class="row g-3 mt-2">
+
+			<!-- =========================
+			     LIGNE 2
+			========================= -->
+
+			<div class="row g-4 mt-2">
 
 			    <div class="col-md-3">
-			        <div class="card bg-success text-white">
+			        <div class="card dashboard-card border-start border-success border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>📄 Baux actifs</h6>
-			                <h2 th:text="${dashboard.bauxActifs}"></h2>
+			                <div class="dashboard-icon text-success">📄</div>
+			                <h6 class="text-muted mb-2">Baux actifs</h6>
+			                <h2 class="fw-bold" th:text="${dashboard.bauxActifs}"></h2>
 			            </div>
 			        </div>
 			    </div>
 
 			    <div class="col-md-3">
-			        <div class="card bg-secondary text-white">
+			        <div class="card dashboard-card border-start border-secondary border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>📁 Baux résiliés</h6>
-			                <h2 th:text="${dashboard.bauxResilies}"></h2>
+			                <div class="dashboard-icon text-secondary">📁</div>
+			                <h6 class="text-muted mb-2">Baux résiliés</h6>
+			                <h2 class="fw-bold" th:text="${dashboard.bauxResilies}"></h2>
 			            </div>
 			        </div>
 			    </div>
 
 			    <div class="col-md-3">
-			        <div class="card bg-danger text-white">
+			        <div class="card dashboard-card border-start border-danger border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>🚨 Baux en retard</h6>
-			                <h2 th:text="${dashboard.nombreBauxEnRetard}"></h2>
+			                <div class="dashboard-icon text-danger">🚨</div>
+			                <h6 class="text-muted mb-2">Baux en retard</h6>
+			                <h2 class="fw-bold" th:text="${dashboard.nombreBauxEnRetard}"></h2>
 			            </div>
 			        </div>
 			    </div>
 
 			    <div class="col-md-3">
-			        <div class="card bg-primary text-white">
+			        <div class="card dashboard-card border-start border-primary border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>👥 Locataires</h6>
-			                <h2 th:text="${dashboard.totalLocataires}"></h2>
+			                <div class="dashboard-icon text-primary">👥</div>
+			                <h6 class="text-muted mb-2">Locataires</h6>
+			                <h2 class="fw-bold" th:text="${dashboard.totalLocataires}"></h2>
 			            </div>
 			        </div>
 			    </div>
 
-			</div>			
-			<!-- ============================
-				LIGNE3
-			==============================-->
-			<div class="row g-3 mt-2">
+			</div>
+
+			<!-- =========================
+			     LIGNE 3
+			========================= -->
+
+			<div class="row g-4 mt-2">
 
 			    <div class="col-md-4">
-			        <div class="card bg-success text-white">
+			        <div class="card dashboard-card border-start border-success border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>💰 Encaissé ce mois</h6>
-			                <h2 th:text="${#numbers.formatInteger(dashboard.montantEncaisseMois,0,'WHITESPACE')} + ' FCFA'"></h2>
+			                <div class="dashboard-icon text-success">💰</div>
+			                <h6 class="text-muted mb-2">Encaissé ce mois</h6>
+			                <h2 class="fw-bold"
+			                    th:text="${#numbers.formatInteger(dashboard.montantEncaisseMois,0,'WHITESPACE')} + ' FCFA'">
+			                </h2>
 			            </div>
 			        </div>
 			    </div>
 
 			    <div class="col-md-4">
-			        <div class="card bg-primary text-white">
+			        <div class="card dashboard-card border-start border-primary border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>💵 Encaissé cette année</h6>
-			                <h2 th:text="${#numbers.formatInteger(dashboard.montantEncaisseAnnee,0,'WHITESPACE')} + ' FCFA'"></h2>
+			                <div class="dashboard-icon text-primary">💵</div>
+			                <h6 class="text-muted mb-2">Encaissé cette année</h6>
+			                <h2 class="fw-bold"
+			                    th:text="${#numbers.formatInteger(dashboard.montantEncaisseAnnee,0,'WHITESPACE')} + ' FCFA'">
+			                </h2>
 			            </div>
 			        </div>
 			    </div>
 
 			    <div class="col-md-4">
-			        <div class="card bg-danger text-white">
+			        <div class="card dashboard-card border-start border-danger border-4 shadow-sm h-100">
 			            <div class="card-body text-center">
-			                <h6>⚠️ Impayés</h6>
-			                <h2 th:text="${#numbers.formatInteger(dashboard.montantImpayes,0,'WHITESPACE')} + ' FCFA'"></h2>
+			                <div class="dashboard-icon text-danger">⚠️</div>
+			                <h6 class="text-muted mb-2">Impayés</h6>
+			                <h2 class="fw-bold"
+			                    th:text="${#numbers.formatInteger(dashboard.montantImpayes,0,'WHITESPACE')} + ' FCFA'">
+			                </h2>
 			            </div>
 			        </div>
 			    </div>

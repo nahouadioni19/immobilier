@@ -40,6 +40,24 @@ public class GlobalModelAttributes {
     // Nom utilisateur
     // =========================
     @ModelAttribute("currentUserFullName")
+    public String currentUserFullName(Authentication authentication) {
+
+        if (authentication == null
+                || !(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+            return "Invité";
+        }
+
+        Utilisateur user = principal.getUtilisateur();
+
+        String prenom = user.getPrenoms() != null ? user.getPrenoms() : "";
+        String nom = user.getNom() != null ? user.getNom() : "";
+
+        String fullName = (prenom + " " + nom).trim();
+
+        return fullName.isEmpty() ? user.getUsername() : fullName;
+    }
+    
+   /* @ModelAttribute("currentUserFullName")
     public String currentUserFullName(Principal principal) {
 
         if (principal == null) return "Invité";
@@ -59,12 +77,29 @@ public class GlobalModelAttributes {
         String nom = user.getNom() != null ? user.getNom() : "";
 
         return ((prenom + " " + nom).trim());
-    }
+    }*/
 
     // =========================
     // Rôles (basé BDD)
     // =========================
     @ModelAttribute("userRoles")
+    public Set<String> userRoles(Authentication authentication) {
+
+        if (authentication == null
+                || !(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+            return Set.of();
+        }
+
+        return principal.getUtilisateur()
+                .getAssignations()
+                .stream()
+                .map(Assignation::getRole)
+                .filter(r -> r != null && r.getLibelle() != null)
+                .map(r -> mapRoleToMenu(r.getLibelle()))
+                .collect(Collectors.toSet());
+    }
+    
+    /*@ModelAttribute("userRoles")
     public Set<String> userRoles(Principal principal) {
 
         if (principal == null) return Set.of();
@@ -85,7 +120,7 @@ public class GlobalModelAttributes {
                 .filter(r -> r != null && r.getLibelle() != null)
                 .map(r -> mapRoleToMenu(r.getLibelle()))
                 .collect(Collectors.toSet());
-    }
+    }*/
 
     // =========================
     // Assignations courantes (Spring Security)
@@ -105,13 +140,6 @@ public class GlobalModelAttributes {
                 .toList();
     }
 
-    // =========================
-    // Session
-    // =========================
-    /*@ModelAttribute("currentAssignationId")
-    public Long currentAssignationId(HttpSession session) {
-        return (Long) session.getAttribute("CURRENT_ASSIGNATION_ID");
-    }*/
     
     @ModelAttribute("currentAssignationId")
     public Long currentAssignationId(HttpSession session) {
@@ -130,12 +158,44 @@ public class GlobalModelAttributes {
 
         return null;
     }
+    
+    @ModelAttribute("currentAssignation")
+    public Assignation currentAssignation(Authentication authentication) {
 
-    @ModelAttribute("currentRole")
-    public String currentRole(HttpSession session) {
-        return (String) session.getAttribute("CURRENT_ROLE");
+        if (authentication == null) {
+            return null;
+        }
+
+        if (!(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+            return null;
+        }
+
+        return principal.getAssignationCourant();
     }
 
+    /*@ModelAttribute("currentRole")
+    public String currentRole(HttpSession session) {
+        return (String) session.getAttribute("CURRENT_ROLE");
+    }*/
+
+    @ModelAttribute("currentRole")
+    public String currentRole(Authentication authentication) {
+
+        if (authentication == null) {
+            return null;
+        }
+
+        if (!(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+            return null;
+        }
+
+        Assignation a = principal.getAssignationCourant();
+
+        return (a != null && a.getRole() != null)
+                ? a.getRole().getLibelle()
+                : null;
+    }
+    
     // =========================
     // Connexion
     // =========================
@@ -161,6 +221,20 @@ public class GlobalModelAttributes {
             case "AGENT" -> "AGENT";
             default -> libelleBdd.trim().toUpperCase();
         };
+    }
+    
+    @ModelAttribute("currentUser")
+    public UserPrincipal currentUser(Authentication authentication) {
+
+        if (authentication == null) {
+            return null;
+        }
+
+        if (!(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+            return null;
+        }
+
+        return principal;
     }
 }
 

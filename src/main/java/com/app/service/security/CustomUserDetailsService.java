@@ -15,7 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.app.entities.administration.Assignation;
 import com.app.entities.administration.Utilisateur;
 import com.app.security.UserPrincipal;
 import com.app.service.AgenceSecurityService;

@@ -91,32 +91,40 @@
 	                <div class="mb-1"><label>Fin arriérés</label><input type="text" id="arriereFinDisplay" class="form-control" disabled></div>
 	                <div class="mb-1"><label>Loyer FCFA</label><input type="text" id="conloyer" class="form-control" disabled></div>
 					
-					<div class="row" th:if="${userRoles.contains('DIREC')}">
-						<div class="mb-1">	
-							<label class="form-label">
-								<span class="text-danger">
-						        Annule pénalité retard
-								</span>
-						    </label>
+					<div class="row" sec:authorize="hasAnyRole('ADMIN','DIREC')">
 
-						    <div class="form-control d-flex align-items-center"
-						         style="height:40px;border-color: red; background-color: rgb(239, 239, 239);">
+					    <div class="col-md-12 mb-3">
 
-						        <div class="form-check m-0">
-						            <input type="checkbox"
-						                   th:field="*{bloque}"
-						                   id="bloquePenalite"
-						                   class="form-check-input" style="border-color: red;"/>
+					        <label class="form-label fw-bold text-danger">
+					            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+					            Annulation de la pénalité de retard
+					        </label>
 
-						            <label class="form-check-label ms-2"
-						                   for="bloquePenalite">
-						                Annule
-						            </label>
-						        </div>
+					        <div class="border border-danger rounded p-3 bg-light">
 
-						    </div>
-						</div>
-					</div>					
+					            <div class="form-check form-switch">
+
+					                <input class="form-check-input"
+					                       type="checkbox"
+					                       id="bloquePenalite"
+					                       th:field="*{bloque}">
+
+					                <label class="form-check-label fw-semibold"
+					                       for="bloquePenalite">
+					                    Annuler la pénalité de retard
+					                </label>
+
+					            </div>
+
+					            <small class="text-muted">
+					                Lorsque cette option est activée, aucune pénalité de retard ne sera appliquée à ce dossier.
+					            </small>
+
+					        </div>
+
+					    </div>
+
+					</div>				
 					
 	                <div class="mb-1"><label>Pénalité retard (FCFA)</label><input type="text" id="penaliteDisplay" class="form-control" disabled></div>
 	                <div class="mb-1"><label>Total à payer (FCFA)</label><input type="text" id="totalDisplay" class="form-control" disabled></div>

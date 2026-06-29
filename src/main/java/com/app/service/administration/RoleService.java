@@ -19,6 +19,7 @@ import com.app.dto.RoleDTO;
 import com.app.entities.administration.Banque;
 import com.app.entities.administration.Role;
 import com.app.entities.administration.Typerole;
+import com.app.entities.administration.Utilisateur;
 import com.app.repositories.administration.RoleRepository;
 import com.app.repositories.base.BaseRepository;
 import com.app.service.base.BaseService;
@@ -111,10 +112,24 @@ public class RoleService extends BaseService<Role> {
     
     @Transactional(readOnly = true)
     public List<RoleDTO> findAllLight() {
-        return repo.findAllNotLikeAdmin()
+    	
+    	Utilisateur userConnected = getCurrentUser();
+	    // =========================
+	    // SI ADMIN_AG
+	    // =========================
+
+	    if (userConnected.hasRole("ADMIN_AG")) {
+	    	return repo.findAllNotLikeAdmin()
+	                   .stream()
+	                   .map(r -> new RoleDTO(r.getId(), r.getCode(), r.getLibelle()))
+	                   .toList();
+	    }else {
+    	
+        return repo.findAll()
                    .stream()
                    .map(r -> new RoleDTO(r.getId(), r.getCode(), r.getLibelle()))
                    .toList();
+	    }
     }
     
     public Role saverole(Role role) {
