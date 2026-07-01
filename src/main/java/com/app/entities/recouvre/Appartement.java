@@ -13,7 +13,6 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.envers.Audited;

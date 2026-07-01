@@ -147,8 +147,8 @@
 											          method="post" style="margin:0; padding:0;">
 											          
 											        <button type="submit" 
-											                class="dropdown-item" 
-											                th:if="${#sets.contains(userRoles, 'DIREC')}"
+											                class="dropdown-item"
+															sec:authorize="hasAnyRole('ADMIN','DIREC')"
 											                style="width:100%; text-align:left; border:none; background:none; margin-left: 10%; padding:0;">
 											            <i class="bi bi-check me-2"></i>Valider
 											        </button>
