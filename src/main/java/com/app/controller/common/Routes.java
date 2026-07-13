@@ -25,6 +25,7 @@ public class Routes {
     public static final String ROUTE_RECOUVRE ="/recouvrements";
     public static final String ROUTE_AGENCE ="/agences";
     public static final String ROUTE_PROFESSION ="/professions";
+    public static final String ROUTE_PRESTATAIRE = "/prestataires";
     
     public static final String ROUTE_LIST = "/index";
     public static final String ROUTE_CREATE = "/create";
