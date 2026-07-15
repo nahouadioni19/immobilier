@@ -60,14 +60,14 @@ public class PrestataireController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("currentPage", page);
 
-        return "prestataire/enrolement/list";
+        return "maintenance/prestataire/list";
     }
    
     // FORMULAIRE DE CREATION
     @GetMapping("/create")
     public String showCreateForm(Model model) {
         model.addAttribute("prestataire", new Prestataire());
-        return "prestataire/enrolement/form";
+        return "maintenance/prestataire/form";
     }
       
     @PostMapping("/save")
@@ -108,7 +108,7 @@ public class PrestataireController {
 
     	model.addAttribute("prestataire", prestataire);
 
-        return "prestataire/enrolement/form"; // même template que la création
+        return "maintenance/prestataire/form"; // même template que la création
     }
     
     // SUPPRESSION
