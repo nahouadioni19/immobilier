@@ -19,13 +19,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.app.dto.BailleurDTO;
 import com.app.dto.PrestataireDTO;
-import com.app.dto.TypeInterventionDTO;
+import com.app.dto.TypeinterventionDTO;
 import com.app.entities.administration.Agence;
 import com.app.entities.maintenance.Prestataire;
-import com.app.entities.maintenance.TypeIntervention;
+import com.app.entities.maintenance.Typeintervention;
 import com.app.entities.recouvre.Bailleur;
 import com.app.repositories.maintenance.PrestataireRepository;
-import com.app.repositories.maintenance.TypeInterventionRepository;
+import com.app.repositories.maintenance.TypeinterventionRepository;
 import com.app.repositories.recouvre.BailleurRepository;
 import com.app.service.base.BaseService;
 
@@ -34,15 +34,15 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class TypeInterventionService extends BaseService<TypeIntervention>{
+public class TypeinterventionService extends BaseService<Typeintervention>{
 
-	private final TypeInterventionRepository repo;
+	private final TypeinterventionRepository repo;
 	
 	@Transactional
-    public TypeIntervention saveIntervention(TypeIntervention typeIntervention) throws IOException {
+    public Typeintervention saveIntervention(Typeintervention typeIntervention) throws IOException {
 
         boolean isNew = (typeIntervention.getId() == null);
-        TypeIntervention entity;
+        Typeintervention entity;
         
         Agence agence = getCurrentAgence();
         
@@ -76,12 +76,14 @@ public class TypeInterventionService extends BaseService<TypeIntervention>{
         return entity;
     }
 
-    /*public Optional<Prestataire> findByIdAgence(Integer id) {
-        return repo.findByIdAndAgenceId(id, getCurrentAgenceId());
-    }*/
+	public Typeintervention findById(Integer id) {
+	    return repo.findById(id)
+	            .orElseThrow(() ->
+	                new IllegalArgumentException("Type intervention introuvable : " + id));
+	}
 
       
-    public Page<TypeIntervention> searchLocataire(String keyword, Pageable pageable) {
+    public Page<Typeintervention> searchLocataire(String keyword, Pageable pageable) {
     	
     	Integer agenceId = getCurrentAgenceId();
     	
@@ -93,11 +95,11 @@ public class TypeInterventionService extends BaseService<TypeIntervention>{
         return repo.search(keyword.trim(), pageable);
     }
     
-    public Page<TypeInterventionDTO> search(String keyword, Pageable pageable) {
+    public Page<TypeinterventionDTO> search(String keyword, Pageable pageable) {
     	
     	Integer agenceId = getCurrentAgenceId();
     	
-        Page<TypeIntervention> page;
+        Page<Typeintervention> page;
 
         if (keyword == null || keyword.trim().isEmpty()) {
            // page = repo.findByAgenceId(agenceId, pageable);
@@ -110,8 +112,8 @@ public class TypeInterventionService extends BaseService<TypeIntervention>{
         return page.map(this::toDTO);
     }
 
-    private TypeInterventionDTO toDTO(TypeIntervention b) {
-    	TypeInterventionDTO dto = new TypeInterventionDTO();
+    private TypeinterventionDTO toDTO(Typeintervention b) {
+    	TypeinterventionDTO dto = new TypeinterventionDTO();
 
         dto.setId(b.getId());
         dto.setLibelle(b.getLibelle());
@@ -124,7 +126,7 @@ public class TypeInterventionService extends BaseService<TypeIntervention>{
     }
 
 	@Override
-	public JpaRepository<TypeIntervention, Integer> getRepository() {
+	public JpaRepository<Typeintervention, Integer> getRepository() {
 		// TODO Auto-generated method stub
 		return repo;
 	}

@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class TypeInterventionDTO {
+public class TypeinterventionDTO {
     private Integer id;
     private String libelle;
 }

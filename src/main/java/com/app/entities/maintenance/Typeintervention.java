@@ -17,7 +17,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @DynamicUpdate
-public class TypeIntervention extends BaseEntity{
+public class Typeintervention extends BaseEntity{
 
     @Column(nullable=false, unique=true)
     private String libelle;

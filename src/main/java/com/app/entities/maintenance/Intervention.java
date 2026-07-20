@@ -37,7 +37,7 @@ public class Intervention extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "type_intervention_id", nullable = false)
-    private TypeIntervention typeIntervention;
+    private Typeintervention typeIntervention;
 
     @Column(nullable = false, length = 300)
     private String objet;
