@@ -1,7 +1,6 @@
 package com.app.controller.maintenance;
 
 import com.app.controller.common.Routes;
-import com.app.entities.maintenance.Prestataire;
 import com.app.entities.maintenance.Typeintervention;
 import com.app.security.UserPrincipal;
 import com.app.service.maintenance.TypeinterventionService;
@@ -45,7 +44,7 @@ public class TypeinterventionController {
     }
 
     @GetMapping
-    public String listTypeinterventions(
+    public String list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) String keyword,
             @AuthenticationPrincipal UserPrincipal principal,
@@ -60,18 +59,18 @@ public class TypeinterventionController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("currentPage", page);
 
-        return "maintenance/prestataire/list";
+        return "maintenance/typeintervention/list";
     }
    
     // FORMULAIRE DE CREATION
     @GetMapping("/create")
     public String showCreateForm(Model model) {
         model.addAttribute("typeintervention", new Typeintervention());
-        return "maintenance/prestataire/form";
+        return "maintenance/typeintervention/form";
     }
       
     @PostMapping("/save")
-    public String savePrestataire(
+    public String saveTypeintervention(
             @ModelAttribute("typeintervention") Typeintervention typeintervention,
             RedirectAttributes redirectAttributes) {
 
@@ -107,7 +106,7 @@ public class TypeinterventionController {
 
         model.addAttribute("typeintervention", typeintervention);
 
-        return "maintenance/prestataire/form";
+        return "maintenance/typeintervention/form";
     }
     
     // SUPPRESSION
@@ -120,9 +119,9 @@ public class TypeinterventionController {
         return "redirect:" + Routes.ROUTE_BAILLEUR;
     }*/
         
-    @GetMapping(value = "/api/prestataires", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/api/type-interventions", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Map<String, Object> searchPrestataire(
+    public Map<String, Object> searchtypeintervention(
             @RequestParam String term,
             @AuthenticationPrincipal UserPrincipal principal) {
 

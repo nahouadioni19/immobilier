@@ -17,13 +17,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.app.dto.BailleurDTO;
-import com.app.dto.PrestataireDTO;
+import com.app.dto.InterventionDTO;
 import com.app.entities.administration.Agence;
-import com.app.entities.maintenance.Prestataire;
+import com.app.entities.maintenance.Intervention;
 import com.app.entities.recouvre.Bailleur;
+import com.app.repositories.maintenance.InterventionRepository;
 import com.app.repositories.maintenance.PrestataireRepository;
+import com.app.repositories.maintenance.TypeinterventionRepository;
 import com.app.repositories.recouvre.BailleurRepository;
+import com.app.repositories.recouvre.LocataireRepository;
 import com.app.service.base.BaseService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,27 +33,31 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class PrestataireService extends BaseService<Prestataire>{
+public class InterventionService extends BaseService<Intervention>{
 
-	private final PrestataireRepository repo;
+	private final InterventionRepository repo;
+	private final BailleurRepository bailleurRepository;
+	private final LocataireRepository locataireRepository;
+	private final PrestataireRepository prestataireRepository;
+	private final TypeinterventionRepository typeinterventionRepository;
 	
 	@Transactional
-    public Prestataire saveWithDocument(Prestataire prestataire) throws IOException {
+    public Intervention saveIntervention(Intervention intervention) throws IOException {
 
-        boolean isNew = (prestataire.getId() == null);
-        Prestataire entity;
+        boolean isNew = (intervention.getId() == null);
+        Intervention entity;
         
         Agence agence = getCurrentAgence();
         
         checkAgenceActive(agence);
         
         if (isNew) {
-            entity = prestataire;
+            entity = intervention;
             entity.setAgence(agence);
 
         } else {
-            entity = repo.findByIdAndAgenceId(prestataire.getId(), getCurrentAgenceId())
-                    .orElseThrow(() -> new IllegalArgumentException("Prestataire introuvable"));
+            entity = repo.findByIdAndAgenceId(intervention.getId(), getCurrentAgenceId())
+                    .orElseThrow(() -> new IllegalArgumentException("Intervention introuvable"));
 
             Integer agenceEntityId = entity.getAgence() != null ? entity.getAgence().getId() : null;
             Integer agenceCurrentId = getCurrentAgenceId();
@@ -62,11 +68,11 @@ public class PrestataireService extends BaseService<Prestataire>{
             }
 
             // mapping champs
-            entity.setNom(prestataire.getNom());
-            entity.setTelephone(prestataire.getTelephone());
-            entity.setAdresse(prestataire.getAdresse());
-            entity.setEmail(prestataire.getEmail());
-            entity.setEmail(prestataire.getEmail());
+            entity.setNom(intervention.getNom());
+            entity.setTelephone(intervention.getTelephone());
+            entity.setAdresse(intervention.getAdresse());
+            entity.setEmail(intervention.getEmail());
+            entity.setEmail(intervention.getEmail());
         }
 
         entity = repo.save(entity); // 🔥 garantit ID
@@ -75,7 +81,7 @@ public class PrestataireService extends BaseService<Prestataire>{
         return entity;
     }
 
-    public Optional<Prestataire> findByIdAgence(Integer id) {
+    public Optional<Intervention> findByIdAgence(Integer id) {
         return repo.findByIdAndAgenceId(id, getCurrentAgenceId());
     }
 
@@ -83,21 +89,21 @@ public class PrestataireService extends BaseService<Prestataire>{
         return repo.save(bailleur);
     }*/
       
-    public Page<Prestataire> searchLocataire(String keyword, Pageable pageable) {
+    /*public Page<Intervention> searchLocataire(String keyword, Pageable pageable) {
     	
     	Integer agenceId = getCurrentAgenceId();
     	
         if (keyword == null || keyword.trim().isEmpty()) {
             return repo.findByAgenceId(agenceId, pageable);
         }
-        return repo.searchPrestataire(keyword.trim(), agenceId, pageable);
-    }
+        return repo.searchBailleur(keyword.trim(), agenceId, pageable);
+    }*/
     
-    public Page<PrestataireDTO> search(String keyword, Pageable pageable) {
+    public Page<InterventionDTO> search(String keyword, Pageable pageable) {
     	
     	Integer agenceId = getCurrentAgenceId();
     	
-        Page<Prestataire> page;
+        Page<Intervention> page;
 
         if (keyword == null || keyword.trim().isEmpty()) {
             page = repo.findByAgenceId(agenceId, pageable);
@@ -108,8 +114,8 @@ public class PrestataireService extends BaseService<Prestataire>{
         return page.map(this::toDTO);
     }
 
-    private PrestataireDTO toDTO(Prestataire b) {
-    	PrestataireDTO dto = new PrestataireDTO();
+    private InterventionDTO toDTO(Intervention b) {
+    	InterventionDTO dto = new InterventionDTO();
 
         dto.setId(b.getId());
         dto.setNom(b.getNom());
@@ -124,7 +130,7 @@ public class PrestataireService extends BaseService<Prestataire>{
     }
 
 	@Override
-	public JpaRepository<Prestataire, Integer> getRepository() {
+	public JpaRepository<Intervention, Integer> getRepository() {
 		// TODO Auto-generated method stub
 		return repo;
 	}

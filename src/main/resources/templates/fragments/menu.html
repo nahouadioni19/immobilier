@@ -220,7 +220,7 @@
 			         currentUri != null &&
 			         (
 			             #strings.contains(currentUri,'/prestataires')
-			             || #strings.contains(currentUri,'/patrimoines')
+			             || #strings.contains(currentUri,'/type-interventions')
 			         )
 			      } ? ' show' : ''"
 			      id="maintenanceMenu"
@@ -236,9 +236,9 @@
 				</li>
 
 				<li>
-				    <a class="nav-link" th:href="@{/patrimoines}">
+				    <a class="nav-link" th:href="@{/type-interventions}">
 				        <i class="bi bi-house-check me-2"></i>
-				        Patrimoine
+				        type intervention
 				    </a>
 				</li>
 				

@@ -8,36 +8,20 @@
     <section layout:fragment="content">
         <div class="container my-2">
             <div class="container mt-4">
-                <h2>Gestion des prestataires</h2>
+                <h2>Gestion des types d'intervention</h2>
 
-                <form th:action="@{/prestataires/save}" th:object="${prestataire}" method="post" 
-										class="border p-4 rounded shadow-sm bg-white" id="prestataireForm">
+                <form th:action="@{/type-interventions/save}" th:object="${typeintervention}" method="post" 
+										class="border p-4 rounded shadow-sm bg-white" id="typeinterventionForm">
                     <input type="hidden" th:field="*{id}"/>
-					<input type="hidden" th:field="*{version}" />
-					<input type="hidden" th:field="*{agence.id}" />
+					<!--<input type="hidden" th:field="*{version}" />
+					<input type="hidden" th:field="*{agence.id}" />-->
 					
                     <!--<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">-->
-                        <h4>prestataire</h4>
+                        <h4>type intervention</h4>
                         <div class="mb-1">							
-                            <label for="nom" class="form-label">Nom<span style="color:red;"> *</span></label>
-                            <input type="text" th:field="*{nom}" class="form-control" required oninput="uppercaseWords(this)">               
+                            <label for="libelle" class="form-label">Libellé<span style="color:red;"> *</span></label>
+                            <input type="text" th:field="*{libelle}" class="form-control" required oninput="capitalizeWords(this)">               
                         </div>
-
-
-                        <div class="mb-1">
-                            <label for="telephone" class="form-label">Téléphone<span style="color:red;"> *</span></label>
-							<input type="text" th:field="*{telephone}" class="form-control phone_ci" placeholder="00 00 00 00 00" maxlength="14" inputmode="numeric">
-                        </div>
-						
-						<div class="mb-1">
-					        <label for="email" class="form-label">E.mail</label>
-					        <input type="email" th:field="*{email}" class="form-control" >
-						</div>
-
-						<div class="mb1">
-					        <label for="adresse" class="form-label">Adresse</label>
-					        <input type="text" th:field="*{adresse}" class="form-control" >
-						</div>
 
 					<hr>
                     <!-- Boutons -->
@@ -48,7 +32,7 @@
                             </button>
                         </div>
                         <div class="col-12 col-md-2">
-                            <a th:href="@{/prestataires}" class="btn btn-danger w-100">Retour à la liste</a>
+                            <a th:href="@{/type-interventions}" class="btn btn-danger w-100">Retour à la liste</a>
                         </div>
                     </div>
                     <!--</fieldset>-->

@@ -41,7 +41,7 @@ public interface PrestataireRepository extends JpaRepository<Prestataire, Intege
 		    AND p.agence.id = :agenceId
 		    ORDER BY p.nom ASC
 		""")
-		Page<Prestataire> searchBailleur(
+		Page<Prestataire> searchPrestataire(
 		        @Param("keyword") String keyword,
 		        @Param("agenceId") Integer agenceId,
 		        Pageable pageable

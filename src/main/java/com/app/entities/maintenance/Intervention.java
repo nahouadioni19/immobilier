@@ -1,6 +1,7 @@
 package com.app.entities.maintenance;
 
 import com.app.entities.BaseEntity;
+import com.app.entities.administration.Agence;
 import com.app.entities.recouvre.Appartement;
 import com.app.entities.recouvre.Locataire;
 import com.app.enums.StatutIntervention;
@@ -22,6 +23,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Intervention extends BaseEntity {
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "agence_id", nullable = false)
+    private Agence agence;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "appartement_id", nullable = false)
