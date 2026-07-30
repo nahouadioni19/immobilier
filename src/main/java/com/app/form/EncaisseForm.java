@@ -1,4 +1,4 @@
-package com.app.dto;
+package com.app.form;
 import java.time.LocalDate;
 
 import org.springframework.format.annotation.DateTimeFormat;

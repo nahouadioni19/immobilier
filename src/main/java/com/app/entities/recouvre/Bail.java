@@ -137,6 +137,8 @@ public class Bail extends BaseEntity {
     private long safe(Long v) {
         return v == null ? 0L : v;
     }
+    
+    private String comment;
 }
 
 

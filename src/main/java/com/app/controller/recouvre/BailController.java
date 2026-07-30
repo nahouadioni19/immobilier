@@ -175,6 +175,7 @@ public class BailController {
         }
     }
     
+    
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable("id") int id, Model model) {
 
@@ -207,7 +208,7 @@ public class BailController {
     }
     
     //RESILIER
-    @GetMapping("/resilier/{id}")
+   /* @GetMapping("/resilier/{id}")
     public String resilierBail(
             @PathVariable Integer id,
             RedirectAttributes redirectAttributes
@@ -221,7 +222,34 @@ public class BailController {
         );
 
         return "redirect:" + Routes.ROUTE_BAIL;
+    }*/
+    
+    
+
+    @GetMapping("/resilier/{id}")
+    public String showResilier(@PathVariable("id") int id, Model model) {
+
+        // 🔹 Charger le bail avec le locataire et l'appartement courant (JOIN FETCH)
+        Bail bail = service.findByIdWithLocataireAndAppartement(id)
+            .orElseThrow(() -> new IllegalArgumentException("Bail introuvable : " + id));
+
+        // ⚡ Préparer le bail dans le modèle
+        model.addAttribute("bail", bail);
+
+        // 🔹 Préparer les options pour le select (uniquement l’élément courant)
+        if (bail.getLocataire() != null) {
+            model.addAttribute("currentLocataire", bail.getLocataire());
+        }
+        if (bail.getAppartement() != null) {
+            model.addAttribute("currentAppartement", bail.getAppartement());
+        }
+        
+        model.addAttribute("readOnly", true);
+
+        return "locataire/bail/detail";
     }
+    
+    
     
     @GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody

@@ -1,4 +1,4 @@
-package com.app.dto;
+package com.app.form;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

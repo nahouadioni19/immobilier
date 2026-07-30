@@ -1,7 +1,7 @@
 package com.app.service;
 
-import com.app.dto.UserForm;
 import com.app.entities.administration.Utilisateur;
+import com.app.form.UserForm;
 import com.app.repositories.UserutilisateurRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

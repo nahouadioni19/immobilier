@@ -30,12 +30,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.app.controller.common.Routes;
 import com.app.controller.common.SetupPage;
 import com.app.dto.AssignationDTO;
-
-import com.app.dto.PasswordForm;
 import com.app.dto.UtilisateurDTO;
 import com.app.entities.administration.Assignation;
 import com.app.entities.administration.Utilisateur;
 import com.app.enums.Titre;
+import com.app.form.PasswordForm;
 import com.app.mapper.UtilisateurMapper;
 import com.app.security.UserPrincipal;
 import com.app.service.administration.AgenceService;

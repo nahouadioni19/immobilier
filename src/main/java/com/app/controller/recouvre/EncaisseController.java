@@ -29,11 +29,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.app.dto.EncaisseDTO;
-import com.app.dto.EncaisseForm;
 import com.app.dto.IdentificationProjection;
 import com.app.entities.administration.Utilisateur;
 import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Encaisse;
+import com.app.form.EncaisseForm;
 import com.app.repositories.BailSelectProjection;
 import com.app.security.UserPrincipal;
 import com.app.service.FileStorageService;

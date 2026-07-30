@@ -9,11 +9,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.app.dto.ImmeubForm;
 import com.app.dto.ImmeubleDTO;
 import com.app.entities.recouvre.Appartement;
 import com.app.entities.recouvre.Bailleur;
 import com.app.entities.recouvre.Immeuble;
+import com.app.form.ImmeubForm;
 import com.app.entities.administration.Utilisateur;
 import com.app.repositories.administration.UtilisateurRepository;
 import com.app.repositories.recouvre.AppartementRepository;

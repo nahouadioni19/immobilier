@@ -21,9 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.app.dto.AgenceDTO;
-import com.app.dto.AgenceForm;
 import com.app.dto.BailleurDTO;
 import com.app.entities.administration.Agence;
+import com.app.form.AgenceForm;
 import com.app.security.UserPrincipal;
 import com.app.service.administration.AgenceService;
 

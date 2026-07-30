@@ -12,7 +12,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import com.app.dto.EncaisseDTO;
-import com.app.dto.EncaisseForm;
 import com.app.dto.EncaisseListDto;
 import com.app.entities.administration.Agence;
 import com.app.entities.administration.Utilisateur;
@@ -20,6 +19,7 @@ import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Encaisse;
 import com.app.entities.recouvre.Identification;
 import com.app.entities.recouvre.Loyann;
+import com.app.form.EncaisseForm;
 import com.app.mapper.EncaisseMapper;
 import com.app.repositories.administration.UtilisateurRepository;
 import com.app.repositories.recouvre.BailRepository;

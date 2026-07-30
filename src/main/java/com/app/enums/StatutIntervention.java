@@ -1,10 +1,19 @@
 package com.app.enums;
 public enum StatutIntervention {
 
-    DECLAREE,
-    PLANIFIEE,
-    EN_COURS,
-    TERMINEE,
-    ANNULEE
+    DECLAREE("Déclarée"),
+    PLANIFIEE("Planifiée"),
+    EN_COURS("En cours"),
+    TERMINEE("Terminée"),
+    ANNULEE("Annulée");
 
+    private final String libelle;
+
+    StatutIntervention(String libelle) {
+        this.libelle = libelle;
+    }
+
+    public String getLibelle() {
+        return libelle;
+    }
 }

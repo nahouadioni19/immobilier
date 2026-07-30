@@ -1,4 +1,4 @@
-package com.app.dto;
+package com.app.form;
 
 public class UserForm {
     private String nom;

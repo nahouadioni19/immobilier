@@ -199,7 +199,8 @@
 			         currentUri != null &&
 			         (
 			             #strings.contains(currentUri,'/prestataires')
-			             || #strings.contains(currentUri,'/patrimoines')
+			             || #strings.contains(currentUri,'/type-interventions')
+						 || #strings.contains(currentUri,'/interventions')
 			         )
 			     } ? '' : ' collapsed'"
 			    data-bs-toggle="collapse"
@@ -221,6 +222,7 @@
 			         (
 			             #strings.contains(currentUri,'/prestataires')
 			             || #strings.contains(currentUri,'/type-interventions')
+						 || #strings.contains(currentUri,'/intervention')
 			         )
 			      } ? ' show' : ''"
 			      id="maintenanceMenu"
@@ -241,7 +243,14 @@
 				        type intervention
 				    </a>
 				</li>
-				
+
+				<li>
+				    <a class="nav-link" th:href="@{/interventions}">
+				        <i class="bi bi-house-check me-2"></i>
+				        Intervention
+				    </a>
+				</li>
+												
 	           </ul>
 	       </div>
 	   </li>

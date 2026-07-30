@@ -1,4 +1,4 @@
-package com.app.dto;
+package com.app.form;
 
 import java.util.ArrayList;
 import java.util.List;

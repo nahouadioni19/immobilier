@@ -21,9 +21,12 @@ import com.app.dto.InterventionDTO;
 import com.app.entities.administration.Agence;
 import com.app.entities.maintenance.Intervention;
 import com.app.entities.recouvre.Bailleur;
+import com.app.form.InterventionForm;
+import com.app.mapper.InterventionMapper;
 import com.app.repositories.maintenance.InterventionRepository;
 import com.app.repositories.maintenance.PrestataireRepository;
 import com.app.repositories.maintenance.TypeinterventionRepository;
+import com.app.repositories.recouvre.AppartementRepository;
 import com.app.repositories.recouvre.BailleurRepository;
 import com.app.repositories.recouvre.LocataireRepository;
 import com.app.service.base.BaseService;
@@ -35,58 +38,87 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class InterventionService extends BaseService<Intervention>{
 
-	private final InterventionRepository repo;
-	private final BailleurRepository bailleurRepository;
+	private final InterventionRepository repository;
+	private final AppartementRepository appartementRepository;
 	private final LocataireRepository locataireRepository;
 	private final PrestataireRepository prestataireRepository;
 	private final TypeinterventionRepository typeinterventionRepository;
 	
+	private final InterventionMapper mapper;
+	
+	
 	@Transactional
-    public Intervention saveIntervention(Intervention intervention) throws IOException {
+	public Intervention saveIntervention(InterventionForm form) {
 
-        boolean isNew = (intervention.getId() == null);
-        Intervention entity;
-        
-        Agence agence = getCurrentAgence();
-        
-        checkAgenceActive(agence);
-        
-        if (isNew) {
-            entity = intervention;
-            entity.setAgence(agence);
+	    Agence agence = getCurrentAgence();
+	    checkAgenceActive(agence);
 
-        } else {
-            entity = repo.findByIdAndAgenceId(intervention.getId(), getCurrentAgenceId())
-                    .orElseThrow(() -> new IllegalArgumentException("Intervention introuvable"));
+	    final boolean isNew = (form.getId() == null);
 
-            Integer agenceEntityId = entity.getAgence() != null ? entity.getAgence().getId() : null;
-            Integer agenceCurrentId = getCurrentAgenceId();
+	    Intervention entity;
 
-            if (agenceEntityId == null || agenceCurrentId == null
-                    || !agenceEntityId.equals(agenceCurrentId)) {
-                throw new SecurityException("Accès refusé");
-            }
+	    if (isNew) {
 
-            // mapping champs
-            entity.setNom(intervention.getNom());
-            entity.setTelephone(intervention.getTelephone());
-            entity.setAdresse(intervention.getAdresse());
-            entity.setEmail(intervention.getEmail());
-            entity.setEmail(intervention.getEmail());
-        }
+	        entity = new Intervention();
+	        entity.setAgence(agence);
 
-        entity = repo.save(entity); // 🔥 garantit ID
-      
-        
-        return entity;
-    }
+	    } else {
 
+	        entity = repository.findByIdAndAgenceId(form.getId(), agence.getId())
+	                .orElseThrow(() ->
+	                        new IllegalArgumentException("Intervention introuvable"));
+
+	        Integer agenceEntityId = entity.getAgence() != null
+	                ? entity.getAgence().getId()
+	                : null;
+
+	        if (!agence.getId().equals(agenceEntityId)) {
+	            throw new SecurityException("Accès refusé");
+	        }
+	    }
+
+	    // Mapping des champs simples
+	    mapper.updateEntity(form, entity);
+
+	    // Relations
+	    entity.setAppartement(
+	            appartementRepository.findById(form.getAppartementId())
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException("Appartement introuvable"))
+	    );
+
+	    entity.setLocataire(
+	            form.getLocataireId() == null
+	                    ? null
+	                    : locataireRepository.findById(form.getLocataireId())
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException("Locataire introuvable"))
+	    );
+
+	    entity.setPrestataire(
+	            form.getPrestataireId() == null
+	                    ? null
+	                    : prestataireRepository.findById(form.getPrestataireId())
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException("Prestataire introuvable"))
+	    );
+
+	    entity.setTypeIntervention(
+	            typeinterventionRepository.findById(form.getTypeInterventionId())
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException("Type d'intervention introuvable"))
+	    );
+
+	    return repository.save(entity);
+	}
+	
+	
     public Optional<Intervention> findByIdAgence(Integer id) {
-        return repo.findByIdAndAgenceId(id, getCurrentAgenceId());
+        return repository.findByIdAndAgenceId(id, getCurrentAgenceId());
     }
 
     /*public Bailleur saved(Bailleur bailleur) {
-        return repo.save(bailleur);
+        return repository.save(bailleur);
     }*/
       
     /*public Page<Intervention> searchLocataire(String keyword, Pageable pageable) {
@@ -94,36 +126,76 @@ public class InterventionService extends BaseService<Intervention>{
     	Integer agenceId = getCurrentAgenceId();
     	
         if (keyword == null || keyword.trim().isEmpty()) {
-            return repo.findByAgenceId(agenceId, pageable);
+            return repository.findByAgenceId(agenceId, pageable);
         }
-        return repo.searchBailleur(keyword.trim(), agenceId, pageable);
+        return repository.searchBailleur(keyword.trim(), agenceId, pageable);
     }*/
     
     public Page<InterventionDTO> search(String keyword, Pageable pageable) {
-    	
-    	Integer agenceId = getCurrentAgenceId();
-    	
+
+        Integer agenceId = getCurrentAgenceId();
+
         Page<Intervention> page;
 
         if (keyword == null || keyword.trim().isEmpty()) {
-            page = repo.findByAgenceId(agenceId, pageable);
+            page = repository.findByAgenceId(agenceId, pageable);
         } else {
-            page = repo.search(keyword.trim(), agenceId, pageable);
+            page = repository.search(keyword.trim(), agenceId, pageable);
         }
 
-        return page.map(this::toDTO);
+        return page.map(mapper::toDTO);
     }
 
-    private InterventionDTO toDTO(Intervention b) {
-    	InterventionDTO dto = new InterventionDTO();
+    private InterventionDTO toDTO(Intervention entity) {
 
-        dto.setId(b.getId());
-        dto.setNom(b.getNom());
-        dto.setAdresse(b.getAdresse());
-        dto.setTelephone(b.getTelephone());
+        if (entity == null) {
+            return null;
+        }
 
-        if (b.getAgence() != null) {
-            dto.setAgenceId(b.getAgence().getId());
+        InterventionDTO dto = new InterventionDTO();
+
+        dto.setId(entity.getId());
+
+        dto.setObjet(entity.getObjet());
+        dto.setDescription(entity.getDescription());
+
+        dto.setDateDeclaration(entity.getDateDeclaration());
+        dto.setDatePrevue(entity.getDatePrevue());
+        dto.setDateDebut(entity.getDateDebut());
+        dto.setDateFin(entity.getDateFin());
+
+        dto.setStatut(entity.getStatut());
+
+        dto.setCoutEstime(entity.getCoutEstime());
+        dto.setCoutReel(entity.getCoutReel());
+
+        dto.setObservation(entity.getObservation());
+
+        dto.setUrgente(entity.getUrgente());
+
+        if (entity.getAgence() != null) {
+            dto.setAgenceId(entity.getAgence().getId());
+            dto.setAgenceNom(entity.getAgence().getNom());
+        }
+
+        if (entity.getAppartement() != null) {
+            dto.setAppartementId(entity.getAppartement().getId());
+            dto.setAppartementLibelle(entity.getAppartement().getLibelle());
+        }
+
+        if (entity.getLocataire() != null) {
+            dto.setLocataireId(entity.getLocataire().getId());
+            dto.setLocataireNomComplet(entity.getLocataire().getNom());
+        }
+
+        if (entity.getPrestataire() != null) {
+            dto.setPrestataireId(entity.getPrestataire().getId());
+            dto.setPrestataireNom(entity.getPrestataire().getNom());
+        }
+
+        if (entity.getTypeIntervention() != null) {
+            dto.setTypeInterventionId(entity.getTypeIntervention().getId());
+            dto.setTypeInterventionLibelle(entity.getTypeIntervention().getLibelle());
         }
 
         return dto;
@@ -132,6 +204,6 @@ public class InterventionService extends BaseService<Intervention>{
 	@Override
 	public JpaRepository<Intervention, Integer> getRepository() {
 		// TODO Auto-generated method stub
-		return repo;
+		return repository;
 	}
 }

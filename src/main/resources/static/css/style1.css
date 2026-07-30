@@ -23,24 +23,6 @@ body {
     padding: 1rem;
 }
 
-/* === Apparence générale du sidebar vert === */
-/*.sidebar-green {
-    background-color: #198754;  vert Bootstrap 
-    color: white;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 250px;
-    overflow-y: auto;
-    padding-top: 1rem;
-    z-index: 1040;
-    border-right: 1px solid rgba(255, 255, 255, 0.2);
-    animation: sidebarSlideIn 0.6s ease-out forwards;  Animation d’apparition 
-    opacity: 0;
-    transform: translateX(-50px);
-}*/
-
 /* === TITRE OU SECTION === */
 .sidebar-green h5, 
 .sidebar-green h6 {
@@ -52,17 +34,6 @@ body {
     padding-bottom: 0.5rem;
 }
 
-/* === LIENS DU MENU === */
-/*.sidebar-green a {
-    display: flex;
-    align-items: center;
-    padding: 0.6rem 0.9rem;
-    color: #e6fff2;
-    text-decoration: none;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.2s ease-in-out;
-}*/
 
 /* === Animation du sidebar à l'ouverture === */
 @keyframes sidebarSlideIn {
@@ -94,14 +65,6 @@ body {
     font-size: 1.1rem;
 }
 
-/* === EFFET AU SURVOL === */
-/*.sidebar-green a:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    transform: translateX(3px);
-}
-*/
-
 /* === Effet au survol === */
 .sidebar-green a:hover {
     background-color: rgba(255, 255, 255, 0.25);
@@ -109,12 +72,7 @@ body {
     transform: translateX(4px);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
 }
-/* === LIEN ACTIF (page courante) === */
-/*.sidebar-green a.active {
-    background-color: rgba(255, 255, 255, 0.35);
-    color: #fff;
-    font-weight: 600;
-}*/
+
 /* === Lien actif avec effet Glow === */
 .sidebar-green a.active {
     background-color: rgba(255, 255, 255, 0.3);
