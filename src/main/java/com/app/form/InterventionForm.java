@@ -17,10 +17,16 @@ public class InterventionForm {
 
     @NotNull
     private Integer appartementId;
+    private String appartementLibelle;
+    private String appartementNumAppart;
 
     private Integer locataireId;
+    private String locataireNom;
 
     private Integer prestataireId;
+    
+    private Integer bailleurId;
+    private String bailleurNom;
 
     @NotNull
     private Integer typeInterventionId;

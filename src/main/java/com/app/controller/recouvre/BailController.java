@@ -208,7 +208,7 @@ public class BailController {
     }
     
     //RESILIER
-   /* @GetMapping("/resilier/{id}")
+    /*@PostMapping("/valideresilier")
     public String resilierBail(
             @PathVariable Integer id,
             RedirectAttributes redirectAttributes
@@ -224,6 +224,21 @@ public class BailController {
         return "redirect:" + Routes.ROUTE_BAIL;
     }*/
     
+    
+    @PostMapping("/valideresilier/{id}")
+    public String resilierBail(
+            @PathVariable Integer id,
+            RedirectAttributes redirectAttributes
+    ) {
+
+        service.resilier(id);
+
+        redirectAttributes.addFlashAttribute(
+                "successMessage",
+                "Bail résilié avec succès");
+
+        return "redirect:" + Routes.ROUTE_BAIL;
+    }
     
 
     @GetMapping("/resilier/{id}")

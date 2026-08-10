@@ -26,12 +26,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 import com.app.controller.common.Routes;
 import com.app.controller.common.SetupPage;
 import com.app.dto.ImmeubleDTO;
 import com.app.entities.recouvre.Appartement;
 import com.app.entities.recouvre.Immeuble;
 import com.app.form.ImmeubForm;
+import com.app.security.UserPrincipal;
 import com.app.service.administration.UtilisateurService;
 import com.app.service.common.PaginationService;
 import com.app.service.recouvre.AppartementService;
@@ -330,7 +333,7 @@ public class ImmeubleController{
     }
     
        
-    @GetMapping(value = "/api/appartements", produces = MediaType.APPLICATION_JSON_VALUE)
+    /*@GetMapping(value = "/api/appartements", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> searchAppartement(
             @RequestParam String term,
@@ -364,7 +367,49 @@ public class ImmeubleController{
                 .toList();
 
         return Map.of("results", results);
-    }
+    }*/
+    
+    @GetMapping(value = "/api/appartements", produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseBody
+	public Map<String, Object> searchAppartement(
+	        @RequestParam String term,
+	        @RequestParam(required = false) Integer currentId,
+	        @RequestParam(required = false) Integer bailleurId,
+	        @AuthenticationPrincipal UserPrincipal principal) {
+	
+	    if (term == null || term.trim().isEmpty()) {
+	        return Map.of("results", List.of());
+	    }
+	
+	    Integer agenceId = principal.getUtilisateur().getAgence().getId();
+	
+	    Page<Appartement> page =
+	            appartementService.searchForAppartement(
+	                    term,
+	                    currentId,
+	                    bailleurId,
+	                    PageRequest.of(0, 50)
+	            );
+	
+	    List<Map<String, Object>> results = page.getContent().stream()
+	            .map(a -> {
+	                Map<String, Object> m = new HashMap<>();
+	                m.put("id", a.getId());
+	                m.put("text",
+	                        a.getLibelle() + " - " +
+	                        a.getImmeuble().getNomImmeuble() + " - " +
+	                        a.getImmeuble().getBailleur().getNom() + " - " +
+	                        a.getImmeuble().getBailleur().getPrenom() + " - " + a.getImmeuble().getAdresse() +
+	                        " (" + a.getLoyerMensuel() + " F CFA)");
+	                m.put("libelle", a.getLibelle());
+	                m.put("loyerMensuel", a.getLoyerMensuel());
+	                return m;
+	            })
+	            .toList();
+	
+	    return Map.of("results", results);
+	}
+    
     
     @GetMapping(value = "/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody

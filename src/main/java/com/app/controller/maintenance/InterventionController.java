@@ -16,14 +16,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.app.dto.InterventionDTO;
+import com.app.entities.maintenance.Intervention;
 import com.app.form.InterventionForm;
+import com.app.mapper.InterventionMapper;
 import com.app.repositories.BailSelectProjection;
 import com.app.security.UserPrincipal;
 import com.app.service.FileStorageService;
 import com.app.service.administration.UtilisateurService;
 import com.app.service.maintenance.InterventionService;
+import com.app.service.maintenance.PrestataireService;
+import com.app.service.maintenance.TypeinterventionService;
+import com.app.service.recouvre.AppartementService;
 import com.app.service.recouvre.BailService;
+import com.app.service.recouvre.LocataireService;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import com.app.controller.common.Routes;
@@ -36,7 +43,11 @@ public class InterventionController {
 	private final InterventionService service;
 	private final BailService bailService;
 	private final UtilisateurService utilisateurService;
-	private final FileStorageService fileStorageService;
+	private final PrestataireService prestataireService;
+	private final TypeinterventionService typeinterventionService;	
+	
+	private final InterventionMapper mapper;
+	
 	
 	@Autowired
 	private MessageSource messageSource;	
@@ -67,29 +78,76 @@ public class InterventionController {
 	}	
 	
 	
-	@GetMapping("/create")
+	/*@GetMapping("/create")
 	public String showCreateForm(@AuthenticationPrincipal UserPrincipal principal,
 	                             Model model,
 	                             @RequestParam(required = false) String keyword,
 	                             @RequestParam(value = "id", required = false) Integer id) {
 
-		Integer agenceId = principal.getUtilisateur().getAgence().getId();
-	    // ✅ Création du DTO (formulaire uniquement)
+	    Integer agenceId = principal.getUtilisateur().getAgence().getId();
+
 	    InterventionForm form = new InterventionForm();
-
-
-	    // ✅ IMPORTANT : UN SEUL objet pour le form
 	    model.addAttribute("intervention", form);
 
-
-	    // ✅ (OPTIONNEL MAIS RECOMMANDÉ) ID utilisateur pour Thymeleaf
 	    model.addAttribute("currentUserId",
 	            principal != null && principal.getUtilisateur() != null
 	                    ? principal.getUtilisateur().getId()
 	                    : null);
 
+	    // ✅ Listes déroulantes du formulaire
+	    //model.addAttribute("appartements", appartementService.findByAgenceId(agenceId));
+	    //model.addAttribute("locataires", locataireService.findByAgenceId(agenceId));
+	    model.addAttribute("listePrestataires", prestataireService.findAll());
+	    model.addAttribute("listeTypes", typeinterventionService.findAll());
+
+	    return "maintenance/intervention/form";
+	}*/
+	
+	
+	
+	@GetMapping("/create") // ou une méthode dédiée /edit/{id} selon votre structure
+	public String showCreateForm(@AuthenticationPrincipal UserPrincipal principal,
+	                             Model model,
+	                             @RequestParam(required = false) String keyword,
+	                             @RequestParam(value = "id", required = false) Integer id) {
+
+	    Integer agenceId = principal.getUtilisateur().getAgence().getId();
+
+	    InterventionForm form;
+	    if (id != null) {
+	        Intervention entity = service.findByIdAgence(id)
+	                .orElseThrow(() -> new EntityNotFoundException("Intervention introuvable, id=" + id));
+	        form = mapper.toForm(entity);
+
+	        // ✅ Préremplissage du libellé pour Select2
+	        if (entity.getLocataire() != null) {
+	            form.setLocataireNom(entity.getLocataire().getNom());
+	        }
+	        
+	        if (entity.getBailleur() != null) {
+	            form.setBailleurNom(entity.getBailleur().getNom());
+	        }
+	        
+	        if (entity.getAppartement() != null) {
+	            form.setAppartementLibelle(entity.getAppartement().getLibelle());
+	            form.setAppartementNumAppart(entity.getAppartement().getNumAppart());
+	        }
+	    } else {
+	        form = new InterventionForm();
+	    }
+
+	    model.addAttribute("intervention", form);
+	    model.addAttribute("currentUserId",
+	            principal != null && principal.getUtilisateur() != null
+	                    ? principal.getUtilisateur().getId()
+	                    : null);
+
+	    model.addAttribute("listePrestataires", prestataireService.findAll());
+	    model.addAttribute("listeTypes", typeinterventionService.findAll());
+
 	    return "maintenance/intervention/form";
 	}
+
 	
 		
 	/*

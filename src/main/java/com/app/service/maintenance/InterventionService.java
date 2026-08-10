@@ -1,13 +1,5 @@
 package com.app.service.maintenance;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -15,12 +7,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.app.dto.InterventionDTO;
 import com.app.entities.administration.Agence;
 import com.app.entities.maintenance.Intervention;
-import com.app.entities.recouvre.Bailleur;
 import com.app.form.InterventionForm;
 import com.app.mapper.InterventionMapper;
 import com.app.repositories.maintenance.InterventionRepository;
@@ -43,6 +33,7 @@ public class InterventionService extends BaseService<Intervention>{
 	private final LocataireRepository locataireRepository;
 	private final PrestataireRepository prestataireRepository;
 	private final TypeinterventionRepository typeinterventionRepository;
+	private final BailleurRepository bailleurRepository;
 	
 	private final InterventionMapper mapper;
 	
@@ -107,6 +98,14 @@ public class InterventionService extends BaseService<Intervention>{
 	            typeinterventionRepository.findById(form.getTypeInterventionId())
 	                    .orElseThrow(() ->
 	                            new IllegalArgumentException("Type d'intervention introuvable"))
+	    );
+	    
+	    entity.setBailleur(
+	            form.getLocataireId() == null
+	                    ? null
+	                    : bailleurRepository.findById(form.getBailleurId())
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException("Bailleur introuvable"))
 	    );
 
 	    return repository.save(entity);
@@ -196,6 +195,11 @@ public class InterventionService extends BaseService<Intervention>{
         if (entity.getTypeIntervention() != null) {
             dto.setTypeInterventionId(entity.getTypeIntervention().getId());
             dto.setTypeInterventionLibelle(entity.getTypeIntervention().getLibelle());
+        }
+        
+        if (entity.getBailleur() != null) {
+            dto.setBailleurId(entity.getBailleur().getId());
+            dto.setBailleurNom(entity.getBailleur().getNom());
         }
 
         return dto;

@@ -216,12 +216,16 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        l.prenom,
     	        a.numAppart,
     	        u.nom,
-    	        u.prenoms
+    	        u.prenoms,
+    	        i.adresse,
+    	        p.nom
     	    )
     	    FROM Encaisse e
     	    JOIN e.bail b
     	    JOIN b.locataire l
     	    JOIN b.appartement a
+    	    JOIN a.immeuble i
+    	    JOIN i.bailleur p
     	    JOIN e.utilisateur u
 
     	    WHERE e.agence.id = :agenceId
@@ -247,6 +251,8 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	    JOIN e.bail b
     	    JOIN b.locataire l
     	    JOIN b.appartement a
+    	    JOIN a.immeuble i
+    	    JOIN i.bailleur p
     	    JOIN e.utilisateur u
 
     	    WHERE e.agence.id = :agenceId
@@ -285,12 +291,16 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        l.prenom,
     	        a.numAppart,
     	        u.nom,
-    	        u.prenoms
+    	        u.prenoms,
+    	        i.adresse,
+    	        p.nom
     	    )
     	    FROM Encaisse e
     	    JOIN e.bail b
     	    JOIN b.locataire l
     	    JOIN b.appartement a
+    	    JOIN a.immeuble i
+    	    JOIN i.bailleur p
     	    JOIN e.utilisateur u
 
     	    WHERE
@@ -319,6 +329,8 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	    JOIN e.bail b
     	    JOIN b.locataire l
     	    JOIN b.appartement a
+    	    JOIN a.immeuble i
+    	    JOIN i.bailleur p
     	    JOIN e.utilisateur u
 
     	    WHERE

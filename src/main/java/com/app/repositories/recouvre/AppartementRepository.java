@@ -69,6 +69,8 @@ public interface AppartementRepository extends JpaRepository<Appartement, Intege
 	@EntityGraph(attributePaths = {"immeuble","immeuble.bailleur"})
 	@Query("""
 	   SELECT a FROM Appartement a
+	   JOIN a.immeuble i
+	   JOIN i.bailleur b
 	   WHERE (
 	        LOWER(a.libelle) LIKE LOWER(CONCAT('%', :term, '%'))
 	        OR LOWER(a.immeuble.nomImmeuble) LIKE LOWER(CONCAT('%', :term, '%'))
@@ -80,15 +82,18 @@ public interface AppartementRepository extends JpaRepository<Appartement, Intege
 	        OR (:currentId IS NOT NULL AND a.id = :currentId)
 	   )
 	   AND a.agence.id = :agenceId
+	   AND (:bailleurId IS NULL OR b.id = :bailleurId)
 	   ORDER BY a.libelle ASC
 	""")
 	Page<Appartement> searchForAppartement(
 	    @Param("term") String term,
 	    @Param("currentId") Integer currentId,
 	    @Param("agenceId") Integer agenceId,
+        @Param("bailleurId") Integer bailleurId,
 	    Pageable pageable
 	);
 	
+
     //
 	
 	@Query("""
@@ -135,5 +140,8 @@ public interface AppartementRepository extends JpaRepository<Appartement, Intege
     long countByAgenceIdAndStatut(
             Integer agenceId,
             StatutAppartement statut);
+    
+    ///
+    List<Appartement> findByImmeuble_Bailleur_IdAndAgenceId(Integer bailleurId, Integer agenceId);
 
 }

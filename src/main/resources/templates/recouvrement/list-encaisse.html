@@ -84,7 +84,7 @@
 					                </div>
 
 					                <!-- Valeur -->
-					                <div class="col-md-4">
+					                <div class="col-md-3">
 
 					                    <div id="moisBlock" style="display:none;">
 
@@ -166,25 +166,26 @@
 
 					</form>
 					
-					<br/>
 				    <table class="table">
 				        <thead class="table-success">
 				        <tr>
-				            <th>locataire</th>
+				            <th>Locataire</th>
+							<th>Bailleur</th>
 				            <th>Date</th>
-				            <th style="text-align: center;">Montant recouvré</th>
+				            <th style="text-align: center;">Recouvré</th>
 							<th>Agent</th>
 				        </tr>
 				        </thead>
 				        <tbody>				        
 						<tr th:each="encaisse : ${encaissesPage.content}">
-				            <td th:text="${encaisse.locataireNom +' '+ encaisse.locatairePrenom}">jule</td>
+				            <td th:text="${encaisse.locataireNom +' '+ encaisse.locatairePrenom}"></td>
+							<td th:text="${encaisse.bailleurNom +' - ('+ encaisse.immeubleLocalisation+')'}"></td>
 							<td th:text="${#temporals.format(encaisse.encDate, 'dd/MM/yyyy')}"></td>
 							<td class="format-fr" th:text="${encaisse.encMontant}" style="text-align: center;">0</td>
-							<td th:text="${encaisse.utilisateurNom +' '+ encaisse.utilisateurPrenoms}">herve</td>							
+							<td th:text="${encaisse.utilisateurNom +' '+ encaisse.utilisateurPrenoms}"></td>							
 				        </tr>
 						<tr th:if="${#lists.isEmpty(encaissesPage.content)}">
-					        <td colspan="4" class="text-center">Aucun recouvrement trouvé.</td>
+					        <td colspan="5" class="text-center">Aucun recouvrement trouvé.</td>
 					    </tr>
 				    </tbody>
 				 </table>

@@ -172,6 +172,15 @@ public class BailleurService extends BaseService<Bailleur>{
     public Optional<Bailleur> findByIdAgence(Integer id) {
         return repo.findByIdAndAgenceId(id, getCurrentAgenceId());
     }
+    
+    
+    public List<Bailleur> findByAgence() {
+    	
+    	Integer agenceId = getCurrentAgenceId();
+    	
+        return repo.findByAgenceId(agenceId);
+    }
+    
 
     public Bailleur saved(Bailleur bailleur) {
         return repo.save(bailleur);

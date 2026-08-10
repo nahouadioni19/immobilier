@@ -362,22 +362,29 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
 
 
     // ================= JPQL SEARCH =================
+     
     @Query("""
-        SELECT b
-        FROM Bail b
-        JOIN b.locataire l
-        WHERE (:search IS NULL OR :search = '' OR
-               LOWER(l.nom) LIKE LOWER(CONCAT('%', :search, '%')) OR
-               LOWER(l.prenom) LIKE LOWER(CONCAT('%', :search, '%')))
-        AND b.agence.id = :agenceId
-    """)
+            SELECT b
+            FROM Bail b
+            JOIN b.locataire l
+            LEFT JOIN b.appartement a
+            LEFT JOIN a.immeuble i
+            WHERE (:search IS NULL OR :search = '' OR
+                   LOWER(l.nom) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(l.prenom) LIKE LOWER(CONCAT('%', :search, '%')))
+            AND b.agence.id = :agenceId
+            AND (:bailleurId IS NULL OR i.bailleur.id = :bailleurId)
+        """)
     Page<Bail> searchBaux(
             @Param("search") String search,
             @Param("agenceId") Integer agenceId,
+            @Param("bailleurId") Integer bailleurId,
             Pageable pageable);
+    
+    ///
 
 
-    @Query("""
+    /*@Query("""
         SELECT b
         FROM Bail b
         JOIN b.locataire l
@@ -388,9 +395,30 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
     """)
     List<Bail> searchBauxNoPage(
             @Param("search") String search,
-            @Param("agenceId") Integer agenceId);
+            @Param("agenceId") Integer agenceId);*/
     
     
+    
+    
+    @Query("""
+            SELECT b
+            FROM Bail b
+            JOIN b.locataire l
+            LEFT JOIN b.appartement a
+            LEFT JOIN a.immeuble i
+            WHERE (:search IS NULL OR :search = '' OR
+                   LOWER(l.nom) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(l.prenom) LIKE LOWER(CONCAT('%', :search, '%')))
+            AND b.agence.id = :agenceId
+            AND (:bailleurId IS NULL OR i.bailleur.id = :bailleurId)
+        """)
+    List<Bail> searchBauxNoPage(
+            @Param("search") String search,
+            @Param("agenceId") Integer agenceId,
+            @Param("bailleurId") Integer bailleurId);
+    
+    
+    ///
     long countByAgenceIdAndStatut(
             Integer agenceId,
             StatutBail statut);
@@ -461,6 +489,17 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
     	      ) > 0
     	""", nativeQuery = true)
     	Long nombreBauxEnRetard(@Param("agenceId") Integer agenceId);
+    
+    
+    ///
+    @Query("""
+            SELECT b
+            FROM Bail b
+            WHERE b.agence.id = :agenceId
+            
+        """)
+        List<Bail> searchBauxAgence(
+                @Param("agenceId") Integer agenceId);
     
 
 }

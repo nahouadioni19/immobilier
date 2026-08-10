@@ -89,7 +89,18 @@
 			               class="form-control"
 			               th:value="${annee}">
 			    </div>
-
+				
+				<div class="col-md-4">
+					<select name="bailleurId" class="form-select" id="bailleurSelect">
+					    <option value="">-- Tous les bailleurs --</option>
+					    <option th:each="bl : ${bailleurs}"
+					            th:value="${bl.id}"
+					            th:selected="${bl.id == bailleurId}"
+					            th:text="${bl.nom}">
+					    </option>
+					</select>
+				</div>
+				
 			    <div class="col-md-4">
 			        <input type="text" id="searchInput"
 			               class="form-control"
@@ -98,10 +109,11 @@
 			    </div>
 
 			    <div class="col-md-2">
-			        <a class="btn btn-danger w-100"
-			           th:href="@{/dashboards/loyers-montant/pdf(annee=${annee}, search=${search})}">
-			           📄 Exporter PDF
-			        </a>
+					<a class="btn btn-danger w-100"
+					   href="#"
+					   id="btnExportPdf">
+					    📄 Exporter PDF
+					</a>
 			    </div>
 
 			</div>
@@ -263,20 +275,24 @@
 
 		    const searchInput = document.getElementById("searchInput");
 		    const anneeInput = document.getElementById("anneeInput");
+			const bailleurSelect = document.getElementById("bailleurSelect");
 		    const tbody = document.getElementById("loyannTableBody");
 		    const pagination = document.getElementById("pagination");
+			const tfoot = document.querySelector("tfoot");
+			const btnExportPdf = document.getElementById("btnExportPdf");
 		    const anneeLabel = document.getElementById("anneeLabel");
 
 		    let timeout = null;
 		    let currentPage = 0;
 
 		    // =========================
-		    // 🔥 LOAD DATA
+		    //  LOAD DATA
 		    // =========================
 		    function loadData(page = 0) {
 
 		        const search = searchInput.value || "";
 		        const annee = anneeInput.value;
+				const bailleurId = bailleurSelect.value;
 
 		        if (!annee) return;
 
@@ -287,10 +303,17 @@
 
 		        currentPage = page;
 
-		        const url = "/immobilier/dashboards/loyers-montant/search"
+		        /*const url = "/immobilier/dashboards/loyers-montant/search"
 		            + "?annee=" + annee
 		            + "&search=" + encodeURIComponent(search)
-		            + "&page=" + page;
+					+"&bailleurSelect="+bailleurSelect
+		            + "&page=" + page;*/
+					
+				const url = "/immobilier/dashboards/loyers-montant/search"
+				    + "?annee=" + annee
+				    + "&search=" + encodeURIComponent(search)
+				    + "&bailleurId=" + encodeURIComponent(bailleurId)
+				    + "&page=" + page;
 
 		        console.log("URL:", url);
 
@@ -301,8 +324,17 @@
 		                tbody.innerHTML = "";
 
 		                const content = data.content || [];
+						// Réafficher le total si des données existent
+						tfoot.style.display = "";
+						
+						// Réactiver Export PDF
+						btnExportPdf.classList.remove("disabled");
+						btnExportPdf.removeAttribute("aria-disabled");
+						btnExportPdf.style.pointerEvents = "auto";
+						
+						btnExportPdf.classList.remove("disabled", "opacity-50");
 
-		                if (content.length === 0) {
+		                /*if (content.length === 0) {
 		                    tbody.innerHTML = `
 		                        <tr>
 		                            <td colspan="14" class="text-center text-danger">
@@ -311,7 +343,31 @@
 		                        </tr>`;
 		                    pagination.innerHTML = "";
 		                    return;
-		                }
+		                }*/
+						
+						if (content.length === 0) {
+
+						    tbody.innerHTML = `
+						        <tr>
+						            <td colspan="14" class="text-center text-danger">
+						                Aucun résultat trouvé
+						            </td>
+						        </tr>`;
+
+						    pagination.innerHTML = "";
+
+						    // Masquer la ligne Total
+						    tfoot.style.display = "none";
+							
+							// Désactiver Export PDF
+							    btnExportPdf.classList.add("disabled");
+							    btnExportPdf.setAttribute("aria-disabled", "true");
+							    btnExportPdf.style.pointerEvents = "none";
+								
+								btnExportPdf.classList.add("disabled", "opacity-50");
+
+						    return;
+						}
 
 		                content.forEach(row => {
 
@@ -343,7 +399,7 @@
 		                    tbody.appendChild(tr);
 		                });
 
-		                // 🔥 TOOLTIP REINIT APRÈS RENDER
+		                //  TOOLTIP REINIT APRÈS RENDER
 		                initTooltips();
 
 		                buildPagination(data);
@@ -388,7 +444,7 @@
 		    }
 
 		    // =========================
-		    // 🔥 TOOLTIP INIT (IMPORTANT)
+		    //  TOOLTIP INIT (IMPORTANT)
 		    // =========================
 		    function initTooltips() {
 		        const tooltipTriggerList = [].slice.call(
@@ -401,7 +457,7 @@
 		    }
 
 		    // =========================
-		    // 🔎 SEARCH
+		    //  SEARCH
 		    // =========================
 		    searchInput.addEventListener("input", function () {
 		        clearTimeout(timeout);
@@ -409,14 +465,20 @@
 		    });
 
 		    // =========================
-		    // 📅 YEAR CHANGE
+		    //  YEAR CHANGE
 		    // =========================
 		    anneeInput.addEventListener("change", function () {
 		        loadData(0);
 		    });
 
+			// =========================
+			//  BAILLEUR CHANGE
+			// =========================
+			bailleurSelect.addEventListener("change", function () {
+			    loadData(0);
+			});
 		    // =========================
-		    // 📄 PAGINATION
+		    //  PAGINATION
 		    // =========================
 		    function buildPagination(data) {
 
@@ -485,9 +547,29 @@
 		            });
 		        });
 		    }
+			
+			
+			//const btnExportPdf = document.getElementById("btnExportPdf");
+
+			btnExportPdf.addEventListener("click", function (e) {
+
+			    e.preventDefault();
+
+			    const annee = anneeInput.value;
+			    const search = searchInput.value || "";
+			    const bailleurId = bailleurSelect.value || "";
+
+			    const url =
+			        "/immobilier/dashboards/loyers-montant/pdf"
+			        + "?annee=" + encodeURIComponent(annee)
+			        + "&search=" + encodeURIComponent(search)
+			        + "&bailleurId=" + encodeURIComponent(bailleurId);
+
+			    window.location.href = url;
+			});
 
 		    // =========================
-		    // 🚀 INIT
+		    //  INIT
 		    // =========================
 		    loadData(0);
 
@@ -496,7 +578,6 @@
 
 		
 	</section>
-	
 		
 </body>
 </html>

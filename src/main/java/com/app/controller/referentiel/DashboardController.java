@@ -32,8 +32,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.app.dto.DashboardGlobalDTO;
 import com.app.dto.DashboardLoyerDTO;
 import com.app.dto.DashboardLoyerMontantDTO;
+import com.app.entities.recouvre.Bailleur;
 import com.app.security.UserPrincipal;
 import com.app.service.recouvre.BailService;
+import com.app.service.recouvre.BailleurService;
 import com.app.service.recouvre.DashboardService;
 import com.app.utils.PdfFooter;
 import com.lowagie.text.Font;
@@ -50,10 +52,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public class DashboardController {
 
     private final DashboardService dashboardService;
+    private final BailleurService bailleurService; 
 
     @Autowired
-    public DashboardController(DashboardService dashboardService) {
+    public DashboardController(DashboardService dashboardService, BailleurService bailleurService) {
         this.dashboardService = dashboardService;
+        this.bailleurService = bailleurService;
     }
 
     private static final Logger log =
@@ -133,6 +137,7 @@ public class DashboardController {
     @GetMapping("/loyers-montant")
     public String dashboardLoyersMontant(Model model,
                                          @RequestParam(required = false) Integer annee,
+                                         @RequestParam(required = false) Integer bailleurId,
                                          @RequestParam(required = false) String search,
                                          @RequestParam(defaultValue = "0") int page,
                                          @AuthenticationPrincipal UserPrincipal principal) {
@@ -144,7 +149,7 @@ public class DashboardController {
         }
 
         Page<DashboardLoyerMontantDTO> pageData =
-                dashboardService.getDashboardMontant(annee, search, agenceId,PageRequest.of(page, 10));
+                dashboardService.getDashboardMontant(annee, search, agenceId, bailleurId, PageRequest.of(page, 10));
 
         List<DashboardLoyerMontantDTO> dashboard = pageData.getContent();
 
@@ -187,9 +192,11 @@ public class DashboardController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", pageData.getTotalPages());
         model.addAttribute("search", search);
+        model.addAttribute("bailleurs", bailleurService.findByAgence()); // pour le <select> de filtre
 
         return "dashboard/loyers-montant";
     }
+    
     
     // ✅ ICI
     private long safe(Long value) {
@@ -200,23 +207,27 @@ public class DashboardController {
     @GetMapping(value ="/loyers-montant/search", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> searchDashboard(
-            @RequestParam int annee,
+            @RequestParam Integer annee,
+            @RequestParam(required = false) Integer bailleurId,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @AuthenticationPrincipal UserPrincipal principal) {
 
     	Integer agenceId = principal.getUtilisateur().getAgence().getId();
+    	
+    	Page<DashboardLoyerMontantDTO> pageData =
+    	        dashboardService.getDashboardMontant(
+    	                annee,
+    	                search,
+    	                agenceId,
+    	                bailleurId,
+    	                PageRequest.of(page, 10)
+    	        );
 
-        Page<DashboardLoyerMontantDTO> pageData =
-                dashboardService.getDashboardMontant(
-                        annee,
-                        search,
-                        agenceId,
-                        PageRequest.of(page, 10)
-                );
-
-        // 🔥 AJOUT IMPORTANT : totaux dynamiques
-        Map<String, Long> totals = dashboardService.getTotals(annee, search);
+        //AJOUT IMPORTANT : totaux dynamiques
+        //Map<String, Long> totals = dashboardService.getTotals(annee, search);
+        
+        Map<String, Long> totals = dashboardService.getTotals(annee, search, agenceId, bailleurId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("content", pageData.getContent());
@@ -233,14 +244,25 @@ public class DashboardController {
     public void exportPdf(
             @RequestParam int annee,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) Integer bailleurId,
             HttpServletResponse response,
             @AuthenticationPrincipal UserPrincipal principal) throws Exception {
 
         Integer agenceId = principal.getUtilisateur().getAgence().getId();
+        
+        String bailleurNom = "Tous les bailleurs";
+
+        if (bailleurId != null) {
+        	bailleurNom = bailleurService.findById(bailleurId)
+        			.map(b -> b.getNom() + " " + b.getPrenom())
+                    .orElse("Inconnu");
+        }
+        		
+        		
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=loyers.pdf");
 
-        List<DashboardLoyerMontantDTO> data = dashboardService.getDashboard(annee, search, agenceId);
+        List<DashboardLoyerMontantDTO> data = dashboardService.getDashboard(annee, search, agenceId, bailleurId);
         Map<String, Long> totals = calculateTotals(data);
 
         // 📄 PDF paysage
@@ -253,7 +275,7 @@ public class DashboardController {
 
         // 📌 TITRE
         Font titleFont = new Font(Font.HELVETICA, 14, Font.BOLD);
-        Paragraph title = new Paragraph("TABLEAU DES LOYERS - " + annee, titleFont);
+        Paragraph title = new Paragraph("TABLEAU DES LOYERS - " + annee + "\nBailleur : " + bailleurNom, titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         title.setSpacingAfter(10);
         document.add(title);

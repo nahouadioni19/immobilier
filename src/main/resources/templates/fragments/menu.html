@@ -48,7 +48,17 @@
 			  data-bs-parent="#sidebarAccordion">
 			  
             <ul class="nav flex-column">
-                <li><a class="nav-link" th:href="@{/dashboards/loyers}">✔ Paiements</a></li>
+                <!--<li><a class="nav-link" th:href="@{/dashboards/loyers}">✔ Paiements</a></li>-->
+				<li>
+				    <a class="nav-link text-secondary disabled"
+				       href="#"
+				       tabindex="-1"
+				       aria-disabled="true"
+				       onclick="return false;"
+				       style="pointer-events: none; opacity: 0.6; cursor: not-allowed;">
+				        ✔ Paiements
+				    </a>
+				</li>
                 <li><a class="nav-link" th:href="@{/dashboards/loyers-montant}">💰 Montants</a></li>
             </ul>
         </div>

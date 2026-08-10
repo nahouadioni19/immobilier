@@ -36,7 +36,7 @@
 			<div class="container mt-4">
 				<h2>Gestion des bails</h2>
 				<hr>
-				<form th:action="@{/bails/save}" th:object="${bail}" method="post" enctype="multipart/form-data" 
+				<form th:action="@{/bails/valideresilier/{id}(id=${bail.id})}" th:object="${bail}" method="post" enctype="multipart/form-data" 
 											class="border p-4 rounded shadow-sm bg-white" id="bailForm">
 					<div id="step1">
 					<input type="hidden" th:field="*{id}"/>						

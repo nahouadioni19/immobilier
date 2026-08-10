@@ -118,14 +118,30 @@ public interface LoyannRepository extends JpaRepository<Loyann, Integer> {
 		Optional<Loyann> findByBailAndMoisAndAnnee(Bail bail, int mois, int annee);
 		
 		//
-		@Query("""
+		/*@Query("""
 				SELECT l FROM Loyann l
 				JOIN FETCH l.bail b
 				JOIN FETCH b.locataire
 				WHERE b.statut = 'ACTIF'
 			    AND l.annee = :annee
 				""")
-				List<Loyann> findAllByAnneeWithBail(@Param("annee") int annee);
+				List<Loyann> findAllByAnneeWithBail(@Param("annee") int annee);*/
+		
+		@Query("""
+		        SELECT l FROM Loyann l
+		        JOIN FETCH l.bail b
+		        JOIN FETCH b.locataire
+		        LEFT JOIN b.appartement a
+		        LEFT JOIN a.immeuble i
+		        WHERE b.statut = 'ACTIF'
+		        AND l.annee = :annee
+		        AND b.agence.id = :agenceId
+		        AND (:bailleurId IS NULL OR i.bailleur.id = :bailleurId)
+		        """)
+		List<Loyann> findAllByAnneeWithBail(
+		        @Param("annee") int annee,
+		        @Param("agenceId") Integer agenceId,
+		        @Param("bailleurId") Integer bailleurId);
 		
 		//
 		@Query("""

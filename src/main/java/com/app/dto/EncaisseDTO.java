@@ -18,11 +18,14 @@ public class EncaisseDTO {
     private String appartementNumero;
     private String utilisateurNom;
     private String utilisateurPrenoms;
+    private String immeubleLocalisation;
+    private String bailleurNom;
 
     public EncaisseDTO(Integer id, LocalDate encDate, Long encMontant, String encMode,
                        String locataireNom, String locatairePrenom,
                        String appartementNumero,
-                       String utilisateurNom, String utilisateurPrenoms) {
+                       String utilisateurNom, String utilisateurPrenoms, 
+                       String immeubleLocalisation, String bailleurNom) {
         this.id = id;
         this.encDate = encDate;
         this.encMontant = encMontant;
@@ -32,6 +35,8 @@ public class EncaisseDTO {
         this.appartementNumero = appartementNumero;
         this.utilisateurNom = utilisateurNom;
         this.utilisateurPrenoms = utilisateurPrenoms;
+        this.immeubleLocalisation = immeubleLocalisation;
+        this.bailleurNom = bailleurNom;
     }
 
     // getters

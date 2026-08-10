@@ -3,6 +3,7 @@ package com.app.entities.maintenance;
 import com.app.entities.BaseEntity;
 import com.app.entities.administration.Agence;
 import com.app.entities.recouvre.Appartement;
+import com.app.entities.recouvre.Bailleur;
 import com.app.entities.recouvre.Locataire;
 import com.app.enums.StatutIntervention;
 import jakarta.persistence.*;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 
 //import org.hibernate.envers.Audited;
 
+//@Audited
 @Entity
 @Table(name = "intervention")
 @Getter
@@ -35,6 +37,10 @@ public class Intervention extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "locataire_id")
     private Locataire locataire;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bailleur_id")
+    private Bailleur bailleur;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prestataire_id")

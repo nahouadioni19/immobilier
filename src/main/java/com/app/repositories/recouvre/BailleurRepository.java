@@ -56,5 +56,7 @@ public interface BailleurRepository extends JpaRepository<Bailleur, Integer>{
 	
 	//
 	Page<Bailleur> findByAgenceId(Integer agenceId, Pageable pageable);
+	
+	List<Bailleur> findByAgenceId(Integer agenceId);
 
 }

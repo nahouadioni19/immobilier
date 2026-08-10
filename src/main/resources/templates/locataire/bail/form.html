@@ -517,22 +517,22 @@
 		</script>
 				
 				
-				<script>
-				document.addEventListener("DOMContentLoaded", function() {
-				    const display = document.getElementById("loyerDisplay");
-				    const hidden = document.getElementById("loyerInput");
+		<script>
+		document.addEventListener("DOMContentLoaded", function() {
+		    const display = document.getElementById("loyerDisplay");
+		    const hidden = document.getElementById("loyerInput");
 
-				    // Au chargement, afficher la valeur du hidden dans display
-				    if (hidden.value) {
-				        display.value = hidden.value;
-				    }
+		    // Au chargement, afficher la valeur du hidden dans display
+		    if (hidden.value) {
+		        display.value = hidden.value;
+		    }
 
-				    // Si display change (au cas où), mettre à jour hidden
-				    display.addEventListener("input", () => {
-				        hidden.value = display.value;
-				    });
-				});
-				</script>
+		    // Si display change (au cas où), mettre à jour hidden
+		    display.addEventListener("input", () => {
+		        hidden.value = display.value;
+		    });
+		});
+		</script>
 		
     </section>
 	

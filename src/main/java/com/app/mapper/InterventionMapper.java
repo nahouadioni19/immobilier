@@ -58,6 +58,12 @@ public class InterventionMapper {
             dto.setPrestataireId(entity.getPrestataire().getId());
             dto.setPrestataireNom(entity.getPrestataire().getNom());
         }
+        
+        if (entity.getBailleur() != null) {
+            dto.setBailleurId(entity.getBailleur().getId());
+            dto.setBailleurNom(entity.getBailleur().getNom());
+            dto.setBailleurPrenom(entity.getBailleur().getPrenom());
+        }
 
         if (entity.getTypeIntervention() != null) {
             dto.setTypeInterventionId(entity.getTypeIntervention().getId());
@@ -107,6 +113,10 @@ public class InterventionMapper {
 
         if (entity.getPrestataire() != null) {
             form.setPrestataireId(entity.getPrestataire().getId());
+        }
+        
+        if (entity.getBailleur() != null) {
+            form.setBailleurId(entity.getBailleur().getId());
         }
 
         if (entity.getTypeIntervention() != null) {

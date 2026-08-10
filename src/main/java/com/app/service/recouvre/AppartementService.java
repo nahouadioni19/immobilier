@@ -57,11 +57,16 @@ public class AppartementService extends BaseService<Appartement> {
         return repo.search(term, agenceId, pageable);
     }
     
-    public Page<Appartement> searchForAppartement(String term, Integer currentId, Pageable pageable) {
+    public Page<Appartement> searchForAppartement(String term, Integer currentId, Integer bailleurId, Pageable pageable) {
     	
     	Integer agenceId = getCurrentAgenceId();
     	
-        return repo.searchForAppartement(term, currentId, agenceId, pageable);
+        return repo.searchForAppartement(term, currentId, agenceId, bailleurId, pageable);
     }
+    
+   /* public Page<Appartement> searchForAppartement(String term, Integer currentId, Integer bailleurId, Pageable pageable) {
+        return repo.searchForAppartement(term, currentId, bailleurId, pageable);
+    }*/
+    
 
 }

@@ -137,17 +137,17 @@ public class DashboardService{
     }
     
    // FINANCIER
-    public Page<DashboardLoyerMontantDTO> getDashboardMontant(int annee, String search, Integer agenceId, Pageable pageable){
+    public Page<DashboardLoyerMontantDTO> getDashboardMontant(int annee, String search, Integer agenceId, Integer bailleurId, Pageable pageable){
 
     	search = (search != null && search.trim().isEmpty()) ? null : search;
     	    	
         // 🔥 Pagination réelle en base
-        Page<Bail> pageBaux = bailRepository.searchBaux(search, agenceId, pageable);
+        Page<Bail> pageBaux = bailRepository.searchBaux(search, agenceId, bailleurId, pageable);
 
         List<Bail> baux = pageBaux.getContent();
 
         // 🔥 Loyers de l'année (1 seule requête)
-        List<Loyann> loyers = loyannRepository.findAllByAnneeWithBail(annee);
+        List<Loyann> loyers = loyannRepository.findAllByAnneeWithBail(annee, agenceId, bailleurId);
 
         // 🔥 Indexation
         Map<Integer, Map<Integer, Loyann>> map = new HashMap<>();
@@ -207,9 +207,9 @@ public class DashboardService{
     }
     
     
-    public Map<String, Long> getTotals(int annee, String search) {
+    public Map<String, Long> getTotals(int annee, String search, Integer agenceId, Integer bailleurId) {
 
-        List<Loyann> loyers = loyannRepository.findAllByAnneeWithBail(annee);
+        List<Loyann> loyers = loyannRepository.findAllByAnneeWithBail(annee, agenceId, bailleurId);
 
         Map<String, Long> totals = new HashMap<>();
 
@@ -249,14 +249,17 @@ public class DashboardService{
 
         return totals;
     }
+    
         
-    public List<DashboardLoyerMontantDTO> getDashboard(int annee, String search, Integer agenceId) {
+    
+    public List<DashboardLoyerMontantDTO> getDashboard(int annee, String search, Integer agenceId, Integer bailleurId) {
 
         if (search != null && search.trim().isEmpty()) {
             search = null;
         }
         
-        List<Bail> test = bailRepository.findAll();
+        //List<Bail> test = bailRepository.findAll();
+        List<Bail> test = bailRepository.searchBauxAgence(agenceId);
 
         if (!test.isEmpty()) {
             Bail b = test.get(0);
@@ -266,10 +269,10 @@ public class DashboardService{
         }
 
         // 🔥 Tous les baux (sans pagination)
-        List<Bail> baux = bailRepository.searchBauxNoPage(search,agenceId);
+        List<Bail> baux = bailRepository.searchBauxNoPage(search,agenceId,bailleurId);
 
         // 🔥 Tous les loyers de l'année
-        List<Loyann> loyers = loyannRepository.findAllByAnneeWithBail(annee);
+        List<Loyann> loyers = loyannRepository.findAllByAnneeWithBail(annee, agenceId, bailleurId);
 
         // 🔥 Indexation
         Map<Integer, Map<Integer, Loyann>> map = new HashMap<>();

@@ -25,6 +25,10 @@ public class InterventionDTO {
     private Integer prestataireId;
     private String prestataireNom;
 
+    private Integer bailleurId;
+    private String bailleurNom;
+    private String bailleurPrenom;
+    
     private Integer typeInterventionId;
     private String typeInterventionLibelle;
 
