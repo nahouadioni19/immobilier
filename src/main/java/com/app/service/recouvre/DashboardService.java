@@ -137,7 +137,208 @@ public class DashboardService{
     }
     
    // FINANCIER
-    public Page<DashboardLoyerMontantDTO> getDashboardMontant(int annee, String search, Integer agenceId, Integer bailleurId, Pageable pageable){
+ // FINANCIER
+    public Page<DashboardLoyerMontantDTO> getDashboardMontant(
+            int annee,
+            String search,
+            Integer agenceId,
+            Integer bailleurId,
+            Pageable pageable) {
+
+        search = (search != null && search.trim().isEmpty())
+                ? null
+                : search;
+
+        // --------------------------------------------------
+        // Pagination réelle en base
+        // --------------------------------------------------
+        Page<Bail> pageBaux = bailRepository.searchBaux(
+                search,
+                agenceId,
+                bailleurId,
+                pageable
+        );
+
+        List<Bail> baux = pageBaux.getContent();
+
+        // --------------------------------------------------
+        // Loyers de l'année (1 seule requête)
+        // --------------------------------------------------
+        List<Loyann> loyers =
+                loyannRepository.findAllByAnneeWithBail(
+                        annee,
+                        agenceId,
+                        bailleurId
+                );
+
+        // --------------------------------------------------
+        // Indexation des loyers par Bail + Mois
+        // --------------------------------------------------
+        Map<Integer, Map<Integer, Loyann>> map = new HashMap<>();
+
+        for (Loyann l : loyers) {
+
+            int bailId = l.getBail().getId();
+
+            map.putIfAbsent(
+                    bailId,
+                    new HashMap<>()
+            );
+
+            map.get(bailId).put(
+                    l.getMois(),
+                    l
+            );
+        }
+
+        // --------------------------------------------------
+        // Transformation DTO
+        // --------------------------------------------------
+        List<DashboardLoyerMontantDTO> content = baux.stream()
+                .map(bail -> {
+
+                    DashboardLoyerMontantDTO dto =
+                            new DashboardLoyerMontantDTO();
+
+                    // --------------------------------------------------
+                    // LOCATAIRE
+                    // --------------------------------------------------
+                    if (bail.getLocataire() != null) {
+
+                        String locataire =
+                                (
+                                    bail.getLocataire().getNom()
+                                    + " "
+                                    + bail.getLocataire().getPrenom()
+                                ).trim();
+
+                        dto.setLocataire(locataire);
+
+                    } else {
+
+                        dto.setLocataire("");
+                    }
+
+                    // --------------------------------------------------
+                    // BAILLEUR
+                    // --------------------------------------------------
+                    String bailleur = "";
+
+                    if (bail.getAppartement() != null
+                            && bail.getAppartement().getImmeuble() != null
+                            && bail.getAppartement()
+                                    .getImmeuble()
+                                    .getBailleur() != null) {
+
+                        bailleur =
+                                (
+                                    bail.getAppartement()
+                                            .getImmeuble()
+                                            .getBailleur()
+                                            .getNom()
+                                    + " "
+                                    + bail.getAppartement()
+                                            .getImmeuble()
+                                            .getBailleur()
+                                            .getPrenom()
+                                ).trim();
+                    }
+
+                    dto.setBailleur(bailleur);
+                    
+                    Long loyer = 0L;
+                    
+                    if(bail.getMontantLoyer() != 0) {
+                    	loyer = bail.getMontantLoyer();
+                    }
+
+                    dto.setLoyer(loyer);
+                    
+                    // --------------------------------------------------
+                    // LOYERS PAR MOIS
+                    // --------------------------------------------------
+                    Map<Integer, Loyann> moisMap =
+                            map.getOrDefault(
+                                    bail.getId(),
+                                    new HashMap<>()
+                            );
+
+                    for (int mois = 1; mois <= 12; mois++) {
+
+                        Loyann l = moisMap.get(mois);
+
+                        long montant =
+                                (l != null)
+                                        ? l.getMontantPaye()
+                                        : 0;
+
+                        switch (mois) {
+
+                            case 1:
+                                dto.setJan(montant);
+                                break;
+
+                            case 2:
+                                dto.setFev(montant);
+                                break;
+
+                            case 3:
+                                dto.setMar(montant);
+                                break;
+
+                            case 4:
+                                dto.setAvr(montant);
+                                break;
+
+                            case 5:
+                                dto.setMai(montant);
+                                break;
+
+                            case 6:
+                                dto.setJui(montant);
+                                break;
+
+                            case 7:
+                                dto.setJul(montant);
+                                break;
+
+                            case 8:
+                                dto.setAou(montant);
+                                break;
+
+                            case 9:
+                                dto.setSep(montant);
+                                break;
+
+                            case 10:
+                                dto.setOct(montant);
+                                break;
+
+                            case 11:
+                                dto.setNov(montant);
+                                break;
+
+                            case 12:
+                                dto.setDec(montant);
+                                break;
+                        }
+                    }
+
+                    return dto;
+                })
+                .toList();
+
+        // --------------------------------------------------
+        // Retour avec pagination
+        // --------------------------------------------------
+        return new PageImpl<>(
+                content,
+                pageable,
+                pageBaux.getTotalElements()
+        );
+    }
+    
+    /**public Page<DashboardLoyerMontantDTO> getDashboardMontant(int annee, String search, Integer agenceId, Integer bailleurId, Pageable pageable){
 
     	search = (search != null && search.trim().isEmpty()) ? null : search;
     	    	
@@ -168,6 +369,9 @@ public class DashboardService{
                     bail.getLocataire().getNom() + " " +
                     bail.getLocataire().getPrenom()
                 );
+                
+                
+ 
 
                 long total = 0;
 
@@ -204,7 +408,7 @@ public class DashboardService{
             .toList();
 
         return new PageImpl<>(content, pageable, pageBaux.getTotalElements());
-    }
+    }*/
     
     
     public Map<String, Long> getTotals(int annee, String search, Integer agenceId, Integer bailleurId) {

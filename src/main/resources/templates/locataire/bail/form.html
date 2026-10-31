@@ -1,540 +1,435 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
-
-	  <style>
-	  /* Container */
-	  .select2-container {
-	      width: 100% !important;
-	  }
-
-	  /* Hauteur identique à .form-control Bootstrap */
-	  .select2-container .select2-selection--single {
-	      height: 38px !important;
-	      padding: 0.375rem 0.75rem !important;
-	      border: 1px solid #ced4da;
-	      border-radius: 0.375rem;
-	  }
-
-	  /* Texte centré verticalement */
-	  .select2-container--default .select2-selection--single .select2-selection__rendered {
-	      line-height: 24px !important;
-	      padding-left: 0 !important;
-	  }
-
-	  /* Flèche */
-	  .select2-container--default .select2-selection--single .select2-selection__arrow {
-	      height: 36px !important;
-	      top: 1px !important;
-	  }
-	  </style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gestion des baux</title>
+</head>
 <body>
-    <section layout:fragment="content">
-        <!-- Ton contenu principal ici -->
-		<div class="container my-2">
-			<div class="container mt-4">
-				<h2>Gestion des bails</h2>
-				<hr>
-				<form th:action="@{/bails/save}" th:object="${bail}" method="post" enctype="multipart/form-data" 
-											class="border p-4 rounded shadow-sm bg-white" id="bailForm">
-					<div id="step1">
-					<input type="hidden" th:field="*{id}"/>						
-				        <!-- Sélection du locataire -->
-					<input type="hidden" th:field="*{version}" />
-					
-					<!--<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">-->
-					<h4>Informations du bail</h4>
-						
-					<div class="row">
-						<div class="col-sm-6 col-md-4">
-							<div class="mb-3 form-group">
-								<label for="locataireSelect" class="form-label">Locataire<span style="color:red;"> *</span></label>
-								<select th:field="*{locataire.id}" id="locataireSelect" class="form-select" style="width:100%" required>										   
-									   <!-- Option pour l'édition -->
-									   <option value="">-- Sélectionner --</option>
-								       <option th:if="${currentLocataire != null}"
-								               th:value="${currentLocataire.id}"
-								               th:text="${currentLocataire.prenom + ' ' + currentLocataire.nom +' '+ currentLocataire.telephone}"
-								               selected>
-								       </option>
-								</select>
-							</div>
-						</div>
-						<div class="col-sm-6 col-md-4">
-						    <div class="mb-3 form-group">
-						        <label class="form-label">Téléphone :</label>
-						        <input type="text" id="telInput" th:value="${bail.locataire?.telephone}" class="form-control" disabled>
-						    </div>
-						</div>
-						
-						<div class="col-sm-6 col-md-4">
-						    <div class="mb-3 form-group">
-						        <label class="form-label">E.mail :</label>
-						        <input type="text" id="emailInput" th:value="${bail.locataire?.email}" class="form-control" disabled>
-						    </div>
-						</div>
-					</div>
-					<hr>
-					
-					<div class="row">
-						<!-- Sélection de l'appartement -->
-						<div class="col-sm-6 col-md-4">
-							<div class="mb-3 form-group">
-					            <label for="appartementSelect" class="form-label">Appartement<span style="color:red;"> *</span></label>
-								<select id="appartementSelect" th:field="*{appartement.id}" class="form-select" style="width:100%" required>
-									<!-- Option pour l'édition-->
-									<option value="">-- Sélectionner --</option>
-								    <option th:if="${currentAppartement != null}"
-								            th:value="${currentAppartement.id}"
-								            th:text="${currentAppartement.libelle + ' - ' + currentAppartement.loyerMensuel + ' F'}"
-								            selected>
-								    </option>
-								</select>
-							</div>
-				        </div>
-						
-						<div class="col-sm-6 col-md-4">
-						    <div class="mb-3 form-group">
-						        <label class="form-label">Libellé :</label>
-						        <input type="text" id="libelleInput" class="form-control" th:value="${bail.appartement?.libelle}" disabled>
-						    </div>
-						</div>
-						
-						<div class="col-sm-6 col-md-4">
-							<div class="mb-3 form-group">
-							    <label class="form-label">Loyer mensuel :</label>                                  
-							    <!--<input type="text" id="loyerDisplay" class="form-control">-->
 
-							    <input type="text" th:field="*{montantLoyer}" id="loyerInput" class="form-control">
-							</div>
+	<section layout:fragment="content">
 
-							
-						</div>
-					</div>
-			        <!-- Dates du bail -->					
-					<hr>
-					
-					<div class="row">
-					    <!-- Total caution -->
-					    <div class="col-sm-6 col-md-4">
-					        <div class="mb-3 form-group">
-					            <label>Total caution</label>
-					            <input type="text" id="cautionDisplay" class="form-control" placeholder="0">
-					            <input type="hidden" th:field="*{caution}" id="cautionInput">
-					        </div>
-					    </div>
+    <!-- Select2 + thème Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
 
-					    <!-- Total avance -->
-					    <div class="col-sm-6 col-md-4">
-					        <div class="mb-3 form-group">
-					            <label>Total avance</label>
-					            <input type="text" id="avanceDisplay" class="form-control" placeholder="0">
-					            <input type="hidden" th:field="*{avance}" id="avanceInput">
-					        </div>
-					    </div>
+    <style>
+        .select2-container { width: 100% !important; }
+        .select2-container .select2-selection--single {
+            min-height: 38px !important;
+            padding: .375rem .75rem !important;
+            border: 1px solid #ced4da;
+            border-radius: .375rem;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 24px !important;
+            padding-left: 0 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+            top: 1px !important;
+        }
+        .section-separator { margin: 1.25rem 0; }
+        .readonly-field { background-color: #e9ecef; }
+    </style>
 
-					    <!-- Total honoraire -->
-					    <div class="col-sm-6 col-md-4">
-					        <div class="mb-3 form-group">
-					            <label>Total honoraire</label>
-					            <input type="text" id="honoraireDisplay" class="form-control" placeholder="0">
-					            <input type="hidden" th:field="*{honoraire}" id="honoraireInput">
-					        </div>
-					    </div>
+    <div class="container my-4">
+        <h2>Gestion des baux</h2>
+        <hr>
 
-					    <!-- Total à payer -->
-					    <div class="col-sm-6 col-md-4">
-					        <div class="mb-3 form-group">
-					            <label>Total à payer</label>
-					            <input type="text" id="totalDisplay" class="form-control" readonly>
-					            <input type="hidden" th:field="*{total}" id="totalInput">
-					        </div>
-					    </div>
-						
-					    <!-- Dates -->
-					    <div class="col-sm-6 col-md-4">
-					        <div class="mb-3 form-group">
-					            <label for="dateDebut" class="form-label">Date début bail<span style="color:red;"> *</span></label>
-					            <input type="date" id="dateDebut" th:field="*{dateDebut}" class="form-control" required>
-					        </div>
-					    </div>
+        <form th:action="@{/bails/save}"
+              th:object="${bail}"
+              method="post"
+              id="bailForm"
+              class="border p-4 rounded shadow-sm bg-white">
 
-					    <div class="col-sm-6 col-md-4">
-					        <div class="mb-3 form-group">
-					            <label for="dateFin" class="form-label">Date début paiement<span style="color:red;"> *</span></label>
-					            <input type="date" th:field="*{dateFin}" class="form-control" required>
-					        </div>
-					    </div>
-					</div>
-			        
-					<hr>
-					
-					<div class="row">
-						<div class="col-sm-6 col-md-4">
-							<div class="mb-3 form-group">
-					            <label for="utilite" class="form-label">Usage</label>
-					            <select th:field="*{utilite}" class="form-select">
-					                <option value="BUREAU">Bureau</option>
-					                <option value="HABITATION">Habitation</option>
-					                <option value="COMMERCE">Commerce</option>
-					            </select>
-					        </div>
-				        </div>
-						<div class="col-sm-6 col-md-4">
-							<div class="mb-3 form-group">
-					            <label for="statut" class="form-label">Statut</label>
-					            <select th:field="*{statut}" class="form-select" disabled>
-					                <option value="ACTIF">Actif</option>
-					                <option value="RESILIE">Résilié</option>
-					                <option value="EXPIRE">Expiré</option>
-					            </select>
-					        </div>
-				        </div>						
-			        </div>
-					
-					<hr>
-											
-					<div class="mt-3 row g-2">
-					    <div class="col-12 col-md-2">
-					        <button type="submit" class="btn btn-primary w-100">
-					            <span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
-					        </button>
-					    </div>
-					    <div class="col-12 col-md-2">
-					        <a th:href="@{/bails}" class="btn btn-danger w-100">
-					            Retour à la liste
-					        </a>
-					    </div>
-					</div>
-					<!--</fieldset>-->
-					</div>
-				</form>
-			</div>
-		 </div>
-		 
-		<script>
-			//AFFICHE LA PREMIERE LETTRE EN MAJUSCULE
-			function capitalizeWords(input) {
-			    input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
-			        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-			    });
-			}
-		
-			//METTRE TOUT LE MOT EN MAJUSCULE
-			function uppercaseWords(input){
-				input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
-					return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
-				});
-			}
-		</script>
-		
-		<script>
-		    function validateStepAndProceed(currentStepId, nextStepNumber) {
-		        const currentStep = document.getElementById(currentStepId);
-		        const requiredFields = currentStep.querySelectorAll('[required]');
-		        let allValid = true;
-	
-		        requiredFields.forEach(field => {
-		            if (!field.checkValidity()) {
-		                field.classList.add('is-invalid'); // Ajout classe Bootstrap
-		                allValid = false;
-		            } else {
-		                field.classList.remove('is-invalid');
-		            }
-		        });
-	
-		        if (allValid) {
-		            showStep(nextStepNumber); // Si tout est OK, on passe à l'étape suivante
-		        } else {
-		            // Scroll vers le premier champ invalide
-		            const firstInvalid = currentStep.querySelector('.is-invalid');
-		            if (firstInvalid) {
-		                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-		            }
-		        }
-		    }
-		</script>
-						
-		<script th:inline="javascript">
-			//NAVIGUER ENTRE PAGE
-			function showStep(stepNumber) {
-		        document.getElementById('step1').style.display = stepNumber === 1 ? 'block' : 'none';
-		        document.getElementById('step2').style.display = stepNumber === 2 ? 'block' : 'none';
-		        window.scrollTo(0, 0); // remonte en haut
-		    }			
-		</script>
-		
-		
-		<script th:inline="javascript">
-		document.addEventListener("DOMContentLoaded", function () {
+            <input type="hidden" th:field="*{id}">
+            <input type="hidden" th:field="*{version}">
 
-		    /* ===============================
-		       RÉCUPÉRATION DES CHAMPS
-		    =============================== */
-		    const form = document.getElementById("bailForm");
+            <h4>Informations du bail</h4>
 
-		    const cautionInput = document.getElementById("cautionInput");
-		    const avanceInput = document.getElementById("avanceInput");
-		    const honoraireInput = document.getElementById("honoraireInput");
-		    const totalInput = document.getElementById("totalInput");
+            <!-- Locataire -->
+            <div class="row">
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="locataireSelect" class="form-label">
+                            Locataire <span class="text-danger">*</span>
+                        </label>
+                        <select th:field="*{locataire.id}" id="locataireSelect"
+                                class="form-select" style="width:100%" required>
+                            <option value="">-- Sélectionner un locataire --</option>
+                            <option th:if="${currentLocataire != null}"
+                                    th:value="${currentLocataire.id}"
+                                    th:text="${currentLocataire.prenom + ' ' + currentLocataire.nom + ' ' + currentLocataire.telephone}"
+                                    selected></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="telInput" class="form-label">Téléphone</label>
+                        <input type="text" id="telInput"
+                               th:value="${bail.locataire?.telephone}"
+                               class="form-control readonly-field" readonly>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="emailInput" class="form-label">E-mail</label>
+                        <input type="text" id="emailInput"
+                               th:value="${bail.locataire?.email}"
+                               class="form-control readonly-field" readonly>
+                    </div>
+                </div>
+            </div>
 
-		    const cautionDisplay = document.getElementById("cautionDisplay");
-		    const avanceDisplay = document.getElementById("avanceDisplay");
-		    const honoraireDisplay = document.getElementById("honoraireDisplay");
-		    const totalDisplay = document.getElementById("totalDisplay");
+            <hr class="section-separator">
 
-		    /* ===============================
-		       FONCTIONS UTILITAIRES
-		    =============================== */
-		    function parseNumber(value) {
-		        return parseFloat(
-		            value.toString().replace(/\s/g, "").replace(",", ".")
-		        ) || 0;
-		    }
+            <!-- Appartement et loyer -->
+            <div class="row">
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="appartementSelect" class="form-label">
+                            Appartement <span class="text-danger">*</span>
+                        </label>
+                        <select th:field="*{appartement.id}" id="appartementSelect"
+                                class="form-select" style="width:100%" required>
+                            <option value="">-- Sélectionner un appartement --</option>
+                            <option th:if="${currentAppartement != null}"
+                                    th:value="${currentAppartement.id}"
+                                    th:text="${currentAppartement.libelle + ' - ' + currentAppartement.loyerMensuel + ' F'}"
+                                    selected></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="libelleInput" class="form-label">Libellé</label>
+                        <input type="text" id="libelleInput"
+                               th:value="${bail.appartement?.libelle}"
+                               class="form-control readonly-field" readonly>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="loyerInput" class="form-label">
+                            Loyer mensuel (FCFA) <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" th:field="*{montantLoyer}"
+                               id="loyerInput" class="form-control"
+                               min="1" step="1" required
+                               th:readonly="${bail.id != null}"
+                               th:classappend="${bail.id != null} ? 'readonly-field' : ''">
+                        <div class="form-text" th:if="${bail.id == null}">
+                            Le montant de l'appartement est proposé par défaut et reste ajustable à la création.
+                        </div>
+                        <div class="form-text text-warning" th:if="${bail.id != null}">
+                            Pour augmenter le loyer d'un bail existant, utilisez la fonctionnalité de révision du loyer.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="dateEffetLoyer" class="form-label">Date d'effet du loyer</label>
+                        <input type="date" th:field="*{dateEffetLoyer}"
+                               id="dateEffetLoyer" class="form-control"
+                               th:readonly="${bail.id != null}"
+                               th:classappend="${bail.id != null} ? 'readonly-field' : ''">
+                        <div class="form-text">
+                            Date à laquelle le loyer actuellement enregistré devient applicable.
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-		    function formatNumber(value) {
-		        return value.toLocaleString("fr-FR");
-		    }
+            <hr class="section-separator">
 
-		    /* ===============================
-		       INITIALISATION EN MODE EDIT
-		    =============================== */
-		    function initFromBackend() {
+            <!-- Montants du bail -->
+            <div class="row">
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="cautionDisplay" class="form-label">Total caution (FCFA)</label>
+                        <input type="text" id="cautionDisplay" class="form-control" inputmode="numeric" placeholder="0">
+                        <input type="hidden" th:field="*{caution}" id="cautionInput">
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="avanceDisplay" class="form-label">Total avance (FCFA)</label>
+                        <input type="text" id="avanceDisplay" class="form-control" inputmode="numeric" placeholder="0">
+                        <input type="hidden" th:field="*{avance}" id="avanceInput">
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="honoraireDisplay" class="form-label">Total honoraire (FCFA)</label>
+                        <input type="text" id="honoraireDisplay" class="form-control" inputmode="numeric" placeholder="0">
+                        <input type="hidden" th:field="*{honoraire}" id="honoraireInput">
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="totalDisplay" class="form-label">Total à payer (FCFA)</label>
+                        <input type="text" id="totalDisplay" class="form-control readonly-field" readonly>
+                        <input type="hidden" th:field="*{total}" id="totalInput">
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="dateDebut" class="form-label">
+                            Date de début du bail <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" id="dateDebut" th:field="*{dateDebut}"
+                               class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="dateFin" class="form-label">
+                            Date de fin du bail <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" id="dateFin" th:field="*{dateFin}"
+                               class="form-control" required>
+                    </div>
+                </div>
+            </div>
 
-		        if (cautionInput.value)
-		            cautionDisplay.value = formatNumber(parseNumber(cautionInput.value));
+            <hr class="section-separator">
 
-		        if (avanceInput.value)
-		            avanceDisplay.value = formatNumber(parseNumber(avanceInput.value));
+            <!-- Usage et statut -->
+            <div class="row">
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="utilite" class="form-label">Usage</label>
+                        <select th:field="*{utilite}" id="utilite" class="form-select">
+                            <option value="BUREAU">Bureau</option>
+                            <option value="HABITATION">Habitation</option>
+                            <option value="COMMERCE">Commerce</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="mb-3">
+                        <label for="statut" class="form-label">Statut</label>
+                        <!-- Disabled ne soumet pas la valeur : le serveur doit conserver/calculer le statut. -->
+                        <select th:field="*{statut}" id="statut"
+                                class="form-select readonly-field" disabled>
+                            <option value="ACTIF">Actif</option>
+                            <option value="RESILIE">Résilié</option>
+                            <option value="EXPIRE">Expiré</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-		        if (honoraireInput.value)
-		            honoraireDisplay.value = formatNumber(parseNumber(honoraireInput.value));
+            <hr class="section-separator">
 
-		        if (totalInput.value)
-		            totalDisplay.value = formatNumber(parseNumber(totalInput.value));
-		    }
+            <div class="row g-2">
+                <div class="col-12 col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <span th:text="${bail.id == null ? 'Enregistrer' : 'Modifier'}">Enregistrer</span>
+                    </button>
+                </div>
+                <div class="col-12 col-md-3">
+                    <a th:href="@{/bails}" class="btn btn-danger w-100">Retour à la liste</a>
+                </div>
+            </div>
+        </form>
 
-		    /* ===============================
-		       MISE À JOUR HIDDEN + TOTAL
-		    =============================== */
-		    function updateHiddenAndTotal() {
+        <div id="successMessage" class="d-none"
+             th:if="${successMessage}" th:text="${successMessage}"></div>
+    </div>
 
-		        const caution = parseNumber(cautionDisplay.value);
-		        const avance = parseNumber(avanceDisplay.value);
-		        const honoraire = parseNumber(honoraireDisplay.value);
+    <!-- Scripts : dans le fragment "content" pour être toujours rendus (pas de dépendance au layout) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-		        const total = caution + avance + honoraire;
+    <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("bailForm");
+            const isEdit = String(document.querySelector('input[name="id"]').value || "").trim() !== "";
 
-		        //  Valeurs envoyées à Spring
-		        cautionInput.value = caution;
-		        avanceInput.value = avance;
-		        honoraireInput.value = honoraire;
-		        totalInput.value = total;
+            const cautionInput = document.getElementById("cautionInput");
+            const avanceInput = document.getElementById("avanceInput");
+            const honoraireInput = document.getElementById("honoraireInput");
+            const totalInput = document.getElementById("totalInput");
 
-		        // Affichage formaté
-		        totalDisplay.value = total ? formatNumber(total) : "";
-		    }
+            const cautionDisplay = document.getElementById("cautionDisplay");
+            const avanceDisplay = document.getElementById("avanceDisplay");
+            const honoraireDisplay = document.getElementById("honoraireDisplay");
+            const totalDisplay = document.getElementById("totalDisplay");
 
-		    /* ===============================
-		       LISTENERS
-		    =============================== */
-		    [cautionDisplay, avanceDisplay, honoraireDisplay].forEach(input => {
-		        input.addEventListener("input", updateHiddenAndTotal);
-		    });
+            /* ===== Montants ===== */
+            function parseAmount(value) {
+                const normalized = String(value ?? "").replace(/\s/g, "").replace(",", ".");
+                const number = Number(normalized);
+                return Number.isFinite(number) && number >= 0 ? Math.trunc(number) : 0;
+            }
 
-		    /* ===============================
-		       CONFIRMATION SWEETALERT
-		    =============================== */
-		    if (form) {
-		        form.addEventListener("submit", function (e) {
+            function formatAmount(value) {
+                return Number(value || 0).toLocaleString("fr-FR");
+            }
 
-		            if (!form.checkValidity()) return;
+            function initializeAmount(display, hidden) {
+                display.value = hidden.value ? formatAmount(parseAmount(hidden.value)) : "0";
+            }
 
-		            e.preventDefault();
+            function updateTotals() {
+                const caution = parseAmount(cautionDisplay.value);
+                const avance = parseAmount(avanceDisplay.value);
+                const honoraire = parseAmount(honoraireDisplay.value);
 
-		            const idValue = form.querySelector('input[name="id"]')?.value.trim();
-		            const isEdit = idValue !== "";
+                cautionInput.value = caution;
+                avanceInput.value = avance;
+                honoraireInput.value = honoraire;
 
-		            Swal.fire({
-		                title: "Confirmation",
-		                text: isEdit ? "Voulez-vous modifier ?" : "Voulez-vous enregistrer ?",
-		                icon: "question",
-		                showCancelButton: true,
-		                cancelButtonText: "Non",
-						confirmButtonText: "Oui"
-		            }).then((result) => {
-		                if (result.isConfirmed) {
-		                    form.submit();
-		                }
-		            });
-		        });
-		    }
+                // Règle métier : total = caution + avance + honoraires.
+                const total = caution + avance + honoraire;
+                totalInput.value = total;
+                totalDisplay.value = formatAmount(total);
+            }
 
-		    /* ===============================
-		       DÉMARRAGE
-		    =============================== */
-		    initFromBackend();
+            initializeAmount(cautionDisplay, cautionInput);
+            initializeAmount(avanceDisplay, avanceInput);
+            initializeAmount(honoraireDisplay, honoraireInput);
+            totalDisplay.value = formatAmount(parseAmount(totalInput.value));
 
-		});
-		</script>
-			
-		<!-- ✅ SweetAlert2 -->
-	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            [cautionDisplay, avanceDisplay, honoraireDisplay].forEach(function (input) {
+                input.addEventListener("input", updateTotals);
+                input.addEventListener("blur", function () {
+                    input.value = formatAmount(parseAmount(input.value));
+                });
+            });
 
-		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
-	    <!-- ⚠️ Boîte de confirmation avant envoi -->
-		
-		<script th:inline="javascript">
-		document.addEventListener("DOMContentLoaded", function () {
+            /* ===== Select2 ===== */
+            const select2Language = {
+                inputTooShort: function () { return "Saisissez au moins 1 caractère"; },
+                searching: function () { return "Recherche…"; },
+                noResults: function () { return "Aucun résultat"; },
+                errorLoading: function () { return "Résultats indisponibles"; }
+            };
 
-		    const form = document.getElementById("bailForm");
+            if (window.jQuery && $.fn.select2) {
+                $("#locataireSelect").select2({
+                    theme: "bootstrap-5",
+                    placeholder: "Rechercher un locataire",
+                    minimumInputLength: 1,
+                    language: select2Language,
+                    ajax: {
+                        url: /*[[@{/locataires/api/locataires}]]*/ '',
+                        dataType: "json",
+                        delay: 250,
+                        data: params => ({ term: params.term }),
+                        processResults: data => data
+                    }
+                });
 
-		    form.addEventListener("submit", function (e) {
+                $("#appartementSelect").select2({
+                    theme: "bootstrap-5",
+                    placeholder: "Rechercher un appartement",
+                    minimumInputLength: 1,
+                    language: select2Language,
+                    ajax: {
+                        url: /*[[@{/patrimoines/api/appartements}]]*/ '',
+                        dataType: "json",
+                        delay: 250,
+                        data: params => ({ term: params.term }),
+                        processResults: data => data
+                    }
+                });
 
-		        // Laisse HTML5 gérer required
-		        if (!form.checkValidity()) {
-		            return;
-		        }
+                // Préremplissage locataire (édition) — sans créer d'option en double
+                const currentLocataire = /*[[${currentLocataireData}]]*/ null;
+                if (currentLocataire) {
+                    if ($("#locataireSelect option[value='" + currentLocataire.id + "']").length === 0) {
+                        $("#locataireSelect").append(
+                            new Option(currentLocataire.prenom + " " + currentLocataire.nom,
+                                       currentLocataire.id, true, true)
+                        );
+                    }
+                    $("#locataireSelect").trigger("change");
+                    $("#telInput").val(currentLocataire.telephone || "");
+                    $("#emailInput").val(currentLocataire.email || "");
+                }
 
-		        e.preventDefault();
+                // Préremplissage appartement (édition) — sans créer d'option en double
+                const currentAppartement = /*[[${currentAppartementData}]]*/ null;
+                if (currentAppartement) {
+                    if ($("#appartementSelect option[value='" + currentAppartement.id + "']").length === 0) {
+                        $("#appartementSelect").append(
+                            new Option(currentAppartement.libelle + " - " + currentAppartement.loyerMensuel + " F",
+                                       currentAppartement.id, true, true)
+                        );
+                    }
+                    $("#appartementSelect").trigger("change");
+                    $("#libelleInput").val(currentAppartement.libelle || "");
 
-		        const idValue = form.querySelector('input[name="id"]')?.value.trim();
-		        const isEdit = idValue !== "";
+                    // En création seulement, le loyer de l'appartement sert de valeur initiale.
+                    if (!isEdit) {
+                        $("#loyerInput").val(currentAppartement.loyerMensuel || "");
+                    }
+                }
 
-		        Swal.fire({
-		            title: "Confirmation",
-		            text: isEdit ? "Voulez-vous modifier ?" : "Voulez-vous enregistrer ?",
-		            icon: "question",
-		            showCancelButton: true,
-		            confirmButtonText: "Oui",
-		            cancelButtonText: "Non"
-		        }).then((result) => {
-		            if (result.isConfirmed) {
-		                form.submit(); // ✅ simple et propre
-		            }
-		        });
+                $("#locataireSelect").on("select2:select", function (event) {
+                    const data = event.params.data;
+                    $("#telInput").val(data.telephone || "");
+                    $("#emailInput").val(data.email || "");
+                });
 
-		    });
+                $("#appartementSelect").on("select2:select", function (event) {
+                    const data = event.params.data;
+                    $("#libelleInput").val(data.libelle || "");
 
-		});
-		</script>		
-		
-		<!-- jQuery -->
-		<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+                    // Ne remplit le loyer qu'en création.
+                    if (!isEdit && data.loyerMensuel != null) {
+                        $("#loyerInput").val(data.loyerMensuel);
+                    }
+                });
+            }
 
-		<!-- Select2 4.1 -->
-		<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-		<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+            /* ===== Confirmation à l'envoi ===== */
+            form.addEventListener("submit", function (event) {
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    event.preventDefault();
+                    return;
+                }
 
-		<!-- Theme Bootstrap 5 -->
-		<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-		
-		
-		<script th:inline="javascript">
-				$(document).ready(function() {
+                event.preventDefault();
 
-				    // ===============================
-				    // Initialiser Select2
-				    // ===============================
-				    $('#locataireSelect').select2({
-				        theme: 'bootstrap-5',
-				        placeholder: 'Rechercher un locataire',
-				        minimumInputLength: 1,
-				        ajax: {
-				            url: /*[[@{/locataires/api/locataires}]]*/,
-				            dataType: 'json',
-				            delay: 250,
-				            data: params => ({ term: params.term }),
-				            processResults: data => data
-				        }
-				    });
+                Swal.fire({
+                    title: "Confirmation",
+                    text: isEdit
+                        ? "Confirmez-vous la modification des informations du bail ?"
+                        : "Confirmez-vous la création de ce bail ?",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonText: "Oui, confirmer",
+                    cancelButtonText: "Annuler"
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        // form.submit() ne redéclenche pas l'événement submit.
+                        form.submit();
+                    }
+                });
+            });
 
-				    $('#appartementSelect').select2({
-				        theme: 'bootstrap-5',
-				        placeholder: 'Rechercher un appartement',
-				        minimumInputLength: 1,
-				        ajax: {
-				            url: /*[[@{/patrimoines/api/appartements}]]*/,
-				            dataType: 'json',
-				            delay: 250,
-				            data: params => ({ term: params.term }),
-				            processResults: data => data
-				        }
-				    });
+            /* ===== Message de succès ===== */
+            const successMessage = document.getElementById("successMessage");
+            if (successMessage && successMessage.textContent.trim()) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Opération réussie",
+                    text: successMessage.textContent.trim()
+                });
+            }
+        });
+    </script>
 
-				    // ===============================
-				    // Préremplissage Locataire
-				    // ===============================
-				    const currentLocataire = /*[[${currentLocataireData}]]*/ null;
-				    if(currentLocataire){
-				        const option = new Option(
-				            currentLocataire.prenom + ' ' + currentLocataire.nom,
-				            currentLocataire.id,
-				            true,
-				            true
-				        );
-				        //$('#locataireSelect').append(option).trigger('change');
-
-				        $('#telInput').val(currentLocataire.telephone);
-				        $('#emailInput').val(currentLocataire.email);
-				    }
-
-				    // ===============================
-				    // Préremplissage Appartement
-				    // ===============================
-				    const currentAppartement = /*[[${currentAppartementData}]]*/ null;
-				    if(currentAppartement){
-				        const option = new Option(
-				            currentAppartement.libelle + ' - ' + currentAppartement.loyerMensuel + ' F',
-				            currentAppartement.id,
-				            true,
-				            true
-				        );
-				       // $('#appartementSelect').append(option).trigger('change');
-
-				        $('#libelleInput').val(currentAppartement.libelle);
-				        $('#loyerInput').val(currentAppartement.loyerMensuel);
-				    }
-
-				    // ===============================
-				    // Update readonly fields
-				    // ===============================
-				    $('#locataireSelect').on('select2:select', function (e) {
-				        const data = e.params.data;
-				        $('#telInput').val(data.telephone || '');
-				        $('#emailInput').val(data.email || '');
-				    });
-
-				    $('#appartementSelect').on('select2:select', function (e) {
-				        const data = e.params.data;
-				        $('#libelleInput').val(data.libelle || '');
-				        $('#loyerInput').val(data.loyerMensuel || '');
-				    });
-				    
-
-				});
-		</script>
-				
-				
-		<script>
-		document.addEventListener("DOMContentLoaded", function() {
-		    const display = document.getElementById("loyerDisplay");
-		    const hidden = document.getElementById("loyerInput");
-
-		    // Au chargement, afficher la valeur du hidden dans display
-		    if (hidden.value) {
-		        display.value = hidden.value;
-		    }
-
-		    // Si display change (au cas où), mettre à jour hidden
-		    display.addEventListener("input", () => {
-		        hidden.value = display.value;
-		    });
-		});
-		</script>
-		
-    </section>
-	
+	</section>
 </body>
 </html>

@@ -171,6 +171,7 @@
 				        <tr>
 				            <th>Locataire</th>
 							<th>Bailleur</th>
+							<th>Localisation</th>
 				            <th>Date</th>
 				            <th style="text-align: center;">Recouvré</th>
 							<th>Agent</th>
@@ -179,7 +180,8 @@
 				        <tbody>				        
 						<tr th:each="encaisse : ${encaissesPage.content}">
 				            <td th:text="${encaisse.locataireNom +' '+ encaisse.locatairePrenom}"></td>
-							<td th:text="${encaisse.bailleurNom +' - ('+ encaisse.immeubleLocalisation+')'}"></td>
+							<td th:text="${encaisse.bailleurNom +' '+encaisse.bailleurPrenom}"></td>
+							<td th:text="${encaisse.immeubleLocalisation}"></td>
 							<td th:text="${#temporals.format(encaisse.encDate, 'dd/MM/yyyy')}"></td>
 							<td class="format-fr" th:text="${encaisse.encMontant}" style="text-align: center;">0</td>
 							<td th:text="${encaisse.utilisateurNom +' '+ encaisse.utilisateurPrenoms}"></td>							

@@ -89,7 +89,8 @@
                 <div class="col-sm-12 col-md-6">
                     <div class="mb-3 form-group">
                         <label class="form-label">Email</label>
-                        <input type="email" th:field="*{email}" class="form-control" required>
+                        <input type="email" th:field="*{email}" class="form-control" required
+						oninput="lowercaseWords(this)">
                     </div>
                 </div>
             </div>
@@ -230,9 +231,18 @@ function removeAssignation(btn) {
     function capitalizeWords(input) {
         input.value = input.value.replace(/\b[\p{L}']+/gu, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
     }
+	
     function uppercaseWords(input){
         input.value = input.value.replace(/\b[\p{L}']+/gu, w => w.charAt(0).toUpperCase() + w.slice(1).toUpperCase());
     }
+	
+	// Tout le mot en minuscule
+	function lowercaseWords(input) {
+	    input.value = input.value.replace(/\b[\p{L}']+/gu, function (word) {
+	        return word.toLowerCase();
+	    });
+	}
+		
     document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll('.phone_ci').forEach(input => {
             input.addEventListener('input', (e) => {

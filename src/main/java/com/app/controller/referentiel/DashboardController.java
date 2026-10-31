@@ -1,12 +1,18 @@
 package com.app.controller.referentiel;
 
 import java.time.Year;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.springframework.core.io.ClassPathResource;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.PageSize;
@@ -22,6 +28,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,9 +39,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.app.dto.DashboardGlobalDTO;
 import com.app.dto.DashboardLoyerDTO;
 import com.app.dto.DashboardLoyerMontantDTO;
-import com.app.entities.recouvre.Bailleur;
 import com.app.security.UserPrincipal;
-import com.app.service.recouvre.BailService;
 import com.app.service.recouvre.BailleurService;
 import com.app.service.recouvre.DashboardService;
 import com.app.utils.PdfFooter;
@@ -44,6 +49,8 @@ import com.lowagie.text.Element;
 //import com.lowagie.text.BaseColor;
 
 import java.awt.Color;
+import java.io.IOException;
+import java.io.InputStream;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -62,6 +69,10 @@ public class DashboardController {
 
     private static final Logger log =
             LoggerFactory.getLogger(DashboardController.class);
+    
+    @Value("${app.storage.directory}")
+    private String storageDirectory;
+    
     /* =========================
        📊 DASHBOARD GLOBAL
        ========================= */
@@ -193,6 +204,18 @@ public class DashboardController {
         model.addAttribute("totalPages", pageData.getTotalPages());
         model.addAttribute("search", search);
         model.addAttribute("bailleurs", bailleurService.findByAgence()); // pour le <select> de filtre
+        
+        String logoBase64 = "";
+        try {
+            java.nio.file.Path logoPath = java.nio.file.Paths.get(storageDirectory, "config", "logo-massi.png");
+            if (java.nio.file.Files.exists(logoPath)) {
+                byte[] bytes = java.nio.file.Files.readAllBytes(logoPath);
+                logoBase64 = "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
+            }
+        } catch (IOException e) {
+            // le PDF est généré sans logo
+        }
+        model.addAttribute("logoBase64", logoBase64);
 
         return "dashboard/loyers-montant";
     }
@@ -313,7 +336,8 @@ public class DashboardController {
         for (DashboardLoyerMontantDTO row : data) {
 
             table.addCell(createCell(row.getLocataireCourt(), normalFont, Element.ALIGN_LEFT));
-
+            
+            table.addCell(createCell(row.getLoyerFormatted(), normalFont, Element.ALIGN_RIGHT));
             table.addCell(createCell(row.getJanFormatted(), normalFont, Element.ALIGN_RIGHT));
             table.addCell(createCell(row.getFevFormatted(), normalFont, Element.ALIGN_RIGHT));
             table.addCell(createCell(row.getMarFormatted(), normalFont, Element.ALIGN_RIGHT));

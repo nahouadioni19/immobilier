@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Loyers</title>
+
+	<style>
+	  :root {
+	    --bg: #ffffff;
+	    --fg: #1f2937;
+	    --muted: #6b7280;
+	    --border: #e5e7eb;
+	    --header-bg: #d4e8dc;
+	    --paid-bg: #d4edda;
+	    --paid-fg: #155724;
+	    --notpaid-bg: #f8d7da;
+	    --notpaid-fg: #721c24;
+	    --hover-bg: #f1f1f1;
+	    --total-bg: #e2e3e5;
+	  }
+	  @media (prefers-color-scheme: dark) {
+	    :root:not([data-theme="light"]) {
+	      --bg: #16181d;
+	      --fg: #e5e7eb;
+	      --muted: #9ca3af;
+	      --border: #2c2f36;
+	      --header-bg: #274036;
+	      --paid-bg: #163d24;
+	      --paid-fg: #b7e4c7;
+	      --notpaid-bg: #4a1f24;
+	      --notpaid-fg: #f5c6cb;
+	      --hover-bg: #22252b;
+	      --total-bg: #2a2d33;
+	    }
+	  }
+	  :root[data-theme="dark"] {
+	    --bg: #16181d;
+	    --fg: #e5e7eb;
+	    --muted: #9ca3af;
+	    --border: #2c2f36;
+	    --header-bg: #274036;
+	    --paid-bg: #163d24;
+	    --paid-fg: #b7e4c7;
+	    --notpaid-bg: #4a1f24;
+	    --notpaid-fg: #f5c6cb;
+	    --hover-bg: #22252b;
+	    --total-bg: #2a2d33;
+	  }
+
+	  * { box-sizing: border-box; }
+	  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+	  body {
+	    background: var(--bg);
+	    color: var(--fg);
+	    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+	    margin: 0;
+	    padding: env(safe-area-inset-top,0px) 20px env(safe-area-inset-bottom,0px);
+	  }
+
+	  .wrap {
+	    max-width: 1100px;
+	    margin: 32px auto;
+	  }
+
+	  h1 { font-size: 1.3rem; margin-bottom: 4px; }
+	  p.note { color: var(--muted); margin-top: 0; margin-bottom: 20px; font-size: 0.92rem; }
+
+	  .table-responsive {
+	    overflow-x: auto;
+	    border: 1px solid var(--border);
+	    border-radius: 8px;
+	  }
+
+	  table {
+	    table-layout: fixed;
+	    width: 100%;
+	    border-collapse: collapse;
+	    font-size: 0.92rem;
+	  }
+
+	  th, td {
+	    text-align: center;
+	    vertical-align: middle;
+	    padding: 10px 8px;
+	    border-bottom: 1px solid var(--border);
+	  }
+
+	  thead th {
+	    background: var(--header-bg);
+	    font-weight: 600;
+	  }
+
+	  th:first-child, td:first-child {
+	    text-align: left;
+	    width: 220px;
+	  }
+
+	  tbody tr:hover { background: var(--hover-bg); }
+
+	  /* ⭐ TRONCATURE — colonne Locataire */
+	  td.locataire {
+	    max-width: 220px;
+	    width: 220px;
+	    overflow: hidden;
+	    white-space: nowrap;
+	    text-overflow: ellipsis;
+	    padding: 0 !important;
+	    font-weight: 500;
+	  }
+
+	  td.locataire .cell-content {
+	    display: block;
+	    width: 100%;
+	    overflow: hidden;
+	    white-space: nowrap;
+	    text-overflow: ellipsis;
+	    padding: 10px 12px;
+	    cursor: default;
+	  }
+
+	  .paid { background: var(--paid-bg); color: var(--paid-fg); font-weight: bold; }
+	  .not-paid { background: var(--notpaid-bg); color: var(--notpaid-fg); }
+	  .not-paid:hover { filter: brightness(0.97); }
+
+	  .total-col {
+	    font-weight: bold;
+	    background: var(--total-bg);
+	  }
+
+	  /* Tooltip natif custom (sans dépendance Bootstrap CSS) */
+	  [data-tooltip] {
+	    position: relative;
+	  }
+	  [data-tooltip]:hover::after {
+	    content: attr(data-tooltip);
+	    position: absolute;
+	    left: 12px;
+	    top: 100%;
+	    margin-top: 6px;
+	    background: var(--fg);
+	    color: var(--bg);
+	    padding: 6px 10px;
+	    border-radius: 6px;
+	    font-size: 0.82rem;
+	    white-space: normal;
+	    max-width: 320px;
+	    width: max-content;
+	    z-index: 10;
+	    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+	    pointer-events: none;
+	  }
+
+	  footer.legend {
+	    margin-top: 16px;
+	    color: var(--muted);
+	    font-size: 0.85rem;
+	  }
+	</style>
+</head>
+
+<body>
+	<section layout:fragment="content">
+		<div class="container mt-4">
+		
+		    <h2 class="mb-2 mb-md-0">Tableau de bord des loyers - Année <span id="anneeLabel" th:text="${annee}"></span></h2>
+			
+			<hr style="border: 1px solid rgb(192, 192, 192);">
+			
+			<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+				<h5>Tableau de bord</h5> <br />
+		    <!-- Filtre année -->
+		    
+			
+			<div class="row mb-3 align-items-end">
+
+			    <div class="col-md-2">
+			        <input type="number" id="anneeInput" name="annee"
+			               class="form-control"
+			               th:value="${annee}">
+			    </div>
+				
+				<div class="col-md-4">
+				    <select id="bailleurSelect"
+				            name="bailleurId"
+				            class="form-select">
+
+				        <option value=""></option>
+
+				        <option th:each="bl : ${bailleurs}"
+				                th:value="${bl.id}"
+				                th:text="${bl.nom + (bl.prenom != null && !bl.prenom.trim().isEmpty()
+				                    ? ' ' + bl.prenom.trim()
+				                    : '')}">
+				        </option>
+
+				    </select>
+				</div>
+				
+			    <div class="col-md-4">
+			        <input type="text" id="searchInput"
+			               class="form-control"
+			               placeholder="🔍 Rechercher un locataire..."
+			               th:value="${search}">
+			    </div>
+
+			    <div class="col-md-2">
+					<a class="btn btn-danger w-100"
+					   href="#"
+					   id="btnExportPdf">
+					    📄 Exporter PDF
+					</a>
+			    </div>
+
+			</div>
+		
+		    <div class="table-responsive">
+						
+				<table class="table">
+
+				    <thead class="table-success">
+				        <tr>
+				            <th>Locataire</th>
+							<th>Loyer</th>
+				            <th>Jan</th>
+				            <th>Fév</th>
+				            <th>Mar</th>
+				            <th>Avr</th>
+				            <th>Mai</th>
+				            <th>Juin</th>
+				            <th>Juil</th>
+				            <th>Août</th>
+				            <th>Sep</th>
+				            <th>Oct</th>
+				            <th>Nov</th>
+				            <th>Déc</th>
+				            <th>Total</th>
+				        </tr>
+				    </thead>
+
+				    <!-- ✅ BODY -->
+				    <tbody id="loyannTableBody">
+				        <tr th:each="row : ${dashboard}">
+							<!-- th:title="${(row.locataire ?: '') + ' - ' + (row.bailleur ?: '')}"-->				            							
+							<td class="locataire" 
+							    data-bs-toggle="tooltip" 
+							    th:title="${(row.locataire ?: '')}"> 
+							  <span class="cell-content" th:text="${row.locataireCourt ?: ''}"></span>
+							</td>
+							<td th:text="${row.loyerFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.janPaid} ? 'paid' : 'not-paid'" th:text="${row.janFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.fevPaid} ? 'paid' : 'not-paid'" th:text="${row.fevFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.marPaid} ? 'paid' : 'not-paid'" th:text="${row.marFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.avrPaid} ? 'paid' : 'not-paid'" th:text="${row.avrFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.maiPaid} ? 'paid' : 'not-paid'" th:text="${row.maiFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.juiPaid} ? 'paid' : 'not-paid'" th:text="${row.juiFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.julPaid} ? 'paid' : 'not-paid'" th:text="${row.julFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.aouPaid} ? 'paid' : 'not-paid'" th:text="${row.aouFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.sepPaid} ? 'paid' : 'not-paid'" th:text="${row.sepFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.octPaid} ? 'paid' : 'not-paid'" th:text="${row.octFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.novPaid} ? 'paid' : 'not-paid'" th:text="${row.novFormatted}" style="text-align: right;"></td>
+				            <td th:class="${row.decPaid} ? 'paid' : 'not-paid'" th:text="${row.decFormatted}" style="text-align: right;"></td>
+
+				            <td th:text="${row.totalFormatted}"
+				                style="text-align:right; font-weight:bold; background-color:#e2e3e5;">
+				            </td>
+				        </tr>
+				    </tbody>
+
+				    
+					<tfoot class="table-secondary">
+					    <tr>
+					        <th colspan="15" class="text-center">Chargement...</th>
+					    </tr>
+					</tfoot>
+
+				</table>
+
+				<!-- Pagination simple -->
+				<div class="d-flex justify-content-center mt-3" >
+				    <ul class="pagination" id="pagination">
+
+				        <!-- Précédent -->
+				        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/dashboards/loyers-montant(page=${currentPage-1}, annee=${annee})}">
+				                &laquo;
+				            </a>
+				        </li>
+
+				        <!-- Première page -->
+				        <li class="page-item" th:if="${currentPage > 2}">
+				            <a class="page-link"
+				               th:href="@{/dashboards/loyers-montant(page=0, annee=${annee})}">1</a>
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled" th:if="${currentPage > 3}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Pages autour -->
+				        <li class="page-item"
+				            th:each="i : ${#numbers.sequence(
+				                T(java.lang.Math).max(0, currentPage - 2),
+				                T(java.lang.Math).min(totalPages - 1, currentPage + 2)
+				            )}"
+				            th:classappend="${i == currentPage} ? 'active'">
+
+				            <a class="page-link"
+				               th:text="${i + 1}"
+				               th:href="@{/dashboards/loyers-montant(page=${i}, annee=${annee})}">
+				            </a>
+				        </li>
+
+				        <!-- ... -->
+				        <li class="page-item disabled"
+				            th:if="${currentPage < totalPages - 4}">
+				            <span class="page-link">...</span>
+				        </li>
+
+				        <!-- Dernière page -->
+				        <li class="page-item"
+				            th:if="${currentPage < totalPages - 3}">
+				            <a class="page-link"
+				               th:text="${totalPages}"
+				               th:href="@{/dashboards/loyers-montant(page=${totalPages - 1}, annee=${annee})}">
+				            </a>
+				        </li>
+
+				        <!-- Suivant -->
+				        <li class="page-item"
+				            th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+				            <a class="page-link"
+				               th:href="@{/dashboards/loyers-montant(page=${currentPage+1}, annee=${annee})}">
+				                &raquo;
+				            </a>
+				        </li>
+
+				    </ul>
+				</div>
+		
+		    </div>
+			</fieldset>
+		</div>
+		
+		<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+		<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+		
+		<script>
+			$(document).ready(function () {
+
+			    console.log("========== SELECT2 ==========");
+			    console.log("jQuery :", typeof $);
+			    console.log("Select2 :", typeof $.fn.select2);
+
+			    $('#bailleurSelect').select2({
+			        placeholder: '-- Tous les bailleurs --',
+			        allowClear: true,
+			        width: '100%',
+			        minimumResultsForSearch: 0
+			    });
+
+			    console.log("✅ Select2 initialisé");
+			});
+		</script>
+
+		
+		<script th:inline="javascript">
+		console.log("SCRIPT CHARGÉ");
+
+		document.addEventListener("DOMContentLoaded", function () {
+
+		    const searchInput = document.getElementById("searchInput");
+		    const anneeInput = document.getElementById("anneeInput");
+			const bailleurSelect = document.getElementById("bailleurSelect");
+		    const tbody = document.getElementById("loyannTableBody");
+		    const pagination = document.getElementById("pagination");
+			const tfoot = document.querySelector("tfoot");
+			const btnExportPdf = document.getElementById("btnExportPdf");
+		    const anneeLabel = document.getElementById("anneeLabel");
+
+		    let timeout = null;
+		    let currentPage = 0;
+
+		    // =========================
+		    //  LOAD DATA
+		    // =========================
+		    function loadData(page = 0) {
+
+		        const search = searchInput.value || "";
+		        const annee = anneeInput.value;
+				const bailleurId = bailleurSelect.value;
+
+		        if (!annee) return;
+
+		        // update label année
+		        if (anneeLabel) {
+		            anneeLabel.textContent = annee;
+		        }
+
+		        currentPage = page;
+
+		        /*const url = "/immobilier/dashboards/loyers-montant/search"
+		            + "?annee=" + annee
+		            + "&search=" + encodeURIComponent(search)
+					+"&bailleurSelect="+bailleurSelect
+		            + "&page=" + page;*/
+					
+				const url = "/immobilier/dashboards/loyers-montant/search"
+				    + "?annee=" + annee
+				    + "&search=" + encodeURIComponent(search)
+				    + "&bailleurId=" + encodeURIComponent(bailleurId)
+				    + "&page=" + page;
+
+		        console.log("URL:", url);
+
+		        fetch(url)
+		            .then(res => res.json())
+		            .then(data => {
+
+		                tbody.innerHTML = "";
+
+		                const content = data.content || [];
+						// Réafficher le total si des données existent
+						tfoot.style.display = "";
+						
+						// Réactiver Export PDF
+						btnExportPdf.classList.remove("disabled");
+						btnExportPdf.removeAttribute("aria-disabled");
+						btnExportPdf.style.pointerEvents = "auto";
+						
+						btnExportPdf.classList.remove("disabled", "opacity-50");
+						
+						if (content.length === 0) {
+
+						    tbody.innerHTML = `
+						        <tr>
+						            <td colspan="15" class="text-center text-danger">
+						                Aucun résultat trouvé
+						            </td>
+						        </tr>`;
+
+						    pagination.innerHTML = "";
+
+						    // Masquer la ligne Total
+						    tfoot.style.display = "none";
+							
+							// Désactiver Export PDF
+							    btnExportPdf.classList.add("disabled");
+							    btnExportPdf.setAttribute("aria-disabled", "true");
+							    btnExportPdf.style.pointerEvents = "none";
+								
+								btnExportPdf.classList.add("disabled", "opacity-50");
+
+						    return;
+						}
+
+		                content.forEach(row => {
+
+		                    const tr = document.createElement("tr");
+
+		                    tr.innerHTML = `
+		                        
+								
+								<td class="locataire" 
+								    data-bs-toggle="tooltip" 
+								    title="${[row.locataire, row.bailleur].filter(Boolean).join(' - ')}">
+								  <span class="cell-content">${row.locataireCourt ?? ''}</span>
+								</td>
+								<td >${row.loyerFormatted ?? '0'}</td>
+		                        <td class="${row.janPaid ? 'paid' : 'not-paid'}">${row.janFormatted ?? '0'}</td>
+		                        <td class="${row.fevPaid ? 'paid' : 'not-paid'}">${row.fevFormatted ?? '0'}</td>
+		                        <td class="${row.marPaid ? 'paid' : 'not-paid'}">${row.marFormatted ?? '0'}</td>
+		                        <td class="${row.avrPaid ? 'paid' : 'not-paid'}">${row.avrFormatted ?? '0'}</td>
+		                        <td class="${row.maiPaid ? 'paid' : 'not-paid'}">${row.maiFormatted ?? '0'}</td>
+		                        <td class="${row.juiPaid ? 'paid' : 'not-paid'}">${row.juiFormatted ?? '0'}</td>
+		                        <td class="${row.julPaid ? 'paid' : 'not-paid'}">${row.julFormatted ?? '0'}</td>
+		                        <td class="${row.aouPaid ? 'paid' : 'not-paid'}">${row.aouFormatted ?? '0'}</td>
+		                        <td class="${row.sepPaid ? 'paid' : 'not-paid'}">${row.sepFormatted ?? '0'}</td>
+		                        <td class="${row.octPaid ? 'paid' : 'not-paid'}">${row.octFormatted ?? '0'}</td>
+		                        <td class="${row.novPaid ? 'paid' : 'not-paid'}">${row.novFormatted ?? '0'}</td>
+		                        <td class="${row.decPaid ? 'paid' : 'not-paid'}">${row.decFormatted ?? '0'}</td>
+
+		                        <td style="font-weight:bold">${row.totalFormatted ?? '0'}</td>
+		                    `;
+
+		                    tbody.appendChild(tr);
+		                });
+
+		                //  TOOLTIP REINIT APRÈS RENDER
+		                initTooltips();
+
+		                buildPagination(data);
+
+		                // FOOTER TOTALS
+		                const totals = data.totals;
+
+						if (totals) {
+
+						    const format = (value) => {
+						        if (value === null || value === undefined || value === '') return '0';
+
+						        let clean = value.toString().replace(/\s/g, '').replace(/,/g, '');
+						        let number = Number(clean);
+
+						        if (isNaN(number)) return '0';
+
+						        return number.toLocaleString('fr-FR');
+						    };
+
+						    document.querySelector("tfoot").innerHTML = `
+						        <tr>
+									
+						            <th  colspan=2 style="text-align: right;">Total</th>
+						            <th>${format(totals.m1)}</th>
+						            <th>${format(totals.m2)}</th>
+						            <th>${format(totals.m3)}</th>
+						            <th>${format(totals.m4)}</th>
+						            <th>${format(totals.m5)}</th>
+						            <th>${format(totals.m6)}</th>
+						            <th>${format(totals.m7)}</th>
+						            <th>${format(totals.m8)}</th>
+						            <th>${format(totals.m9)}</th>
+						            <th>${format(totals.m10)}</th>
+						            <th>${format(totals.m11)}</th>
+						            <th>${format(totals.m12)}</th>
+						            <th><b>${format(totals.total)}</b></th>
+						        </tr>
+						    `;
+						}
+		            })
+		            .catch(err => console.error("Erreur:", err));
+		    }
+
+		    // =========================
+		    //  TOOLTIP INIT (IMPORTANT)
+		    // =========================
+		    function initTooltips() {
+		        const tooltipTriggerList = [].slice.call(
+		            document.querySelectorAll('[data-bs-toggle="tooltip"]')
+		        );
+
+		        tooltipTriggerList.forEach(el => {
+		            new bootstrap.Tooltip(el);
+		        });
+		    }
+
+		    // =========================
+		    //  SEARCH
+		    // =========================
+		    searchInput.addEventListener("input", function () {
+		        clearTimeout(timeout);
+		        timeout = setTimeout(() => loadData(0), 500);
+		    });
+
+		    // =========================
+		    //  YEAR CHANGE
+		    // =========================
+		    anneeInput.addEventListener("change", function () {
+		        loadData(0);
+		    });
+
+			// =========================
+			//  BAILLEUR CHANGE
+			// =========================
+			/*bailleurSelect.addEventListener("change", function () {
+			    loadData(0);
+			});*/
+			
+			$('#bailleurSelect').on('change', function () {
+			    console.log("Bailleur sélectionné :", this.value);
+			    loadData(0);
+			});
+		    // =========================
+		    //  PAGINATION
+		    // =========================
+		    function buildPagination(data) {
+
+		        pagination.innerHTML = "";
+
+		        const page = data.page ?? 0;
+		        const totalPages = data.totalPages ?? 0;
+
+		        if (totalPages <= 1) return;
+
+		        pagination.innerHTML += `
+		            <li class="page-item ${page === 0 ? 'disabled' : ''}">
+		                <a class="page-link" href="#" data-page="${page - 1}">&laquo;</a>
+		            </li>`;
+
+		        const start = Math.max(0, page - 2);
+		        const end = Math.min(totalPages - 1, page + 2);
+
+		        if (start > 0) {
+		            pagination.innerHTML += `
+		                <li class="page-item">
+		                    <a class="page-link" href="#" data-page="0">1</a>
+		                </li>`;
+		        }
+
+		        if (start > 1) {
+		            pagination.innerHTML += `
+		                <li class="page-item disabled">
+		                    <span class="page-link">...</span>
+		                </li>`;
+		        }
+
+		        for (let i = start; i <= end; i++) {
+		            pagination.innerHTML += `
+		                <li class="page-item ${i === page ? 'active' : ''}">
+		                    <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
+		                </li>`;
+		        }
+
+		        if (end < totalPages - 2) {
+		            pagination.innerHTML += `
+		                <li class="page-item disabled">
+		                    <span class="page-link">...</span>
+		                </li>`;
+		        }
+
+		        if (end < totalPages - 1) {
+		            pagination.innerHTML += `
+		                <li class="page-item">
+		                    <a class="page-link" href="#" data-page="${totalPages - 1}">
+		                        ${totalPages}
+		                    </a>
+		                </li>`;
+		        }
+
+		        pagination.innerHTML += `
+		            <li class="page-item ${page === totalPages - 1 ? 'disabled' : ''}">
+		                <a class="page-link" href="#" data-page="${page + 1}">&raquo;</a>
+		            </li>`;
+
+		        pagination.querySelectorAll("a").forEach(link => {
+		            link.addEventListener("click", function (e) {
+		                e.preventDefault();
+		                const p = parseInt(this.dataset.page);
+		                if (!isNaN(p)) loadData(p);
+		            });
+		        });
+		    }
+			
+			
+			//const btnExportPdf = document.getElementById("btnExportPdf");
+
+			btnExportPdf.addEventListener("click", function (e) {
+
+			    e.preventDefault();
+
+			    const annee = anneeInput.value;
+			    const search = searchInput.value || "";
+			    const bailleurId = bailleurSelect.value || "";
+
+			    const url =
+			        "/immobilier/dashboards/loyers-montant/pdf"
+			        + "?annee=" + encodeURIComponent(annee)
+			        + "&search=" + encodeURIComponent(search)
+			        + "&bailleurId=" + encodeURIComponent(bailleurId);
+
+			    window.location.href = url;
+			});
+
+		    // =========================
+		    //  INIT
+		    // =========================
+		    loadData(0);
+
+		});
+		</script>
+				
+		
+	</section>
+		
+</body>
+</html>

@@ -9,6 +9,11 @@ import java.util.Map;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.app.security.UserPrincipal; // à adapter selon le package où tu as défini UserPrincipal
 
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import com.app.service.recouvre.ContratBailService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -17,7 +22,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,13 +38,20 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.app.controller.common.Routes;
 import com.app.dto.BailDTO;
+import com.app.dto.revision.RevisionLoyerDto;
 import com.app.entities.recouvre.Appartement;
 import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Locataire;
 import com.app.repositories.BailSelectProjection;
 import com.app.service.recouvre.AppartementService;
 import com.app.service.recouvre.BailService;
+import com.app.service.recouvre.ContratBailService;
 import com.app.service.recouvre.LocataireService;
+
+//Imports : org.springframework.format.annotation.DateTimeFormat,
+import org.springframework.security.access.AccessDeniedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 @RequestMapping(Routes.ROUTE_BAIL)
@@ -47,14 +61,22 @@ public class BailController {
     private final LocataireService locataireService;
     private final AppartementService appartementService;
     
+    // 1) Champ + constructeur : ajouter ContratBailService
+	 private final ContratBailService contratBailService;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(BailController.class); // adaptez le nom de la classe
+
+    
     @Autowired
 	private MessageSource messageSource;
     
     public BailController(BailService service, 
-    			LocataireService locataireService, AppartementService appartementService) {
+    			LocataireService locataireService, AppartementService appartementService, 
+    			ContratBailService contratBailService) {
         this.service = service;
         this.locataireService = locataireService;
         this.appartementService = appartementService;
+        this.contratBailService = contratBailService;
     }
     
     // Liste initiale + pagination
@@ -74,30 +96,6 @@ public class BailController {
     }
     
     
-    /*@GetMapping
-    public String listImmeubs(
-            Model model,
-            @RequestParam(defaultValue = "0") int page,   // page en base 0
-            @RequestParam(defaultValue = "8") int size,  // taille de page
-            @AuthenticationPrincipal UserPrincipal principal,
-            HttpServletRequest request) {
-
-     // Création de l'objet Pageable avec tri descendant sur l'id
-        Pageable pageable = PageRequest.of(page, size, Sort.by("idt").descending());
-        
-        // On récupère une Page de BailSelectProjection via le service
-        Page<BailSelectProjection> bailsPage = service.findBailDetails(principal, pageable);
-
-        // Attributs pour Thymeleaf
-        model.addAttribute("bailsPage", bailsPage);
-        model.addAttribute("bails", bailsPage.getContent());           // la liste pour le template
-        model.addAttribute("currentPage", page + 1);                  // affichage base 1
-        model.addAttribute("totalPages", bailsPage.getTotalPages());  // nombre total de pages
-        model.addAttribute("currentUri", request.getRequestURI());
-
-        return "locataire/bail/list"; // template Thymeleaf
-    }*/
-
     @GetMapping("/create")
     public String showBailForm(Model model) {
         Bail bail = new Bail();
@@ -206,24 +204,7 @@ public class BailController {
         
         return "redirect:" + Routes.ROUTE_BAIL;
     }
-    
-    //RESILIER
-    /*@PostMapping("/valideresilier")
-    public String resilierBail(
-            @PathVariable Integer id,
-            RedirectAttributes redirectAttributes
-    ) {
-
-        service.resilier(id);
-
-        redirectAttributes.addFlashAttribute(
-            "successMessage",
-            "Bail résilié avec succès"
-        );
-
-        return "redirect:" + Routes.ROUTE_BAIL;
-    }*/
-    
+     
     
     @PostMapping("/valideresilier/{id}")
     public String resilierBail(
@@ -275,6 +256,89 @@ public class BailController {
         return service.search(keyword, pageable);
     }
     
+ // ============================================================
+ // REVISION DU LOYER
+ // ============================================================
+
+ /**
+  * Afficher le formulaire de révision du loyer.
+  */
+	 @GetMapping("/{id}/revision-loyer")
+	 public String afficherFormulaireRevisionLoyer(
+	         @PathVariable("id") int id,
+	         Model model,
+	         RedirectAttributes redirectAttributes) {
+	
+	     Bail bail = service.findByIdWithLocataireAndAppartement(id)
+	             .orElseThrow(() ->
+	                     new IllegalArgumentException("Bail introuvable : " + id));
+	
+	     // Une révision est autorisée uniquement sur un bail actif.
+	     if (bail.getStatut() != com.app.enums.StatutBail.ACTIF) {
+	         redirectAttributes.addFlashAttribute(
+	                 "errorMessage",
+	                 "La révision du loyer est réservée aux baux actifs.");
+	
+	         return "redirect:" + Routes.ROUTE_BAIL;
+	     }
+	
+	     model.addAttribute("bail", bail);
+	     model.addAttribute("nouveauMontantLoyer", bail.getMontantLoyer());
+	     model.addAttribute(
+	             "dateEffetLoyer",
+	             bail.getDateEffetLoyer() != null
+	                     ? bail.getDateEffetLoyer()
+	                     : LocalDate.now());
+	
+	     return "locataire/bail/revision-loyer";
+	 }
+
+
+ /**
+  * Enregistrer la révision du loyer.
+  */
+	 
+	 
+	 @PostMapping("/{id}/revision-loyer")
+	 public String enregistrerRevisionLoyer(
+	         @PathVariable("id") int id,
+	         @RequestParam("nouveauMontantLoyer") Long nouveauMontantLoyer,
+	         @RequestParam("dateEffetLoyer")
+	         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateEffetLoyer,
+	         RedirectAttributes redirectAttributes) {
+
+	     try {
+	         service.reviserLoyer(id, nouveauMontantLoyer, dateEffetLoyer);
+
+	         redirectAttributes.addFlashAttribute(
+	                 "successMessage",
+	                 "Révision du loyer enregistrée avec succès.");
+
+	         return "redirect:" + Routes.ROUTE_BAIL;
+
+	     } catch (IllegalArgumentException | IllegalStateException
+	              | AccessDeniedException e) {
+
+	         redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+
+	     } catch (Exception e) {
+
+	         LOG.error("Échec de la révision du loyer du bail {}", id, e);
+	         redirectAttributes.addFlashAttribute(
+	                 "errorMessage",
+	                 "Impossible d'enregistrer la révision du loyer.");
+	     }
+
+	     // En cas d'erreur : retour sur le formulaire, saisie conservée.
+	     // Le GET de cette page ne doit pas écraser ces deux attributs :
+	     //   if (!model.containsAttribute("nouveauMontantLoyer")) { ... }
+	     redirectAttributes.addFlashAttribute("nouveauMontantLoyer", nouveauMontantLoyer);
+	     redirectAttributes.addFlashAttribute("dateEffetLoyer", dateEffetLoyer);
+
+	     return "redirect:" + Routes.ROUTE_BAIL + "/" + id + "/revision-loyer";
+	 }
+
+    
     @GetMapping("/bail/{bailId}/arretes")
     @ResponseBody
     public Map<String, Object> getBailArretes(@PathVariable Integer bailId) {
@@ -302,17 +366,7 @@ public class BailController {
 
         return result;
     }
-    
-    /*@GetMapping(value = "/api/bails", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public List<BailSelectProjection> getBails(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(required = false) Long agentId,
-            @RequestParam(required = false) String keyword) {
-
-        return service.findBailDetailsNative(principal, agentId,keyword);
-    }*/
-    
+     
     @GetMapping(value = "/api/bails", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public List<BailSelectProjection> getBails(
@@ -323,6 +377,42 @@ public class BailController {
 
         return service.findBailDetailsNative(principal, agentId, keyword, id);
     }
+    
+    
+    @GetMapping(value = "/api/bails/{id}/revisions", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public List<RevisionLoyerDto> getRevisions(@PathVariable Integer id) {
+        return service.findRevisionsByBail(id);
+    }
+    
+    
+ // ===== À AJOUTER dans BailController =====
+
+ // Imports à ajouter :
+ // import org.springframework.http.ContentDisposition;
+ // import org.springframework.http.HttpHeaders;
+ // import org.springframework.http.ResponseEntity;
+ // import com.app.service.recouvre.ContratBailService;
+
+
+	 // 2) Endpoint : GET {ROUTE_BAIL}/{id}/contrat  (?download=true pour télécharger)
+	 @GetMapping("/{id}/contrat")
+	 @ResponseBody
+	 public ResponseEntity<byte[]> contratPdf(
+	         @PathVariable("id") Integer id,
+	         @RequestParam(defaultValue = "false") boolean download) {
+	
+	     byte[] pdf = contratBailService.genererPdf(id);
+	
+	     ContentDisposition cd = (download ? ContentDisposition.attachment() : ContentDisposition.inline())
+	             .filename("contrat-bail-" + id + ".pdf")
+	             .build();
+	
+	     return ResponseEntity.ok()
+	             .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
+	             .contentType(MediaType.APPLICATION_PDF)
+	             .body(pdf);
+	 }
     
 }
 

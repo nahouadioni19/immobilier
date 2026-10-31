@@ -13,6 +13,7 @@ import com.app.dto.ImmeubleDTO;
 import com.app.entities.recouvre.Appartement;
 import com.app.entities.recouvre.Bailleur;
 import com.app.entities.recouvre.Immeuble;
+import com.app.enums.StatutAppartement;
 import com.app.form.ImmeubForm;
 import com.app.entities.administration.Utilisateur;
 import com.app.repositories.administration.UtilisateurRepository;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -100,7 +102,222 @@ public class ImmeubleService extends BaseService<Immeuble> {
     
     //
     
+    
     @Transactional
+    public Immeuble saveImmeubleWithAppartement(ImmeubForm form) {
+
+        if (form == null || form.getImmeuble() == null) {
+            throw new IllegalArgumentException("Immeuble obligatoire");
+        }
+
+        Immeuble immeubleForm = form.getImmeuble();
+        List<Appartement> formList = form.getAppartements();
+
+        Integer agenceId = getCurrentAgence().getId();
+
+        // =====================================================
+        // CHARGER OU CRÉER L'IMMEUBLE
+        // =====================================================
+        Immeuble entity;
+
+        if (immeubleForm.getId() == null) {
+
+            entity = new Immeuble();
+            entity.setAgence(getCurrentAgence());
+
+        } else {
+
+            entity = repo.findById(immeubleForm.getId())
+                    .orElseThrow(() ->
+                            new IllegalArgumentException("Immeuble introuvable"));
+
+            // Vérifier l'appartenance à l'agence courante.
+            if (entity.getAgence() == null
+                    || !agenceId.equals(entity.getAgence().getId())) {
+                throw new IllegalArgumentException(
+                        "Vous n'êtes pas autorisé à modifier cet immeuble."
+                );
+            }
+        }
+
+        // =====================================================
+        // INFORMATIONS DE L'IMMEUBLE
+        // =====================================================
+        entity.setNomImmeuble(immeubleForm.getNomImmeuble());
+        entity.setAdresse(immeubleForm.getAdresse());
+        entity.setVille(immeubleForm.getVille());
+        entity.setCodeImmeuble(immeubleForm.getCodeImmeuble());
+        entity.setAnneeConstruction(immeubleForm.getAnneeConstruction());
+        entity.setNombreEtages(immeubleForm.getNombreEtages());
+        entity.setNumeroTitreFoncier(immeubleForm.getNumeroTitreFoncier());
+
+        // =====================================================
+        // BAILLEUR
+        // =====================================================
+        if (immeubleForm.getBailleur() == null
+                || immeubleForm.getBailleur().getId() == null) {
+            throw new IllegalArgumentException("Bailleur obligatoire");
+        }
+
+        Bailleur bailleur = bailleurRepository
+                .findById(immeubleForm.getBailleur().getId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Bailleur introuvable"));
+
+        // Si Bailleur possède une agence, vérifier également
+        // qu'il appartient à l'agence courante.
+        entity.setBailleur(bailleur);
+
+        // =====================================================
+        // AGENT DE RECOUVREMENT
+        // =====================================================
+        if (immeubleForm.getUtilisateur() != null
+                && immeubleForm.getUtilisateur().getId() != null) {
+
+            Utilisateur utilisateur = utilisateurRepository
+                    .findById(immeubleForm.getUtilisateur().getId())
+                    .orElseThrow(() ->
+                            new IllegalArgumentException("Utilisateur introuvable"));
+
+            entity.setUtilisateur(utilisateur);
+        }
+
+        // =====================================================
+        // INDEXER LES APPARTEMENTS EXISTANTS DE CET IMMEUBLE
+        // =====================================================
+        Map<Integer, Appartement> existing = entity.getAppartements()
+                .stream()
+                .filter(a -> a.getId() != null)
+                .collect(Collectors.toMap(
+                        Appartement::getId,
+                        Function.identity()
+                ));
+
+        List<Appartement> finalList = new ArrayList<>();
+        Set<Integer> idsTraites = new HashSet<>();
+
+        // =====================================================
+        // CRÉATION / MODIFICATION DES APPARTEMENTS
+        // =====================================================
+        if (formList != null) {
+
+            for (Appartement aForm : formList) {
+
+                if (aForm == null) {
+                    continue;
+                }
+
+                if (aForm.getNumAppart() == null
+                        || aForm.getNumAppart().isBlank()) {
+                    continue;
+                }
+
+                if (aForm.getLibelle() == null
+                        || aForm.getLibelle().isBlank()) {
+                    throw new IllegalArgumentException(
+                            "Le libellé est obligatoire pour l'appartement "
+                                    + aForm.getNumAppart()
+                    );
+                }
+
+                // Valider le loyer de référence.
+                if (aForm.getLoyerMensuel() != null
+                        && aForm.getLoyerMensuel() < 0) {
+                    throw new IllegalArgumentException(
+                            "Le loyer de référence ne peut pas être négatif."
+                    );
+                }
+
+                Appartement app;
+
+                if (aForm.getId() != null) {
+
+                    // Un ID soumis doit correspondre à un appartement
+                    // appartenant réellement à cet immeuble.
+                    app = existing.get(aForm.getId());
+
+                    if (app == null) {
+                        throw new IllegalArgumentException(
+                                "Appartement introuvable dans cet immeuble : "
+                                        + aForm.getId()
+                        );
+                    }
+
+                    if (!idsTraites.add(aForm.getId())) {
+                        throw new IllegalArgumentException(
+                                "Appartement envoyé plusieurs fois : "
+                                        + aForm.getId()
+                        );
+                    }
+
+                } else {
+
+                    // Nouvel appartement.
+                    app = new Appartement();
+                    app.setAgence(getCurrentAgence());
+                    app.setImmeuble(entity);
+
+                    // Le statut initial est défini côté serveur.
+                    app.setStatut(StatutAppartement.LIBRE);
+                }
+
+                // Informations de l'appartement.
+                app.setNumAppart(aForm.getNumAppart().trim());
+                app.setLibelle(aForm.getLibelle().trim());
+
+                // LOYER DE RÉFÉRENCE MODIFIABLE.
+                // Cette modification ne change pas les baux existants.
+                app.setLoyerMensuel(aForm.getLoyerMensuel());
+
+                app.setCaution(aForm.getCaution());
+                app.setChargesMensuelles(aForm.getChargesMensuelles());
+
+                // Ne pas permettre au formulaire de libérer
+                // artificiellement un appartement déjà occupé.
+                if (aForm.getId() != null) {
+                    // Conserver le statut réel de l'appartement existant.
+                    // Si le statut doit être modifiable, traiter cette
+                    // modification dans une opération métier dédiée.
+                }
+
+                finalList.add(app);
+            }
+        }
+
+        // =====================================================
+        // SYNCHRONISER LA COLLECTION
+        // =====================================================
+        // Attention : les appartements existants omis du formulaire
+        // ne doivent pas être supprimés automatiquement s'ils sont
+        // occupés ou liés à des baux.
+        //
+        // Cette version conserve les appartements existants omis.
+        for (Appartement app : existing.values()) {
+
+            if (!idsTraites.contains(app.getId())) {
+
+                boolean dejaPresent = finalList.stream()
+                        .anyMatch(a -> Objects.equals(a.getId(), app.getId()));
+
+                if (!dejaPresent) {
+                    finalList.add(app);
+                }
+            }
+        }
+
+        entity.getAppartements().clear();
+
+        for (Appartement app : finalList) {
+            app.setImmeuble(entity);
+            entity.getAppartements().add(app);
+        }
+
+        return repo.save(entity);
+    }
+    
+    
+    
+    /*@Transactional
     public Immeuble saveImmeubleWithAppartement(ImmeubForm form) {
 
         Immeuble immeuble = form.getImmeuble();
@@ -216,10 +433,7 @@ public class ImmeubleService extends BaseService<Immeuble> {
 
         return repo.save(entity);
     }
-    
-    
-
-    
+    */    
     
     //
    public Page<Immeuble> searchPatrimoine(String keyword, Pageable pageable) {

@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,6 +17,9 @@ import com.app.dto.EncaisseListDto;
 import com.app.dto.EncaissementMensuelDTO;
 import com.app.entities.administration.Utilisateur;
 import com.app.entities.recouvre.Encaisse;
+import com.app.entities.recouvre.Locataire;
+
+import jakarta.persistence.LockModeType;
 
 @Repository
 public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
@@ -211,6 +215,7 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        e.id,
     	        e.encDate,
     	        e.encMontant,
+    	        e.encPenalite,
     	        e.encMode,
     	        l.nom,
     	        l.prenom,
@@ -218,7 +223,8 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        u.nom,
     	        u.prenoms,
     	        i.adresse,
-    	        p.nom
+    	        p.nom,
+    	        p.prenom
     	    )
     	    FROM Encaisse e
     	    JOIN e.bail b
@@ -237,6 +243,9 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        OR :keyword IS NULL
     	        OR LOWER(l.nom) LIKE :keyword
     	        OR LOWER(l.prenom) LIKE :keyword
+    	        OR LOWER(i.adresse) LIKE :keyword
+    	        OR LOWER(p.nom) LIKE :keyword  
+    	        OR LOWER(p.prenom) LIKE :keyword 	        
     	        OR LOWER(CAST(a.numAppart AS string)) LIKE :keyword
     	    )
 
@@ -264,6 +273,9 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        OR :keyword IS NULL
     	        OR LOWER(l.nom) LIKE :keyword
     	        OR LOWER(l.prenom) LIKE :keyword
+    	        OR LOWER(i.adresse) LIKE :keyword
+    	        OR LOWER(p.nom) LIKE :keyword
+    	        OR LOWER(p.prenom) LIKE :keyword
     	        OR LOWER(CAST(a.numAppart AS string)) LIKE :keyword
     	    )
 
@@ -286,6 +298,7 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        e.id,
     	        e.encDate,
     	        e.encMontant,
+    	        e.encPenalite,
     	        e.encMode,
     	        l.nom,
     	        l.prenom,
@@ -293,7 +306,8 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        u.nom,
     	        u.prenoms,
     	        i.adresse,
-    	        p.nom
+    	        p.nom,
+    	        p.prenom
     	    )
     	    FROM Encaisse e
     	    JOIN e.bail b
@@ -315,6 +329,9 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        OR :keyword IS NULL
     	        OR LOWER(l.nom) LIKE :keyword
     	        OR LOWER(l.prenom) LIKE :keyword
+    	        OR LOWER(i.adresse) LIKE :keyword
+    	        OR LOWER(p.nom) LIKE :keyword
+    	        OR LOWER(p.prenom) LIKE :keyword
     	        OR LOWER(CAST(a.numAppart AS string)) LIKE :keyword
     	    )
 
@@ -345,6 +362,9 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        OR :keyword IS NULL
     	        OR LOWER(l.nom) LIKE :keyword
     	        OR LOWER(l.prenom) LIKE :keyword
+    	        OR LOWER(i.adresse) LIKE :keyword
+    	        OR LOWER(p.nom) LIKE :keyword
+    	        OR LOWER(p.prenom) LIKE :keyword
     	        OR LOWER(CAST(a.numAppart AS string)) LIKE :keyword
     	    )
 
@@ -414,4 +434,55 @@ public interface EncaisseRepository extends JpaRepository<Encaisse, Integer>{
     	        @Param("agenceId") Integer agenceId,
     	        @Param("annee") Integer annee
     	);
+    
+    
+ // À ajouter dans EncaisseRepository :
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select e from Encaisse e where e.id = :id")
+    Optional<Encaisse> trouverPourMiseAJour(@Param("id") Integer id);
+
+    
+    
+	 // =====================================================
+	 // REÇUS ANNUELS PAR LOCATAIRE
+	 // =====================================================
+
+    @Query("""
+    	    SELECT e
+    	    FROM Encaisse e
+    	    JOIN FETCH e.bail b
+    	    JOIN FETCH b.locataire l
+    	    LEFT JOIN FETCH b.appartement a
+    	    LEFT JOIN FETCH e.utilisateur u
+    	    LEFT JOIN FETCH e.identification i
+    	    WHERE e.agence.id = :agenceId
+    	      AND l.id = :locataireId
+    	      AND e.encDate >= :dateDebut
+    	      AND e.encDate <= :dateFin
+    	    ORDER BY e.encDate ASC, e.id ASC
+    	    """)
+    	List<Encaisse> findRecusAnnuelsParLocataire(
+    	        @Param("agenceId") Integer agenceId,
+    	        @Param("locataireId") Integer locataireId,
+    	        @Param("dateDebut") LocalDate dateDebut,
+    	        @Param("dateFin") LocalDate dateFin
+    	);
+	
+	
+	 // =====================================================
+	 // LOCATAIRES AYANT DES ENCAISSEMENTS DANS L'AGENCE   AND e.statut = 2
+	 // =====================================================
+	
+	 @Query("""
+	     SELECT DISTINCT l
+	     FROM Encaisse e
+	     JOIN e.bail b
+	     JOIN b.locataire l
+	     WHERE e.agence.id = :agenceId
+	     ORDER BY l.nom ASC, l.prenom ASC
+	     """)
+	 List<Locataire> findLocatairesAvecEncaissements(
+	         @Param("agenceId") Integer agenceId
+	 );
+    
 }

@@ -1,0 +1,518 @@
+/* =============================================================
+   FEUILLE DE STYLE COMMUNE
+   Pages : facturation, paiement, traitement, retrait
+============================================================== */
+
+
+/* =============================================================
+   PAGE
+============================================================== */
+
+.requerant-form-page {
+    min-height: calc(100vh - 80px);
+    background: #f5f7fb;
+    padding: 24px 0 50px;
+}
+
+
+/* =============================================================
+   EN-TÊTE
+============================================================== */
+
+.form-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+}
+
+.form-page-icon {
+    width: 54px;
+    height: 54px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 14px;
+
+    background: linear-gradient(
+        135deg,
+        #0d6efd,
+        #4d8df7
+    );
+
+    color: #fff;
+    font-size: 24px;
+
+    box-shadow:
+        0 8px 20px rgba(13, 110, 253, .20);
+}
+
+.form-page-title {
+    color: #1e293b;
+    font-size: 25px;
+    font-weight: 700;
+}
+
+.form-page-subtitle {
+    color: #8a94a6;
+    font-size: 14px;
+}
+
+
+/* =============================================================
+   BOUTON RETOUR (HEADER)
+============================================================== */
+
+.btn-back {
+    border-radius: 9px;
+    padding: 9px 15px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    transition: all .2s ease;
+}
+
+.btn-back:hover {
+    transform: translateX(-2px);
+}
+
+
+/* =============================================================
+   CARTES (BLOC REQUÉRANT + FORMULAIRES)
+============================================================== */
+
+.requerant-form-card {
+    background: #fff;
+
+    border: 1px solid #e7ebf0;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 6px 25px rgba(15, 23, 42, .06);
+
+    overflow: hidden;
+}
+
+
+/* =============================================================
+   SECTIONS
+============================================================== */
+
+.form-section {
+    border-bottom: 1px solid #edf0f4;
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+}
+
+
+/* =============================================================
+   HEADER DES SECTIONS
+============================================================== */
+
+.form-section-header {
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 17px 24px;
+
+    background: #fafbfd;
+
+    border-bottom: 1px solid #edf0f4;
+}
+
+.form-section-header h5 {
+    margin: 0;
+
+    color: #263445;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.form-section-header span {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #929baa;
+
+    font-size: 12px;
+}
+
+
+/* =============================================================
+   ICÔNES DES SECTIONS
+   (une couleur par thématique, réutilisée dans les 4 pages)
+============================================================== */
+
+.section-icon {
+    width: 40px;
+    height: 40px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    font-size: 17px;
+}
+
+.section-icon.blue {
+    background: #eaf2ff;
+    color: #0d6efd;
+}
+
+.section-icon.pink {
+    background: #fff0f5;
+    color: #e83e8c;
+}
+
+.section-icon.green {
+    background: #eafaf2;
+    color: #198754;
+}
+
+.section-icon.purple {
+    background: #f1edff;
+    color: #6f42c1;
+}
+
+.section-icon.orange {
+    background: #fff4e8;
+    color: #fd7e14;
+}
+
+.section-icon.cyan {
+    background: #e8f9fc;
+    color: #0dcaf0;
+}
+
+.section-icon.dark {
+    background: #edf0f3;
+    color: #495057;
+}
+
+.section-icon.teal {
+    background: #e6faf7;
+    color: #0f9d94;
+}
+
+
+/* =============================================================
+   CORPS DES SECTIONS
+============================================================== */
+
+.form-section-body {
+    padding: 22px 24px;
+}
+
+
+/* =============================================================
+   LABELS
+============================================================== */
+
+.requerant-form-card label {
+    margin-bottom: 6px;
+
+    color: #475569;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* =============================================================
+   INPUTS
+============================================================== */
+
+.requerant-form-card .form-control,
+.requerant-form-card .form-select {
+
+    min-height: 40px;
+
+    border: 1px solid #dce2ea;
+
+    border-radius: 8px;
+
+    color: #334155;
+
+    font-size: 13px;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+.requerant-form-card .form-control:focus,
+.requerant-form-card .form-select:focus {
+
+    border-color: #86b7fe;
+
+    box-shadow:
+        0 0 0 3px rgba(13, 110, 253, .08);
+}
+
+.requerant-form-card .form-control[readonly] {
+
+    background-color: #f8fafc;
+
+    color: #64748b;
+}
+
+
+/* =============================================================
+   SELECT2
+============================================================== */
+
+.requerant-form-card .select2-container {
+    width: 100% !important;
+}
+
+.requerant-form-card .select2-container
+.select2-selection--single {
+
+    height: 40px !important;
+
+    border: 1px solid #dce2ea !important;
+
+    border-radius: 8px !important;
+
+    display: flex;
+    align-items: center;
+
+    background: #fff;
+}
+
+.requerant-form-card .select2-container
+.select2-selection--single
+.select2-selection__rendered {
+
+    padding-left: 12px;
+
+    color: #334155;
+
+    font-size: 13px;
+
+    line-height: 40px;
+}
+
+.requerant-form-card .select2-container
+.select2-selection--single
+.select2-selection__arrow {
+
+    height: 38px;
+}
+
+.requerant-form-card .select2-container--focus
+.select2-selection--single,
+.requerant-form-card .select2-container--open
+.select2-selection--single {
+
+    border-color: #86b7fe !important;
+
+    box-shadow:
+        0 0 0 3px rgba(13, 110, 253, .08);
+}
+
+
+/* =============================================================
+   ZONE D'ACTIONS (PIED DE CARTE)
+   Par défaut : alignée à droite (facturation, paiement, retrait)
+   Modificateur .form-actions-between : alignée aux extrémités
+   (traitement, où le bouton "Retour" est à gauche et les actions
+   contextuelles Valider/Rejeter/Carte/statut sont à droite)
+============================================================== */
+
+.form-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    padding: 18px 24px;
+
+    background: #fafbfd;
+
+    border-top: 1px solid #edf0f4;
+}
+
+.form-actions.form-actions-between {
+    justify-content: space-between;
+}
+
+.form-actions-group {
+
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+}
+
+
+/* =============================================================
+   BOUTONS
+============================================================== */
+
+.btn-save {
+
+    min-width: 190px;
+
+    min-height: 42px;
+
+    border-radius: 9px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    box-shadow:
+        0 5px 13px rgba(13, 110, 253, .18);
+
+    transition: all .2s ease;
+}
+
+.btn-save:hover {
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 17px rgba(13, 110, 253, .25);
+}
+
+.btn-cancel {
+
+    min-width: 120px;
+
+    min-height: 42px;
+
+    border: 1px solid #dce2e8;
+
+    border-radius: 9px;
+
+    color: #64748b;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.btn-cancel:hover {
+
+    background: #f1f5f9;
+
+    color: #334155;
+}
+
+.btn-valider,
+.btn-rejeter {
+
+    min-width: 140px;
+
+    min-height: 42px;
+
+    border-radius: 9px;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.statut-badge {
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    padding: 9px 16px;
+
+    border-radius: 9px;
+}
+
+
+/* =============================================================
+   SECTIONS CONDITIONNELLES
+   (blocs Mariage / Décès, affichés/masqués en JS)
+============================================================== */
+
+.conditional-section {
+    transition: all .3s ease;
+}
+
+
+/* =============================================================
+   MOBILE
+============================================================== */
+
+@media (max-width: 768px) {
+
+    .requerant-form-page {
+        padding-top: 15px;
+    }
+
+    .form-page-header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 15px;
+    }
+
+    .btn-back {
+        width: 100%;
+    }
+
+    .form-section-header {
+        padding: 15px;
+    }
+
+    .form-section-body {
+        padding: 17px 15px;
+    }
+
+    .form-actions {
+
+        flex-direction: column-reverse;
+
+        padding: 15px;
+    }
+
+    .form-actions.form-actions-between {
+
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+    .form-actions-group {
+
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+    .btn-save,
+    .btn-cancel,
+    .btn-valider,
+    .btn-rejeter {
+        width: 100%;
+    }
+
+}

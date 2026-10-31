@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <style>
+        .select2-container { width: 100% !important; }
+        .select2-selection--single { height: 38px !important; padding: 0.375rem 0.75rem !important; border-radius: 0.375rem; }
+        .select2-selection__rendered { line-height: 24px !important; padding-left: 0 !important; }
+        .select2-selection__arrow { height: 36px !important; top: 1px !important; }
+    </style>
+</head>
+
+<body>
+	
+	<section layout:fragment="content">
+	    <div class="container my-2">
+	        <div class="container mt-4">
+	            <h5>Ajouter un recouvrement</h5>
+	            <form th:action="@{/recouvrements/save}" th:object="${encaisse}" method="post" enctype="multipart/form-data"
+	                  class="border p-4 rounded shadow-sm bg-white" id="encaisseForm">
+
+	                <!-- Hidden fields -->
+	                <input type="hidden" th:field="*{id}" />
+	                <input type="hidden" th:field="*{version}" />
+	                <input type="hidden" th:field="*{encloyer}" id="conloyerInput">
+	                <input type="hidden" th:field="*{encArriere}" id="arriereInput">
+	                <input type="hidden" th:field="*{encPenalite}" id="penaliteInput">
+	                <input type="hidden" th:field="*{enctotal}" id="totalInput">
+	                <input type="hidden" th:field="*{encDeb}" id="arriereDebut">
+	                <input type="hidden" th:field="*{encFin}" id="arriereFin">
+	                <input type="hidden" th:field="*{encMontant}" id="montantInput">
+
+					<input type="hidden" th:field="*{utilisateurId}" id="hiddenAgent">
+					<input type="hidden" th:field="*{bailId}" id="hiddenBail">
+					<input type="hidden" th:field="*{identificationId}" id="hiddenIdentification">
+
+					<input type="hidden" id="initBailId" th:value="${initBailId}">
+					<input type="hidden" id="initBailText" th:value="${initBailText}">
+
+					<input type="hidden" id="initIdentId" th:value="${initIdentId}">
+					<input type="hidden" id="initIdentText" th:value="${initIdentText}">
+					<input type="hidden" th:field="*{chequePath}">
+					<input type="hidden" name="removeCheque" id="removeCheque">
+
+					<!-- DONNEES DU 16/06/2026 -->
+					<input type="hidden" id="initLoyer" th:value="${initLoyer}">
+					<input type="hidden" id="initLastPayment" th:value="${initLastPayment}">
+					<input type="hidden" id="initDateDebut" th:value="${initDateDebut}">
+
+	                <!-- Agent -->
+					<div class="row" th:if="! ${userRoles.contains('RECOUV')}">
+		                <div class="mb-1">
+		                    <label for="agentSelect" class="form-label">Agent de recouvrement <span class="text-danger">*</span></label>
+		                    <select id="agentSelect" th:field="*{filtreAgentId}" class="form-select">
+		                        <option value=""> TOUS LES AGENTS DU RECOUVREMENT </option>
+		                        <option th:each="u : ${utilisateurs}" th:value="${u.id}" th:text="|${u.prenoms} ${u.nom}|"></option>
+		                    </select>
+		                </div>
+					</div>
+
+	                <!-- Date -->
+	                <div class="mb-1">
+	                    <label for="encDate" class="form-label">Date de recouvrement <span class="text-danger">*</span></label>
+						<input type="date"
+						       th:field="*{encDate}"
+						       class="form-control"
+						       required
+						       th:attr="max=${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}" />
+	                </div>
+
+	                <!-- Locataire / Bail -->
+	                <div class="mb-1">
+	                    <label class="form-label">Locataire <span class="text-danger">*</span></label>
+	                    <select id="bailSelect" class="form-select" required></select>
+	                </div>
+
+	                <!-- Quittance -->
+	                <div class="mb-1">
+	                    <label class="form-label">Numéro de quittance <span class="text-danger">*</span></label>
+	                    <select id="identificationSelect" class="form-select" required></select>
+	                </div>
+
+	                <!-- Arriérés / Loyer / Pénalités / Total -->
+	                <div class="mb-1"><label>Arriéré(s) FCFA</label><input type="text" id="arriereDisplay" class="form-control" disabled></div>
+	                <div class="mb-1"><label>Début arriérés</label><input type="text" id="arriereDebutDisplay" class="form-control" disabled></div>
+	                <div class="mb-1"><label>Fin arriérés</label><input type="text" id="arriereFinDisplay" class="form-control" disabled></div>
+	                <div class="mb-1"><label>Loyer FCFA</label><input type="text" id="conloyer" class="form-control" disabled></div>
+
+					<div class="row" sec:authorize="hasAnyRole('ADMIN','DIREC')">
+
+					    <div class="col-md-12 mb-3">
+
+					        <label class="form-label fw-bold text-danger">
+					            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+					            Annulation de la pénalité de retard
+					        </label>
+
+					        <div class="border border-danger rounded p-3 bg-light">
+
+					            <div class="form-check form-switch">
+
+					                <input class="form-check-input"
+					                       type="checkbox"
+					                       id="bloquePenalite"
+					                       th:field="*{bloque}">
+
+					                <label class="form-check-label fw-semibold"
+					                       for="bloquePenalite">
+					                    Annuler la pénalité de retard
+					                </label>
+
+					            </div>
+
+					            <small class="text-muted">
+					                Lorsque cette option est activée, aucune pénalité de retard ne sera appliquée à ce dossier.
+					            </small>
+
+					        </div>
+
+					    </div>
+
+					</div>
+
+	                <div class="mb-1"><label>Pénalité retard (FCFA)</label><input type="text" id="penaliteDisplay" class="form-control" disabled></div>
+	                <div class="mb-1"><label>Total à payer (FCFA)</label><input type="text" id="totalDisplay" class="form-control" disabled></div>
+
+	                <!-- Montant payé -->
+	                <div class="mb-1"><label>Montant payé <span class="text-danger">*</span></label>
+	                    <input type="text" id="montantDisplay" class="form-control" placeholder="0"></div>
+
+	                <!-- Mode -->
+	                <div class="mb-1">
+	                    <label>Mode de paiement <span class="text-danger">*</span></label>
+	                    <select th:field="*{encMode}" id="modePaiement" class="form-select" required>
+	                        <option value="">-- Choisir le mode --</option>
+	                        <option value="ESPECE">Espèce</option>
+	                        <option value="CHEQUE">Chèque</option>
+	                        <option value="VIREMENT">Virement</option>
+	                        <option value="MOBILE MONEY">Mobile Money</option>
+	                    </select>
+	                </div>
+
+					<div class="row">
+					    <div class="col-sm-12 col-md-6" id="chequeBlock" style="display:none;">
+
+					        <!-- UPLOAD CHÈQUE -->
+					        <div class="mb-3">
+
+					            <label class="form-label fw-bold">
+					                Joindre le chèque
+					            </label>
+
+					            <!-- DOCUMENT EXISTANT -->
+					            <div th:if="${chequeUrl != null}"
+					                 class="border rounded p-3 bg-light mb-3">
+
+					                <div class="d-flex justify-content-between align-items-center mb-2">
+
+					                    <span class="fw-bold">Document actuel</span>
+
+					                    <div class="d-flex gap-2">
+
+					                        <!-- Voir -->
+					                        <a th:href="@{${chequeUrl}}"
+					                           target="_blank"
+					                           class="btn btn-sm btn-outline-secondary">
+					                            🔍 Voir
+					                        </a>
+
+					                        <!-- Supprimer -->
+					                        <button type="button"
+					                                class="btn btn-sm btn-outline-danger"
+					                                onclick="confirmDeleteCheque()">
+					                            🗑 Supprimer
+					                        </button>
+
+					                    </div>
+
+					                </div>
+
+					                <!-- Aperçu -->
+					                <div class="mb-2 text-center">
+
+					                    <!-- IMAGE -->
+					                    <img th:if="${#strings.endsWith(chequeUrl, '.jpg')
+					                                or #strings.endsWith(chequeUrl, '.jpeg')
+					                                or #strings.endsWith(chequeUrl, '.png')}"
+					                         th:src="@{${chequeUrl}}"
+					                         class="img-fluid rounded border"
+					                         style="max-height: 180px;">
+
+					                    <!-- PDF -->
+					                    <div th:if="${#strings.endsWith(chequeUrl, '.pdf')}">
+					                        <a th:href="@{${chequeUrl}}"
+					                           target="_blank"
+					                           class="btn btn-sm btn-outline-primary">
+					                            📄 Ouvrir le PDF
+					                        </a>
+					                    </div>
+
+					                </div>
+
+					                <p class="text-muted small mb-0 text-center">
+					                    Vous pouvez remplacer ou supprimer ce fichier.
+					                </p>
+
+					            </div>
+
+					            <!-- INPUT FILE -->
+					            <input type="file"
+					                   id="cheque"
+					                   name="chequeFile"
+					                   class="form-control">
+
+					            <!-- preview live -->
+					            <div id="previewLive" class="mt-2"></div>
+
+					        </div>
+
+					    </div>
+					</div>
+
+					<hr>
+
+					<!-- Boutons -->
+	                <div class="mt-3 row g-2">
+	                    <div class="col-12 col-md-2">
+	                        <button type="submit" class="btn btn-primary w-100">
+								<span th:text="*{id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
+							</button>
+	                    </div>
+	                    <div class="col-12 col-md-2">
+	                        <a th:href="@{/recouvrements/a-encaisser}" class="btn btn-danger w-100">Retour à la liste</a>
+	                    </div>
+	                </div>
+	            </form>
+	        </div>
+	    </div>
+
+		<!-- jQuery -->
+		<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+		<!-- Select2 4.1 -->
+		<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+		<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+		<!-- Theme Bootstrap 5 -->
+		<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+
+	    <!-- Boîte de confirmation avant envoi + message de succès -->
+	    <script>
+	        document.getElementById('encaisseForm').addEventListener('submit', function (e) {
+	            e.preventDefault(); // Bloque l'envoi automatique
+	            const form = this;
+
+				const idField = form.querySelector('input[name="id"]');
+				const idValue = idField ? idField.value.trim() : "";
+		        const isEdit = idValue !== "" && idValue !== "0";
+
+	            Swal.fire({
+	                title: 'Confirmation',
+	                text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
+	                icon: 'question',
+	                showCancelButton: true,
+	                cancelButtonText: 'Non',
+					confirmButtonText: 'Oui',
+	                reverseButtons: true
+	            }).then((result) => {
+	                if (result.isConfirmed) {
+	                    form.submit(); // Si confirmé → on envoie le formulaire
+	                }
+	            });
+			});
+
+			// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
+			document.addEventListener('DOMContentLoaded', function () {
+			    const successDiv = document.getElementById('successMessage');
+			    if (successDiv && successDiv.textContent.trim() !== '') {
+			        Swal.fire({
+			            icon: 'success',
+			            title: 'Succès !',
+			            text: successDiv.textContent.trim(),
+			            confirmButtonText: 'OK'
+			        });
+			    }
+			});
+	    </script>
+
+		<script th:inline="javascript">
+		$(document).ready(function(){
+
+		    const bailSelect = $('#bailSelect');
+		    const identificationSelect = $('#identificationSelect');
+
+		    const hiddenAgent = $('#hiddenAgent');
+		    const hiddenBail = $('#hiddenBail');
+		    const hiddenIdentification = $('#hiddenIdentification');
+
+		    const conloyerInput = $('#conloyerInput');
+		    const arriereInput = $('#arriereInput');
+		    const penaliteInput = $('#penaliteInput');
+		    const totalInput = $('#totalInput');
+		    const montantInput = $('#montantInput');
+
+		    const connectedUserId = /*[[${#authentication.principal.utilisateur.id}]]*/ 0;
+
+		    const bailsApiUrl = /*[[@{/bails/api/bails}]]*/ '';
+		    const identApiUrl = /*[[@{/carnets/api/identifications}]]*/ '';
+
+		    // =========================
+		    // HISTORIQUE DES REVISIONS DE LOYER
+		    // =========================
+		    let revisionsBail = [];
+
+		    // Charge les révisions du bail puis exécute le callback
+		    function chargerRevisions(bailId, apres) {
+		        if (!bailId) {
+		            revisionsBail = [];
+		            if (apres) apres();
+		            return;
+		        }
+		        $.getJSON(bailsApiUrl + '/' + bailId + '/revisions')
+		            .done(function (revs) {
+		                revisionsBail = revs || [];
+		            })
+		            .fail(function () {
+		                console.warn("Impossible de charger les révisions du bail " + bailId);
+		                revisionsBail = [];
+		            })
+		            .always(function () {
+		                if (apres) apres();
+		            });
+		    }
+
+		    // Normalise une date (string "2026-10-01", "2026-10-01T..." ou tableau [2026,10,1])
+		    function parseDateRevision(d) {
+		        if (Array.isArray(d)) {
+		            return new Date(d[0], d[1] - 1, d[2]);
+		        }
+		        return new Date(String(d).split("T")[0] + "T00:00:00");
+		    }
+
+		    // Loyer applicable pour un mois donné (mois : 0-11)
+		    function loyerPourMois(data, annee, mois) {
+		        const revs = (data.revisions || [])
+		            .slice()
+		            .sort((a, b) => parseDateRevision(a.dateEffet) - parseDateRevision(b.dateEffet));
+
+		        if (revs.length === 0) return Number(data.loyer) || 0;
+
+		        const debutMois = new Date(annee, mois, 1);
+
+		        // Avant la 1re révision : ancien montant de cette révision
+		        let loyer = Number(revs[0].ancienMontant);
+
+		        for (const r of revs) {
+		            if (parseDateRevision(r.dateEffet) <= debutMois) {
+		                loyer = Number(r.nouveauMontant);
+		            } else {
+		                break;
+		            }
+		        }
+		        return loyer;
+		    }
+
+		    // =========================
+		    // SELECT2 BAIL
+		    // =========================
+		    bailSelect.select2({
+		        theme:'bootstrap-5',
+		        placeholder:"Rechercher locataire, téléphone ou bail...",
+		        allowClear:true,
+		        width:'100%',
+		        minimumInputLength:1,
+		        ajax:{
+		            url:bailsApiUrl,
+		            dataType:'json',
+		            delay:250,
+		            data:function(params){
+
+		                let selectedAgent = $('#agentSelect').val();
+
+		                return {
+		                    keyword: params.term,
+		                    agentId: (selectedAgent === "" ? null : selectedAgent)
+		                };
+		            },
+		            processResults:function(data){
+		                return {
+		                    results:data.map(b => ({
+		                        id: b.id,
+		                        text: b.locnom+" "+b.locprenom+
+		                              " | Tel: "+(b.loctel || '-')+
+		                              " | Bail: "+b.numero+
+		                              " | Loyer: "+(b.montantloyer || 0).toLocaleString('fr-FR')+" FCFA",
+		                        loyer: b.montantloyer || 0,
+		                        lastpayment: b.derniereDatePaiement,
+		                        datedebut: b.dateDebut
+		                    }))
+		                };
+		            }
+		        }
+		    });
+
+		    // =========================
+		    // SELECT2 QUITTANCE
+		    // =========================
+		    identificationSelect.select2({
+		        theme:'bootstrap-5',
+		        placeholder:"Rechercher numéro quittance...",
+		        allowClear:true,
+		        width:'100%',
+		        minimumInputLength:1,
+		        ajax:{
+		            url:identApiUrl,
+		            dataType:'json',
+		            delay:250,
+		            data:function(params){
+		                return {
+		                    keyword: params.term,
+		                    agentId: $('#agentSelect').val() || hiddenAgent.val()
+		                };
+		            },
+		            processResults:function(data){
+		                return {
+		                    results:data.map(i => ({
+		                        id:i.id,
+		                        text:i.numero
+		                    }))
+		                };
+		            }
+		        }
+		    });
+
+		    // =========================
+		    // CALCUL ARRIERES (loyer applicable mois par mois)
+		    // =========================
+		    function calculateArrieres(data, lastPaymentDate, encDate) {
+
+		        const vide = {arrieres:0, penalite:0, total:0, debut:'', fin:'', loyerCourant:0};
+
+		        if (!data || !lastPaymentDate || !encDate) return vide;
+
+		        const lastPayment = new Date(lastPaymentDate.split("T")[0] + "T00:00:00");
+		        const paiement = new Date(encDate + "T00:00:00");
+
+		        if (paiement < lastPayment) return vide;
+
+		        let nbMois = (paiement.getFullYear() - lastPayment.getFullYear()) * 12
+		                   + (paiement.getMonth() - lastPayment.getMonth());
+
+		        let moisCourantCompte = false;
+
+		        if (paiement.getDate() >= 11) {
+		            nbMois += 1;
+		            moisCourantCompte = true;
+		        }
+
+		        let nbPenalite = nbMois;
+
+		        if (!moisCourantCompte && paiement.getDate() <= 10) {
+		            nbPenalite = Math.max(nbPenalite - 1, 0);
+		        }
+
+		        // checkbox annule pénalité
+		        const bloquePenalite = document.getElementById('bloquePenalite');
+		        const annulePenalite = bloquePenalite ? bloquePenalite.checked : false;
+
+		        let arrieres = 0;
+		        let penalite = 0;
+
+		        for (let i = 0; i < nbMois; i++) {
+		            const m = new Date(lastPayment.getFullYear(), lastPayment.getMonth() + i, 1);
+		            const loyerMois = loyerPourMois(data, m.getFullYear(), m.getMonth());
+
+		            arrieres += loyerMois;
+
+		            // les mois les plus anciens sont ceux en retard
+		            if (!annulePenalite && i < nbPenalite) {
+		                penalite += loyerMois * 0.1;
+		            }
+		        }
+
+		        penalite = Math.round(penalite);
+
+		        return {
+		            arrieres: arrieres,
+		            penalite: penalite,
+		            total: arrieres + penalite,
+		            debut: lastPayment.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'}),
+		            fin: paiement.toLocaleDateString('fr-FR',{month:'2-digit', year:'numeric'}),
+		            loyerCourant: loyerPourMois(data, paiement.getFullYear(), paiement.getMonth())
+		        };
+		    }
+
+			function recalcArrieres(){
+
+			    const data = bailSelect.select2('data')[0];
+
+			    if(!data) return;
+
+			    // Révisions du bail sélectionné
+			    data.revisions = revisionsBail;
+
+			    const encDate = $('#encDate').val();
+
+			    let lastPayment = data.lastpayment || data.datedebut;
+			    if(lastPayment) {
+			        lastPayment = lastPayment.split("T")[0];
+			    }
+
+			    const result = calculateArrieres(data, lastPayment, encDate);
+
+			    // Loyer applicable à la date de recouvrement (et non le loyer actuel)
+			    const loyer = result.loyerCourant || Number(data.loyer || 0);
+
+				$('#conloyer').val(loyer.toLocaleString('fr-FR') + " FCFA");
+
+			    $('#arriereDisplay').val(result.arrieres.toLocaleString('fr-FR') + " FCFA");
+			    $('#penaliteDisplay').val(result.penalite.toLocaleString('fr-FR') + " FCFA");
+			    $('#totalDisplay').val(result.total.toLocaleString('fr-FR'));
+
+				$('#arriereDebutDisplay').val(result.debut);
+				$('#arriereFinDisplay').val(result.fin);
+
+				$('#arriereDebut').val(result.debut);
+				$('#arriereFin').val(result.fin);
+
+			    conloyerInput.val(loyer);
+			    arriereInput.val(result.arrieres);
+			    penaliteInput.val(result.penalite);
+			    totalInput.val(result.total);
+
+			    // IMPORTANT
+			    $('#montantDisplay').val(result.total.toLocaleString('fr-FR'));
+			    montantInput.val(result.total);
+			}
+
+			// =========================
+			// INIT EDIT BAIL
+			// =========================
+			const initBailId = $('#initBailId').val();
+			const initBailText = $('#initBailText').val();
+
+			const initLoyer = $('#initLoyer').val();
+			const initLastPayment = $('#initLastPayment').val();
+			const initDateDebut = $('#initDateDebut').val();
+
+			if (initBailId && initBailText) {
+
+			    const option = new Option(
+			        initBailText,
+			        initBailId,
+			        true,
+			        true
+			    );
+
+			    $(option).data('data', {
+			        id: initBailId,
+			        text: initBailText,
+			        loyer: Number(initLoyer) || 0,
+			        lastpayment: initLastPayment,
+			        datedebut: initDateDebut
+			    });
+
+			    bailSelect.append(option).trigger('change');
+
+			    hiddenBail.val(initBailId);
+
+			    // Charge les révisions puis recalcule
+			    chargerRevisions(initBailId, recalcArrieres);
+			}
+
+		    // =========================
+		    // INIT EDIT QUITTANCE
+		    // =========================
+		    const initIdentId = $('#initIdentId').val();
+		    const initIdentText = $('#initIdentText').val();
+
+		    if (initIdentId && initIdentText) {
+		        const option = new Option(initIdentText, initIdentId, true, true);
+		        identificationSelect.append(option).trigger('change');
+		        hiddenIdentification.val(initIdentId);
+		    }
+
+		    // =========================
+		    // AFFICHAGE EDIT
+		    // =========================
+		    if (conloyerInput.val()) {
+		        $('#conloyer').val(parseFloat(conloyerInput.val()).toLocaleString('fr-FR') + " FCFA");
+		    }
+
+		    if (arriereInput.val()) {
+		        $('#arriereDisplay').val(parseFloat(arriereInput.val()).toLocaleString('fr-FR') + " FCFA");
+		    }
+
+		    if (penaliteInput.val()) {
+		        $('#penaliteDisplay').val(parseFloat(penaliteInput.val()).toLocaleString('fr-FR') + " FCFA");
+		    }
+
+		    if (totalInput.val()) {
+		        $('#totalDisplay').val(parseFloat(totalInput.val()).toLocaleString('fr-FR'));
+		    }
+
+		    if (montantInput.val()) {
+		        $('#montantDisplay').val(parseFloat(montantInput.val()).toLocaleString('fr-FR'));
+		    }
+
+		    if ($('#arriereDebut').val()) {
+		        $('#arriereDebutDisplay').val($('#arriereDebut').val());
+		    }
+
+		    if ($('#arriereFin').val()) {
+		        $('#arriereFinDisplay').val($('#arriereFin').val());
+		    }
+
+		    // =========================
+		    // EVENTS
+		    // =========================
+		    bailSelect.on('select2:select', function(e){
+		        hiddenBail.val(e.params.data.id);
+		        // On charge d'abord les révisions, puis on calcule
+		        chargerRevisions(e.params.data.id, recalcArrieres);
+		    });
+
+		    identificationSelect.on('select2:select', function(e){
+		        hiddenIdentification.val(e.params.data.id);
+		    });
+
+			// =========================
+			// ANNULATION PENALITE
+			// =========================
+			$(document).on('change', '#bloquePenalite', function () {
+			    recalcArrieres();
+			});
+
+		    $('#encDate').on('change', function(){
+		        recalcArrieres();
+		    });
+
+		    // =========================
+		    // GESTION AGENT
+		    // =========================
+		    $('#agentSelect').on('change', function(){
+
+		        let selectedAgent = $(this).val();
+
+		        if (selectedAgent === "") {
+		            hiddenAgent.val(connectedUserId);
+		        } else if (selectedAgent === "9999999") {
+		            hiddenAgent.val("");
+		        } else {
+		            hiddenAgent.val(selectedAgent);
+		        }
+
+		        revisionsBail = [];
+		        bailSelect.val(null).trigger('change');
+		        identificationSelect.val(null).trigger('change');
+		    });
+
+		    // =========================
+		    // FORMAT MONTANT
+		    // =========================
+		    $('#montantDisplay').on('input', function(){
+
+		        let val = $(this).val().replace(/\s/g,'').replace(',','.');
+		        val = parseFloat(val) || 0;
+
+		        $(this).val(val.toLocaleString('fr-FR'));
+		        montantInput.val(val);
+		    });
+
+		});
+		</script>
+
+		<script>
+		document.addEventListener("DOMContentLoaded", function () {
+
+		    const modeSelect = document.getElementById("modePaiement");
+		    const chequeBlock = document.getElementById("chequeBlock");
+		    const chequeInput = document.getElementById("cheque");
+		    const preview = document.getElementById("previewLive");
+		    const removeInput = document.getElementById("removeCheque");
+
+		    // =========================
+		    // TOGGLE CHEQUE BLOCK
+		    // =========================
+		    function toggleCheque() {
+		        if (!modeSelect) return;
+
+		        if (modeSelect.value === "CHEQUE") {
+		            chequeBlock.style.display = "block";
+		            chequeInput.setAttribute("required", "required");
+		        } else {
+		            chequeBlock.style.display = "none";
+		            chequeInput.removeAttribute("required");
+		            chequeInput.value = "";
+		            preview.innerHTML = "";
+		        }
+		    }
+
+		    // =========================
+		    // PREVIEW FILE
+		    // =========================
+		    function handlePreview(file) {
+
+		        preview.innerHTML = "";
+
+		        if (!file) return;
+
+		        const type = file.type;
+
+		        if (type.startsWith("image/")) {
+
+		            const img = document.createElement("img");
+		            img.src = URL.createObjectURL(file);
+		            img.className = "img-fluid rounded border mt-2";
+		            img.style.maxHeight = "200px";
+		            preview.appendChild(img);
+
+		        } else if (type === "application/pdf") {
+
+		            const div = document.createElement("div");
+		            div.className = "alert alert-info mt-2";
+		            div.textContent = "📄 PDF sélectionné : " + file.name;
+		            preview.appendChild(div);
+
+		        } else {
+
+		            preview.innerHTML = "<div class='alert alert-warning mt-2'>Type non supporté</div>";
+		        }
+		    }
+
+		    // =========================
+		    // DELETE CHEQUE
+		    // =========================
+		    window.confirmDeleteCheque = function () {
+
+		        if (confirm("Voulez-vous supprimer le chèque ?")) {
+
+		            if (removeInput) {
+		                removeInput.value = "true";
+		            }
+
+		            const block = document.querySelector("#chequeBlock .bg-light");
+		            if (block) block.style.display = "none";
+
+		            if (chequeInput) chequeInput.value = "";
+		            if (preview) preview.innerHTML = "";
+		        }
+		    }
+
+		    // =========================
+		    // EVENTS SAFE
+		    // =========================
+		    if (modeSelect) {
+		        modeSelect.addEventListener("change", toggleCheque);
+		        toggleCheque();
+		    }
+
+		    if (chequeInput) {
+		        chequeInput.addEventListener("change", function (event) {
+		            handlePreview(event.target.files[0]);
+		        });
+		    }
+
+		});
+		</script>
+
+	</section>
+
+	
+</body>
+</html>	

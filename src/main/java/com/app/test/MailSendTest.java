@@ -1,4 +1,4 @@
-package com.app.test;
+/*package com.app.test;
 
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -29,4 +29,4 @@ public class MailSendTest {
             e.printStackTrace();
         }
     }
-}
+}*/

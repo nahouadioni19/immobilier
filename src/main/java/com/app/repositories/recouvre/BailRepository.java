@@ -5,22 +5,22 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.app.dto.BailDTO;
 import com.app.entities.recouvre.Bail;
-import com.app.enums.StatutAppartement;
 import com.app.enums.StatutBail;
 import com.app.repositories.BailSelectProjection;
 
+import jakarta.persistence.LockModeType;
+
 @Repository
 public interface BailRepository extends JpaRepository<Bail, Integer> {
-	
-	
 
     /* ================= LISTE SIMPLE ================= */
     @Query(value = """
@@ -35,7 +35,8 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
                 t.derniere_date_paiement AS derniereDatePaiement,
-                t.date_fin AS dateDebut
+                t.date_fin AS dateDebut, /*date_fin*/
+                t.date_fin_recouvre AS dateFinRecouvre
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
         JOIN t_appartement p ON p.idt = t.appartement_id
@@ -67,7 +68,8 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
                 t.derniere_date_paiement AS derniereDatePaiement,
-                t.date_fin AS dateDebut
+                t.date_fin AS dateDebut,  /*date_fin */
+                t.date_fin_recouvre AS dateFinRecouvre
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
         JOIN t_appartement p ON p.idt = t.appartement_id
@@ -99,7 +101,8 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
                 t.derniere_date_paiement AS derniereDatePaiement,
-                t.date_fin AS dateDebut
+                t.date_fin AS dateDebut,  /*date_fin */
+                t.date_fin_recouvre AS dateFinRecouvre
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
         JOIN t_appartement p ON p.idt = t.appartement_id
@@ -151,17 +154,22 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
             b.id,
             b.total,
             b.statut,
-            l.nom,
-            l.prenom,
-            a.numAppart,
-            a.libelle
+            concat(l.nom ,' ',l.prenom )as nom,
+            concat('(appartement: ',a.numAppart ,' ',a.libelle ,')') as libelle,
+            concat('(désignation: ',i.nomImmeuble ,' ',i.adresse ,')') as adresse,
+            concat('(bailleur: ',e.nom,' ',e.prenom,')') as prenom,
+            b.montantLoyer
         )
         FROM Bail b
         LEFT JOIN b.locataire l
         LEFT JOIN b.appartement a
+        LEFT JOIN a.immeuble i
+        LEFT JOIN i.bailleur e
         WHERE (:keyword IS NULL OR :keyword = ''
             OR LOWER(l.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
             OR LOWER(l.prenom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(e.nom) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(e.prenom) LIKE LOWER(CONCAT('%', :keyword, '%'))
         )
         AND b.agence.id = :agenceId
     """)
@@ -176,14 +184,18 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
             b.id,
             b.total,
             b.statut,
-            l.nom,
-            l.prenom,
-            a.numAppart,
-            a.libelle
+            concat(l.nom ,' ',l.prenom)as nom,
+            concat('(appartement: ',a.numAppart ,' ',a.libelle ,')') as libelle,
+            concat('(désignation: ',i.nomImmeuble ,' ',i.adresse ,')') as adresse,
+            concat('(bailleur: ',e.nom,' ',e.prenom,')') as prenom,
+            b.montantLoyer
+            
         )
         FROM Bail b
         LEFT JOIN b.locataire l
         LEFT JOIN b.appartement a
+        LEFT JOIN a.immeuble i
+        LEFT JOIN i.bailleur e
         WHERE b.agence.id = :agenceId
     """)
     Page<BailDTO> findAllDTO(
@@ -200,31 +212,6 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
 
     long countByStatutAndUtilite(StatutBail statut, String utilite);
 
-	
-	
-	
-	
-	
-	
-    
-    
-    
-    
-    
-    
-    
-    
-    
-	
-	
-	
-	
-	
-	
-	
-	
-    
-
     /* ===== Version Pagination ===== */
     
     @Query(value = """
@@ -239,7 +226,8 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                     p.libelle AS bailibelle,
                     p.num_appart AS numero, 
                     t.derniere_date_paiement AS derniereDatePaiement,
-                    t.date_fin AS dateDebut
+                    t.date_fin AS dateDebut,
+                    t.date_fin_recouvre AS dateFinRecouvre
             FROM t_bail t
             JOIN t_locataire l ON l.idt = t.locataire_id
             JOIN t_appartement p ON p.idt = t.appartement_id
@@ -274,7 +262,8 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
                 t.derniere_date_paiement AS derniereDatePaiement,
-                t.date_fin AS dateDebut
+                t.date_fin AS dateDebut,  /*date_fin */
+                t.date_fin_recouvre AS dateFinRecouvre
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
         JOIN t_appartement p ON p.idt = t.appartement_id
@@ -301,7 +290,8 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
                 p.libelle AS bailibelle,
                 p.num_appart AS numero, 
                 t.derniere_date_paiement AS derniereDatePaiement,
-                t.date_fin AS dateDebut
+                t.date_fin AS dateDebut,  /*date_fin */
+                t.date_fin_recouvre AS dateFinRecouvre
         FROM t_bail t
         JOIN t_locataire l ON l.idt = t.locataire_id
         JOIN t_appartement p ON p.idt = t.appartement_id
@@ -337,7 +327,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
 
 
     // ================= FIND BY ID =================
-    @Query(value = """
+    /**@Query(value = """
         SELECT  t.idt AS id,
                 l.nom AS locnom,
                 l.prenom AS locprenom,
@@ -358,47 +348,67 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
     """, nativeQuery = true)
     BailSelectProjection findBailById(
             @Param("id") Integer id,
-            @Param("agenceId") Integer agenceId);
+            @Param("agenceId") Integer agenceId);*/
+    
+	
+	 @Query(value = """
+	     SELECT
+	         t.idt AS id,
+	         l.nom AS locnom,
+	         l.prenom AS locprenom,
+	         l.telephone AS loctel,
+	         l.email AS locemail,
+	         t.utilite AS usglibelle,
+	         t.montant_loyer AS montantloyer,
+	         t.statut AS statut,
+	         p.libelle AS bailibelle,
+	         p.num_appart AS numero,
+	         t.derniere_date_paiement AS derniereDatePaiement,
+	         t.date_debut AS dateDebut,
+	         t.date_fin AS dateFin,
+	         t.date_effet_loyer AS dateEffetLoyer,
+	         t.date_fin_recouvre AS dateFinRecouvre
+	     FROM t_bail t
+	     JOIN t_locataire l ON l.idt = t.locataire_id
+	     JOIN t_appartement p ON p.idt = t.appartement_id
+	     WHERE t.idt = :id
+	       AND t.agence_id = :agenceId
+	     """, nativeQuery = true)
+	 BailSelectProjection findBailById(
+	         @Param("id") Integer id,
+	         @Param("agenceId") Integer agenceId
+	 );
+	 
+    
+    
 
 
     // ================= JPQL SEARCH =================
-     
-    @Query("""
-            SELECT b
-            FROM Bail b
-            JOIN b.locataire l
-            LEFT JOIN b.appartement a
-            LEFT JOIN a.immeuble i
-            WHERE (:search IS NULL OR :search = '' OR
-                   LOWER(l.nom) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(l.prenom) LIKE LOWER(CONCAT('%', :search, '%')))
-            AND b.agence.id = :agenceId
-            AND (:bailleurId IS NULL OR i.bailleur.id = :bailleurId)
-        """)
-    Page<Bail> searchBaux(
-            @Param("search") String search,
-            @Param("agenceId") Integer agenceId,
-            @Param("bailleurId") Integer bailleurId,
-            Pageable pageable);
-    
-    ///
+    @EntityGraph(attributePaths = {
+    	    "locataire",
+    	    "appartement",
+    	    "appartement.immeuble",
+    	    "appartement.immeuble.bailleur"
+    	})
+    	@Query("""
+    	    SELECT b
+    	    FROM Bail b
+    	    JOIN b.locataire l
+    	    LEFT JOIN b.appartement a
+    	    LEFT JOIN a.immeuble i
+    	    WHERE (:search IS NULL OR :search = '' OR
+    	           LOWER(l.nom) LIKE LOWER(CONCAT('%', :search, '%')) OR
+    	           LOWER(l.prenom) LIKE LOWER(CONCAT('%', :search, '%')))
+    	    AND b.agence.id = :agenceId
+    	    AND (:bailleurId IS NULL OR i.bailleur.id = :bailleurId)
+    	""")
+    	Page<Bail> searchBaux(
+    	        @Param("search") String search,
+    	        @Param("agenceId") Integer agenceId,
+    	        @Param("bailleurId") Integer bailleurId,
+    	        Pageable pageable);
+ 
 
-
-    /*@Query("""
-        SELECT b
-        FROM Bail b
-        JOIN b.locataire l
-        WHERE (:search IS NULL OR :search = '' OR
-               LOWER(l.nom) LIKE LOWER(CONCAT('%', :search, '%')) OR
-               LOWER(l.prenom) LIKE LOWER(CONCAT('%', :search, '%')))
-        AND b.agence.id = :agenceId
-    """)
-    List<Bail> searchBauxNoPage(
-            @Param("search") String search,
-            @Param("agenceId") Integer agenceId);*/
-    
-    
-    
     
     @Query("""
             SELECT b
@@ -423,15 +433,7 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
             Integer agenceId,
             StatutBail statut);
     
-    //en retard
-  /*  @Query("""
-    	    SELECT COALESCE(SUM(b.total), 0)
-    	    FROM Bail b
-    	    WHERE b.agence.id = :agenceId
-    	      AND b.statut = com.app.enums.StatutBail.EN_RETARD
-    	""")
-    	Long totalImpayes(@Param("agenceId") Integer agenceId);*/
-    
+     
     //RETARD
     @Query("""
     	    SELECT COUNT(DISTINCT e.bail.id)
@@ -500,6 +502,12 @@ public interface BailRepository extends JpaRepository<Bail, Integer> {
         """)
         List<Bail> searchBauxAgence(
                 @Param("agenceId") Integer agenceId);
+    
+    
+ // À ajouter dans BailRepository :
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select b from Bail b where b.id = :id")
+    Optional<Bail> trouverPourMiseAJour(@Param("id") Integer id);
     
 
 }

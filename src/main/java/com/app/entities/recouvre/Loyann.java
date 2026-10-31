@@ -138,4 +138,5 @@ public class Loyann extends BaseEntity{
 	            statut = "IMPAYE";
 	        }
 	    }
+	    	    
 }

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Loyers</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --header-bg: #d4e8dc;
+    --paid-bg: #d4edda;
+    --paid-fg: #155724;
+    --notpaid-bg: #f8d7da;
+    --notpaid-fg: #721c24;
+    --hover-bg: #f1f1f1;
+    --total-bg: #e2e3e5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181d;
+      --fg: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #2c2f36;
+      --header-bg: #274036;
+      --paid-bg: #163d24;
+      --paid-fg: #b7e4c7;
+      --notpaid-bg: #4a1f24;
+      --notpaid-fg: #f5c6cb;
+      --hover-bg: #22252b;
+      --total-bg: #2a2d33;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181d;
+    --fg: #e5e7eb;
+    --muted: #9ca3af;
+    --border: #2c2f36;
+    --header-bg: #274036;
+    --paid-bg: #163d24;
+    --paid-fg: #b7e4c7;
+    --notpaid-bg: #4a1f24;
+    --notpaid-fg: #f5c6cb;
+    --hover-bg: #22252b;
+    --total-bg: #2a2d33;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    margin: 0;
+    padding: env(safe-area-inset-top,0px) 20px env(safe-area-inset-bottom,0px);
+  }
+
+  .wrap {
+    max-width: 1100px;
+    margin: 32px auto;
+  }
+
+  h1 { font-size: 1.3rem; margin-bottom: 4px; }
+  p.note { color: var(--muted); margin-top: 0; margin-bottom: 20px; font-size: 0.92rem; }
+
+  .table-responsive {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+
+  th, td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  thead th {
+    background: var(--header-bg);
+    font-weight: 600;
+  }
+
+  th:first-child, td:first-child {
+    text-align: left;
+    width: 220px;
+  }
+
+  tbody tr:hover { background: var(--hover-bg); }
+
+  /* ⭐ TRONCATURE — colonne Locataire */
+  td.locataire {
+    max-width: 220px;
+    width: 220px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding: 0 !important;
+    font-weight: 500;
+  }
+
+  td.locataire .cell-content {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding: 10px 12px;
+    cursor: default;
+  }
+
+  .paid { background: var(--paid-bg); color: var(--paid-fg); font-weight: bold; }
+  .not-paid { background: var(--notpaid-bg); color: var(--notpaid-fg); }
+  .not-paid:hover { filter: brightness(0.97); }
+
+  .total-col {
+    font-weight: bold;
+    background: var(--total-bg);
+  }
+
+  /* Tooltip natif custom (sans dépendance Bootstrap CSS) */
+  [data-tooltip] {
+    position: relative;
+  }
+  [data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 12px;
+    top: 100%;
+    margin-top: 6px;
+    background: var(--fg);
+    color: var(--bg);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    white-space: normal;
+    max-width: 320px;
+    width: max-content;
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    pointer-events: none;
+  }
+
+  footer.legend {
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+	<section layout:fragment="content">
+  <div class="container mt-4">
+    <h1>Colonne « Locataire » — troncature + tooltip complet</h1>
+    <p class="note">
+      Le texte long est coupé sur une seule ligne avec des points de suspension (…).
+      Survolez une cellule de la colonne « Locataire » pour voir le texte complet.
+    </p>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Locataire</th>
+            <th>Jan</th><th>Fév</th><th>Mar</th><th>Avr</th>
+            <th>Mai</th><th>Juin</th><th>Juil</th><th>Août</th>
+            <th>Sep</th><th>Oct</th><th>Nov</th><th>Déc</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="demoBody"></tbody>
+        <tfoot>
+          <tr>
+            <th>Total</th>
+            <th colspan="12" style="text-align:right;">1 512 000</th>
+            <th class="total-col" style="text-align:right;">1 512 000</th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <footer class="legend">
+      Cette page est une démonstration autonome (sans Bootstrap) : le tooltip est recréé en CSS pur
+      via <code>data-tooltip</code> + <code>::after</code>, pour reproduire fidèlement le comportement
+      que vous obtiendrez avec <code>data-bs-toggle="tooltip"</code> + Bootstrap dans votre application.
+    </footer>
+  </div>
+
+  <script>
+    // Données de démonstration, structure identique à ce que renvoie votre backend
+    const rows = [
+      {
+        locataire: "OUATTARA Abdoulaye Junior", bailleur: "DOSSO Oumar",
+        locataireCourt: "Locataire: OUATTARA Abdoulaye... - Bailleur: DOSSO Oumar",
+        jan: "0", fev: "60 000", mar: "60 000", avr: "60 000", mai: "60 000",
+        juin: "60 000", juil: "60 000", aou: "60 000", sep: "48 000",
+        oct: "0", nov: "0", dec: "0", total: "468 000",
+        paid: [false,true,true,true,true,true,true,true,true,false,false,false]
+      },
+      {
+        locataire: "KDS Nutrition SARL", bailleur: "KOUAME Kouassi Bertrand",
+        locataireCourt: "Locataire: KDS Nutrition... - Bailleur: KOUAME Kou...",
+        jan: "60 000", fev: "60 000", mar: "60 000", avr: "60 000", mai: "60 000",
+        juin: "60 000", juil: "60 000", aou: "60 000", sep: "60 000",
+        oct: "60 000", nov: "60 000", dec: "60 000", total: "720 000",
+        paid: Array(12).fill(true)
+      },
+      {
+        locataire: "KOUADIO Yao Frédéric", bailleur: "CAMARA Lassina",
+        locataireCourt: "Locataire: KOUADIO Y... - Bailleur: CAMARA Las...",
+        jan: "60 000", fev: "60 000", mar: "60 000", avr: "60 000", mai: "60 000",
+        juin: "24 000", juil: "0", aou: "0", sep: "0",
+        oct: "0", nov: "0", dec: "0", total: "324 000",
+        paid: [true,true,true,true,true,true,false,false,false,false,false,false]
+      }
+    ];
+
+    const tbody = document.getElementById("demoBody");
+
+    rows.forEach(row => {
+      const months = [row.jan,row.fev,row.mar,row.avr,row.mai,row.juin,row.juil,row.aou,row.sep,row.oct,row.nov,row.dec];
+      const tr = document.createElement("tr");
+
+      const fullText = [row.locataire, row.bailleur].filter(Boolean).join(" - ");
+
+      let cells = `
+        <td class="locataire" data-tooltip="${fullText.replace(/"/g,'&quot;')}">
+          <span class="cell-content">${row.locataireCourt}</span>
+        </td>`;
+
+      months.forEach((val, i) => {
+        cells += `<td class="${row.paid[i] ? 'paid' : 'not-paid'}" style="text-align:right;">${val}</td>`;
+      });
+
+      cells += `<td class="total-col" style="text-align:right;">${row.total}</td>`;
+
+      tr.innerHTML = cells;
+      tbody.appendChild(tr);
+    });
+  </script>
+	</section>
+</body>
+</html>

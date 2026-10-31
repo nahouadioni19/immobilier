@@ -1,0 +1,297 @@
+
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Reçus annuels par locataire</title>
+
+    <style>
+        .recu {
+            border: 1px solid #444;
+            padding: 25px;
+            margin-bottom: 25px;
+            background: white;
+            color: #222;
+        }
+
+        .recu-entete {
+            text-align: center;
+            border-bottom: 2px solid #198754;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .recu-entete h3 {
+            margin-bottom: 5px;
+        }
+
+        .recu-total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #198754;
+        }
+
+        .actions-impression {
+            display: flex;
+            gap: 10px;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+            }
+
+            .no-print,
+            header,
+            nav,
+            footer,
+            .sidebar {
+                display: none !important;
+            }
+
+            .container {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .recu {
+                border: 1px solid #333;
+                margin: 0;
+                padding: 15mm;
+                min-height: 220mm;
+                page-break-after: always;
+                break-after: page;
+                box-sizing: border-box;
+            }
+
+            .recu:last-child {
+                page-break-after: auto;
+                break-after: auto;
+            }
+
+            .recu-total {
+                color: #000;
+            }
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
+    </style>
+</head>
+
+<body>
+
+	<section layout:fragment="content">
+	
+	    <div class="container my-4">
+	
+	        <div class="d-flex justify-content-between align-items-center mb-4">
+	            <div>
+	                <h4>Reçus annuels par locataire</h4>
+	                <p class="text-muted mb-0">
+	                    Consultation et impression des paiements annuels.
+	                </p>
+	            </div>
+	        </div>
+	
+	        <!-- FORMULAIRE DE RECHERCHE -->
+	        <div class="card shadow-sm mb-4 no-print">
+	            <div class="card-body">
+	
+	                <form th:action="@{/recouvrements/recus-annuels}"
+	                      method="get"
+	                      class="row g-3">
+	
+	                    <div class="col-md-7">
+	                        <label for="locataireId" class="form-label">
+	                            Locataire
+	                        </label>
+	
+	                        <select id="locataireId"
+	                                name="locataireId"
+	                                class="form-select"
+	                                required>
+	
+	                            <option value="">Sélectionner un locataire</option>
+	
+	                            <option th:each="l : ${locataires}"
+	                                    th:value="${l.id}"
+	                                    th:selected="${locataireId != null
+	                                        and locataireId.equals(l.id)}"
+	                                    th:text="${l.prenom + ' ' + l.nom}">
+	                            </option>
+	
+	                        </select>
+	                    </div>
+	
+	                    <div class="col-md-3">
+	                        <label for="annee" class="form-label">
+	                            Année
+	                        </label>
+	
+	                        <select id="annee"
+	                                name="annee"
+	                                class="form-select"
+	                                required>
+	
+	                            <option th:each="a : ${#numbers.sequence(
+	                                         T(java.time.LocalDate).now().year,
+	                                         2020)}"
+	                                    th:value="${a}"
+	                                    th:selected="${annee == a}"
+	                                    th:text="${a}">
+	                            </option>
+	
+	                        </select>
+	                    </div>
+	
+	                    <div class="col-md-2 d-flex align-items-end">
+	                        <button type="submit"
+	                                class="btn btn-primary w-100">
+	                            Rechercher
+	                        </button>
+	                    </div>
+	
+	                </form>
+	
+	            </div>
+	        </div>
+	
+	        <!-- RESULTATS -->
+	        <div th:if="${locataireId != null}">
+	
+	            <div class="alert alert-info no-print"
+	                 th:if="${#lists.isEmpty(encaisses)}">
+	                Aucun encaissement transmis trouvé pour ce locataire
+	                au cours de l'année sélectionnée.
+	            </div>
+	
+	            <div th:if="${not #lists.isEmpty(encaisses)}">
+	
+	                <div class="card shadow-sm mb-4 no-print">
+	                    <div class="card-body d-flex justify-content-between
+	                                align-items-center flex-wrap gap-3">
+	
+	                        <div>
+	                            <strong th:text="${#lists.size(encaisses)}
+	                                + ' reçu(s)'"></strong>
+	
+	                            <div class="recu-total mt-1">
+	                                Total encaissé :
+	                                <span th:text="${#numbers.formatDecimal(
+	                                    totalAnnuel, 0, 'WHITESPACE', 0, 'POINT')}">
+	                                </span>
+	                                FCFA
+	                            </div>
+	                        </div>
+	
+	                        <div class="actions-impression">
+	                            <button type="button"
+	                                    class="btn btn-success"
+	                                    onclick="window.print()">
+	                                Imprimer tous les reçus
+	                            </button>
+	                        </div>
+	
+	                    </div>
+	                </div>
+	
+	                <!-- UN REÇU PAR ENCAISSEMENT -->
+	                <div th:each="e : ${encaisses}" class="recu">
+	
+	                    <div class="recu-entete">
+	                        <h3>REÇU DE PAIEMENT</h3>
+	                        <p class="mb-1">
+	                            Gestion immobilière - IMMONET
+	                        </p>
+	
+							<strong>
+							    N° du reçu :
+							    <span th:text="${e.identification != null
+							        ? e.identification.ideNumero
+							        : 'Non renseigné'}">
+							    </span>
+							</strong>
+	                    </div>
+	
+	                    <p>
+	                        Nous reconnaissons avoir reçu le paiement
+	                        enregistré ci-dessous.
+	                    </p>
+	
+	                    <hr>
+	
+	                    <p>
+	                        <strong>Locataire :</strong>
+	                        <span th:text="${e.bail.locataire.prenom
+	                            + ' ' + e.bail.locataire.nom}"></span>
+	                    </p>
+	
+	                    <p>
+	                        <strong>Date du paiement :</strong>
+	                        <span th:text="${#temporals.format(
+	                            e.encDate, 'dd/MM/yyyy')}"></span>
+	                    </p>
+	
+	                    <p>
+	                        <strong>Appartement :</strong>
+	                        <span th:text="${e.bail.appartement != null
+	                            ? e.bail.appartement.numAppart
+	                            : 'Non renseigné'}"></span>
+	                    </p>
+	
+	                    <p>
+	                        <strong>Mode de paiement :</strong>
+	                        <span th:text="${e.encMode != null
+	                            ? e.encMode : 'Non renseigné'}"></span>
+	                    </p>
+	
+	                    <div class="mt-4 p-3 border rounded">
+	                        <strong>Montant encaissé :</strong>
+	
+	                        <div class="recu-total mt-2">
+	                            <span th:text="${#numbers.formatDecimal(
+	                                e.encMontant != null
+	                                    ? e.encMontant : 0,
+	                                0, 'WHITESPACE', 0, 'POINT')}"></span>
+	                            FCFA
+	                        </div>
+	                    </div>
+	
+	                    <p class="mt-4">
+	                        <strong>Agent de recouvrement :</strong>
+	                        <span th:text="${e.utilisateur != null
+	                            ? e.utilisateur.prenoms + ' '
+	                                + e.utilisateur.nom
+	                            : 'Non renseigné'}"></span>
+	                    </p>
+	
+	                    <div class="row mt-5">
+	                        <div class="col-6 text-center">
+	                            Signature du locataire
+	                        </div>
+	
+	                        <div class="col-6 text-center">
+	                            Signature et cachet de l'agence
+	                        </div>
+	                    </div>
+	
+	                </div>
+	
+	            </div>
+	        </div>
+	
+	    </div>
+	
+	</section>
+
+</body>
+</html>

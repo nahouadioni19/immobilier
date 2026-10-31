@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Contrat de bail</title>
+    <style type="text/css">
+        @page {
+            size: A4;
+            margin: 22mm 20mm 22mm 20mm;
+            @bottom-center {
+                content: "Contrat de bail - Page " counter(page) " / " counter(pages);
+                font-size: 8pt;
+                color: #666;
+            }
+        }
+        body { font-family: serif; font-size: 10.5pt; line-height: 1.45; color: #111; }
+        h1 { text-align: center; font-size: 16pt; margin: 0 0 4pt 0; text-transform: uppercase; }
+        .sous-titre { text-align: center; margin-bottom: 14pt; color: #444; }
+        h2 { font-size: 11pt; margin: 14pt 0 4pt 0; text-transform: uppercase; border-bottom: 0.5pt solid #999; padding-bottom: 2pt; page-break-after: avoid; }
+        p { margin: 0 0 6pt 0; text-align: justify; }
+        ul { margin: 0 0 6pt 0; padding-left: 16pt; }
+        table.montants { border-collapse: collapse; width: 100%; margin: 6pt 0 8pt 0; }
+        table.montants td, table.montants th { border: 0.5pt solid #777; padding: 4pt 6pt; }
+        table.montants th { background-color: #eee; text-align: left; }
+        table.montants td.val { text-align: right; width: 35%; }
+        table.montants tr.total td { font-weight: bold; background-color: #eee; }
+        table.signatures { width: 100%; margin-top: 24pt; border-collapse: collapse; page-break-inside: avoid; }
+        table.signatures td { width: 50%; vertical-align: top; padding: 4pt; height: 90pt; }
+        .centre { text-align: center; }
+    </style>
+</head>
+<body>
+
+<h1>Contrat de bail à usage d'habitation</h1>
+<div class="sous-titre">N° <span th:text="${c.numero}">BAIL-2026-000001</span></div>
+
+<h2>Article 1 - Les parties</h2>
+<p><strong>Le bailleur</strong> : <strong th:text="${c.bailleurNom}">NOM Prénom</strong>,
+    propriétaire du bien, représenté par son mandataire l'agence
+    <strong th:text="${c.agenceNom}">AGENCE</strong>, domiciliée à
+    <span th:text="${c.agenceAdresse}">adresse</span>
+    (tél. <span th:text="${c.agenceTelephone}">00</span>,
+    courriel <span th:text="${c.agenceEmail}">mail</span>), ci-après « le Bailleur ».</p>
+<p><strong>Le preneur</strong> : <strong th:text="${c.locataireNom}">NOM Prénom</strong>,
+    pièce d'identité : <span th:text="${c.locatairePiece}">type</span>,
+    tél. <span th:text="${c.locataireTelephone}">00</span>,
+    courriel <span th:text="${c.locataireEmail}">mail</span>, ci-après « le Preneur ».</p>
+
+<h2>Article 2 - Objet et destination</h2>
+<p>Le Bailleur donne à bail au Preneur, qui l'accepte, le logement suivant :
+    <strong th:text="${c.bienLibelle}">A6 - 2 chambres + salon</strong>
+    <span th:if="${!#strings.isEmpty(c.bienComposition)}">(<span th:text="${c.bienComposition}">composition</span>)</span>,
+    dans l'immeuble <span th:text="${c.immeubleNom}">immeuble</span>,
+    situé <span th:text="${c.immeubleAdresse}">adresse</span>.</p>
+<p>Le bien est loué exclusivement à usage de <strong th:text="${c.usage}">habitation</strong>.
+    Toute autre activité est interdite sans accord écrit préalable du Bailleur.</p>
+
+<h2>Article 3 - Durée</h2>
+<p>Le bail est conclu pour une durée de <strong th:text="${c.dureeMois}">12</strong> mois,
+    du <strong th:text="${c.dateDebut}">01/01/2026</strong>
+    au <strong th:text="${c.dateFin}">31/12/2026</strong>. À son terme, il se renouvelle par tacite
+    reconduction, sauf congé donné dans les conditions de l'article 11.</p>
+
+<h2>Article 4 - Loyer et charges</h2>
+<p>Le loyer mensuel initial est fixé à <strong><span th:text="${c.loyer}">0</span> FCFA</strong>
+    (<span th:text="${c.loyerEnLettres}">en lettres</span> francs CFA), hors charges.
+    Les charges mensuelles s'élèvent à <strong><span th:text="${c.charges}">0</span> FCFA</strong>.</p>
+<p th:if="${c.revise}">Ce loyer a fait l'objet de révision(s). Le loyer mensuel actuel est de
+    <strong><span th:text="${c.loyerActuel}">0</span> FCFA</strong>
+    (<span th:text="${c.loyerActuelEnLettres}">en lettres</span> francs CFA).</p>
+<table class="montants" th:if="${c.revise}">
+    <tr><th>Date d'effet</th><th>Ancien loyer (FCFA)</th><th>Nouveau loyer (FCFA)</th></tr>
+    <tr th:each="r : ${c.revisions}">
+        <td th:text="${r.dateEffet}">01/01/2027</td>
+        <td th:text="${r.ancienMontant}">0</td>
+        <td th:text="${r.nouveauMontant}">0</td>
+    </tr>
+</table>
+<p>Le loyer est payable d'avance, au plus tard le <span th:text="${c.jourLimitePaiement}">10</span>
+    de chaque mois. Une quittance est remise au Preneur pour chaque paiement.</p>
+
+<h2>Article 5 - Retard de paiement</h2>
+<p>Tout loyer payé après le <span th:text="${c.jourLimitePaiement}">10</span> du mois est majoré
+    d'une pénalité égale à <span th:text="${c.penaliteTaux}">10</span> % du loyer mensuel.</p>
+
+<h2>Article 6 - Sommes versées à la signature</h2>
+<table class="montants">
+    <tr><td>Avance sur loyer (<span th:text="${c.avanceNombreMois}">2</span> mois)</td>
+        <td class="val"><span th:text="${c.avance}">0</span> FCFA</td></tr>
+    <tr><td>Dépôt de garantie (<span th:text="${c.cautionNombreMois}">2</span> mois)</td>
+        <td class="val"><span th:text="${c.caution}">0</span> FCFA</td></tr>
+    <tr><td>Honoraires d'agence</td>
+        <td class="val"><span th:text="${c.honoraire}">0</span> FCFA</td></tr>
+    <tr><td>Charges</td>
+        <td class="val"><span th:text="${c.charges}">0</span> FCFA</td></tr>
+    <tr class="total"><td>Total versé à la signature</td>
+        <td class="val"><span th:text="${c.total}">0</span> FCFA</td></tr>
+</table>
+<p>Soit <span th:text="${c.totalEnLettres}">en lettres</span> francs CFA. Le dépôt de garantie
+    ne produit pas d'intérêts. Il est restitué après la remise des clés et l'état des lieux de sortie,
+    déduction faite des sommes dues par le Preneur. L'avance est imputée sur les derniers loyers.</p>
+
+<h2>Article 7 - Obligations du Bailleur</h2>
+<ul>
+    <li>Remettre un bien en bon état d'usage et en assurer la jouissance paisible.</li>
+    <li>Effectuer les grosses réparations non imputables au Preneur.</li>
+    <li>Remettre une quittance pour chaque paiement.</li>
+</ul>
+
+<h2>Article 8 - Obligations du Preneur</h2>
+<ul>
+    <li>Payer le loyer et les charges aux échéances convenues.</li>
+    <li>User du bien en bon père de famille et assurer l'entretien courant.</li>
+    <li>Ne réaliser aucune transformation sans accord écrit du Bailleur.</li>
+    <li>Souscrire une assurance contre l'incendie et les dégâts des eaux.</li>
+    <li>Permettre les visites du Bailleur ou de son mandataire, sur rendez-vous.</li>
+</ul>
+
+<h2>Article 9 - Sous-location</h2>
+<p>La sous-location, totale ou partielle, et la cession du bail sont interdites sans accord écrit
+    du Bailleur.</p>
+
+<h2>Article 10 - État des lieux</h2>
+<p>Un état des lieux contradictoire est établi à l'entrée et à la sortie du Preneur. Les dégradations
+    constatées, hors usure normale, sont à sa charge.</p>
+
+<h2>Article 11 - Congé et résiliation</h2>
+<p>Chaque Partie peut mettre fin au bail à son terme en respectant un préavis de
+    <span th:text="${c.preavisMois}">3</span> mois, notifié par lettre recommandée ou remise en main
+    propre contre décharge.</p>
+
+<h2>Article 12 - Clause résolutoire</h2>
+<p>En cas de non-paiement du loyer ou des charges, ou d'inexécution d'une obligation essentielle, le bail
+    est résilié de plein droit <span th:text="${c.delaiResolutoireJours}">15</span> jours après une mise
+    en demeure restée sans effet. L'expulsion ne peut intervenir que par décision de justice.</p>
+
+<h2>Article 13 - Droit applicable et litiges</h2>
+<p>Le présent contrat est soumis au droit ivoirien. À défaut d'accord amiable, tout litige relève du
+    tribunal compétent de <span th:text="${c.tribunal}">Abidjan</span>.</p>
+
+<p style="margin-top: 14pt;">Fait en deux exemplaires originaux, à
+    <span th:text="${c.lieuSignature}">Abidjan</span>, le <span th:text="${c.dateSignature}">01/01/2026</span>.</p>
+
+<table class="signatures">
+    <tr>
+        <td class="centre"><strong>Le Bailleur (par son mandataire)</strong><br />
+            <span th:text="${c.agenceNom}">AGENCE</span><br />
+            <em>« Lu et approuvé »</em></td>
+        <td class="centre"><strong>Le Preneur</strong><br />
+            <span th:text="${c.locataireNom}">NOM Prénom</span><br />
+            <em>« Lu et approuvé »</em></td>
+    </tr>
+</table>
+
+</body>
+</html>

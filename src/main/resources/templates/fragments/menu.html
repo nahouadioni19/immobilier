@@ -92,6 +92,7 @@
 			         (
 			             #strings.contains(currentUri,'/recouvrements/a-encaisser')
 			             || #strings.contains(currentUri,'/recouvrements/encaissements')
+						 || #strings.contains(currentUri,'/recouvrements/recus-annuels')
 			         )
 			     } ? '' : ' collapsed'"
 			    data-bs-toggle="collapse"
@@ -113,6 +114,7 @@
 			         (
 			             #strings.contains(currentUri,'/recouvrements/a-encaisser')
 			             || #strings.contains(currentUri,'/recouvrements/encaissements')
+						 || #strings.contains(currentUri,'/recouvrements/recus-annuels')
 			         )
 			      } ? ' show' : ''"
 			      id="recouvrementMenu"
@@ -133,6 +135,13 @@
 				        Encaissements
 				    </a>
 				</li>
+				
+				<li>
+				    <a class="nav-link" th:href="@{/recouvrements/recus-annuels}">
+				        <i class="bi bi-cash-coin me-2"></i>
+				        Reçus annuels
+				    </a>
+				</li>				
 
 	        </ul>
 	    </div>
@@ -202,7 +211,7 @@
     </li>
 	
 	<!-- Maintenance -->
-	   <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIREC')">					 
+	   <li class="nav-item" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMIN','DIRECTO')">					 
 			 
 			 <a class="nav-link d-flex justify-content-between align-items-center"
 			    th:classappend="${

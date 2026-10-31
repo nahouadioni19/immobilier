@@ -31,407 +31,508 @@
 	  	  </style>
 
 <body>
-    <section layout:fragment="content">
-	    <!-- Ton contenu principal ici -->
-		<div class="container my-2">
-			<div class="container mt-4">
-				
-				<form th:action="@{/patrimoines/save}" th:object="${immeubForm}" method="post" 
-										enctype="multipart/form-data" class="border p-4 rounded shadow-sm bg-white" id="patrimoineForm">
 
-					<input type="hidden" th:field="*{immeuble.id}"/>
-					<input type="hidden" th:field="*{immeuble.version}" />
-					
-					<h2>Gestion du patrimoine</h2>
-					
-					<!--<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">-->
-					<h4>Informations du patrimoine</h4>
-					<div class="row">
-						<div class="col-sm-12 col-md-6">
-							<div class="mb-3 form-group">
-						    <label class="form-label">Désignation :<span style="color:red;"> *</span></label>
-						    <input type="text" th:field="*{immeuble.nomImmeuble}" required class="form-control" oninput="uppercaseWords(this)">
-							</div>
-						</div>
-						<div class="col-sm-12 col-md-6">
-							<div class="mb-3 form-group">
-						    <label class="form-label">Code :</label>
-						    <input type="text" th:field="*{immeuble.codeImmeuble}" class="form-control" oninput="uppercaseWords(this)">
-							</div>
-						</div>
-						<div class="col-sm-12 col-md-6">
-							<div class="mb-3 form-group">
-						    <label class="form-label">Localisation :<span style="color:red;"> *</span></label>
-						    <input type="text" th:field="*{immeuble.adresse}" class="form-control" required>
-							</div>
-						</div>
-						
-						<div class="col-sm-12 col-md-6">
-							<div class="mb-3 form-group">
-						    <label class="form-label">Nombre d'étages :</label>
-							<input type="number" th:field="*{immeuble.nombreEtages}" min="0" class="form-control">
-							</div>
-						</div>
-					</div>
-					
-					<div class="row">
-						<div class="col-sm-12 col-md-6">
-							<div class="mb-3 form-group">
-						    <label class="form-label">Année construction :<span style="color:red;"> *</span></label>
-						    <input type="number" th:field="*{immeuble.anneeConstruction}" min="1900" class="form-control">
-							</div>
-						</div>
-						
-						<div class="col-sm-12 col-md-6">
-							<div class="mb-3 form-group">
-						    <label class="form-label">Titre foncier :</label>
-						    <input type="text" th:field="*{immeuble.numeroTitreFoncier}" class="form-control" oninput="uppercaseWords(this)">
-							</div>
-						</div>
-					</div>
-					<hr>
-					<div class="row">							
-						<div class="col-sm-12 col-md-6">
-							<div class="mb-3 form-group">
-							
-							<label for="bailleurSelect" class="form-label">Bailleur<span style="color:red;"> *</span></label>
-							<select th:field="*{immeuble.bailleur.id}" id="bailleurSelect" class="form-select" style="width:100%" required>										   
-								   <!-- Option pour l'édition -->
-								   <option value="">-- Sélectionner --</option>
-							       <option th:if="${currentBailleur != null}"
-							               th:value="${currentBailleur.id}"
-							               th:text="${currentBailleur.nom + ' ' + currentBailleur.prenom}"
-							               selected>
-							       </option>
-							</select>							
-							
-							</div>
-						</div>
-						
-						<div class="col-sm-12 col-md-6">
-							<div class="mb-3 form-group">
-						    <label class="form-label">Agent de recouvrement :<span style="color:red;"> *</span></label>
-							<select th:field="*{immeuble.utilisateur}" id="utilisateur" required class="form-control">
-							    <option value="">-- Sélectionner --</option>
-							    <option th:each="u : ${utilisateurs}" th:value="${u.id}" th:text="|${u.prenoms} ${u.nom}|"></option>
-							</select>
-							</div>
-						</div>
-					</div>
-					<hr>
-					
-				    <h4>Appartements</h4>
-					<!-- Tableau des appartements -->
-					    <table id="table-appartements" class="table table-bordered">
-					        <thead style="text-align: center;">
-					        <tr>
-					            <th>Numéro<span style="color:red;"> *</span></th>
-					            <th>Loyer</th>
-					            <th>Libellé<span style="color:red;"> *</span></th>
-					            <th>Action</th>
-					        </tr>
-					        </thead>
-					        <tbody>								
-							<!--<tr th:each="app, iter : *{appartements}">
-							    <td><input type="text" th:field="*{appartements[__${iter.index}__].numAppart}" class="form-control" oninput="uppercaseWords(this)" required></td>
-							    <td><input type="number" th:field="*{appartements[__${iter.index}__].loyerMensuel}" class="form-control"></td>
-							    <td><input type="text" th:field="*{appartements[__${iter.index}__].libelle}" class="form-control" oninput="uppercaseWords(this)" required></td>
-							    <td><button type="button" onclick="supprimerLigne(this)" class="btn btn-danger">Supprimer</button></td>
-							  </tr>-->
-							  <tr th:each="app, iter : *{appartements}">
+	<section layout:fragment="content">
 
-							      <input type="hidden"
-							             th:field="*{appartements[__${iter.index}__].id}" />
+	    <div class="container my-2">
+	        <div class="container mt-4">
 
-							      <input type="hidden"
-							             th:field="*{appartements[__${iter.index}__].version}" />
+	            <form th:action="@{/patrimoines/save}"
+	                  th:object="${immeubForm}"
+	                  method="post"
+	                  enctype="multipart/form-data"
+	                  class="border p-4 rounded shadow-sm bg-white"
+	                  id="patrimoineForm">
 
-							      <!-- IMPORTANT -->
-							      <input type="hidden"
-							             th:field="*{appartements[__${iter.index}__].statut}"
-							             class="statut-appartement" />
+	                <input type="hidden" th:field="*{immeuble.id}"/>
+	                <input type="hidden" th:field="*{immeuble.version}"/>
 
-							      <td>
-							          <input type="text"
-							                 th:field="*{appartements[__${iter.index}__].numAppart}"
-							                 class="form-control" oninput="uppercaseWords(this)"
-							                 required>
-							      </td>
+	                <h2>Gestion du patrimoine</h2>
+	                <h4>Informations du patrimoine</h4>
 
-							      <td>
-							          <input type="number"
-							                 th:field="*{appartements[__${iter.index}__].loyerMensuel}"
-							                 class="form-control">
-							      </td>
+	                <div class="row">
+	                    <div class="col-sm-12 col-md-6">
+	                        <div class="mb-3">
+	                            <label class="form-label">
+	                                Désignation : <span class="text-danger">*</span>
+	                            </label>
+	                            <input type="text"
+	                                   th:field="*{immeuble.nomImmeuble}"
+	                                   required
+	                                   class="form-control"
+	                                   oninput="uppercaseWords(this)">
+	                        </div>
+	                    </div>
 
-							      <td>
-							          <input type="text"
-							                 th:field="*{appartements[__${iter.index}__].libelle}"
-							                 class="form-control" oninput="uppercaseWords(this)" 
-							                 required>
-							      </td>
+	                    <div class="col-sm-12 col-md-6">
+	                        <div class="mb-3">
+	                            <label class="form-label">Code :</label>
+	                            <input type="text"
+	                                   th:field="*{immeuble.codeImmeuble}"
+	                                   class="form-control"
+	                                   oninput="uppercaseWords(this)">
+	                        </div>
+	                    </div>
 
-							      <td>
-							          <button type="button"
-							                  onclick="supprimerLigne(this)"
-							                  class="btn btn-danger">
-							              Supprimer
-							          </button>
-							      </td>
+	                    <div class="col-sm-12 col-md-6">
+	                        <div class="mb-3">
+	                            <label class="form-label">
+	                                Localisation : <span class="text-danger">*</span>
+	                            </label>
+	                            <input type="text"
+	                                   th:field="*{immeuble.adresse}"
+	                                   class="form-control"
+	                                   required>
+	                        </div>
+	                    </div>
 
-							  </tr>
-					        </tbody>
-					    </table>
-						
-						<div class="mt-3 row g-2">
-						    <div class="col-12 col-md-2">
-						        <button type="button" class="btn btn-primary w-100" onclick="ajouterAppartement()">
-						            <span>+ Ajouter</span>
-						        </button>
-						    </div>
-						</div>
-					
-					<hr>
-					
-					<div class="mt-3 row g-2">
-					    <div class="col-12 col-md-2">
-							<button type="submit" class="btn btn-primary w-100">
-								<span th:text="*{immeuble.id} == null ? 'Enregistrer' : 'Modifier'">Enregistrer</span>
-							</button>
-					    </div>						
-						<div class="col-12 col-md-2">
-						     <a th:href="@{/patrimoines}" class="btn btn-danger w-100">Retour à la liste</a>
-						</div>
-						
-					</div>	
-					<!--</fieldset>	-->
-				</form>
-				
-			</div>
-		 </div>
+	                    <div class="col-sm-12 col-md-6">
+	                        <div class="mb-3">
+	                            <label class="form-label">Nombre d'étages :</label>
+	                            <input type="number"
+	                                   th:field="*{immeuble.nombreEtages}"
+	                                   min="0"
+	                                   class="form-control">
+	                        </div>
+	                    </div>
 
-		
-		<script th:inline="javascript">
-		  // Taille actuelle de la liste (0 si null)
-		 // let compteurAppartements = [[${#lists.size(immeubForm.appartements)?:0}]];
-		  let compteurAppartements = document.querySelectorAll('#table-appartements tbody tr').length;
-		 
-		  function ajouterAppartement() {
+	                    <div class="col-sm-12 col-md-6">
+	                        <div class="mb-3">
+	                            <label class="form-label">
+	                                Année construction :
+	                                <span class="text-danger">*</span>
+	                            </label>
+	                            <input type="number"
+	                                   th:field="*{immeuble.anneeConstruction}"
+	                                   min="1900"
+	                                   class="form-control"
+	                                   required>
+	                        </div>
+	                    </div>
 
-		      const tbody = document.querySelector('#table-appartements tbody');
-		      const idx = compteurAppartements++;
+	                    <div class="col-sm-12 col-md-6">
+	                        <div class="mb-3">
+	                            <label class="form-label">Titre foncier :</label>
+	                            <input type="text"
+	                                   th:field="*{immeuble.numeroTitreFoncier}"
+	                                   class="form-control"
+	                                   oninput="uppercaseWords(this)">
+	                        </div>
+	                    </div>
+	                </div>
 
-		      const tr = document.createElement('tr');
+	                <hr>
 
-		      tr.innerHTML = `
+	                <div class="row">
+	                    <div class="col-sm-12 col-md-6">
+	                        <div class="mb-3">
+	                            <label for="bailleurSelect" class="form-label">
+	                                Bailleur <span class="text-danger">*</span>
+	                            </label>
 
-		          <input type="hidden" name="appartements[${idx}].id" value="">
-		          <input type="hidden" name="appartements[${idx}].version" value="0">
+	                            <select th:field="*{immeuble.bailleur.id}"
+	                                    id="bailleurSelect"
+	                                    class="form-select"
+	                                    style="width:100%"
+	                                    required>
+	                                <option value="">-- Sélectionner --</option>
 
-		          <!-- NOUVEAU -->
-		          <input type="hidden"
-		                 name="appartements[${idx}].statut"
-		                 value="LIBRE"
-		                 class="statut-appartement">
+	                                <option th:if="${currentBailleur != null}"
+	                                        th:value="${currentBailleur.id}"
+	                                        th:text="${currentBailleur.nom + ' ' + currentBailleur.prenom}"
+	                                        selected>
+	                                </option>
+	                            </select>
+	                        </div>
+	                    </div>
 
-		          <td>
-		              <input type="text"
-		                     name="appartements[${idx}].numAppart"
-		                     class="form-control" oninput="uppercaseWords(this)" 
-		                     required>
-		          </td>
+	                    <div class="col-sm-12 col-md-6">
+	                        <div class="mb-3">
+	                            <label class="form-label">
+	                                Agent de recouvrement :
+	                                <span class="text-danger">*</span>
+	                            </label>
 
-		          <td>
-		              <input type="number"
-		                     name="appartements[${idx}].loyerMensuel"
-		                     class="form-control">
-		          </td>
+	                            <select th:field="*{immeuble.utilisateur}"
+	                                    id="utilisateur"
+	                                    required
+	                                    class="form-select">
+	                                <option value="">-- Sélectionner --</option>
 
-		          <td>
-		              <input type="text"
-		                     name="appartements[${idx}].libelle"
-		                     class="form-control" oninput="uppercaseWords(this)" 
-		                     required>
-		          </td>
+	                                <option th:each="u : ${utilisateurs}"
+	                                        th:value="${u.id}"
+	                                        th:text="|${u.prenoms} ${u.nom}|">
+	                                </option>
+	                            </select>
+	                        </div>
+	                    </div>
+	                </div>
 
-		          <td>
-		              <button type="button"
-		                      onclick="supprimerLigne(this)"
-		                      class="btn btn-danger">
-		                  Supprimer
-		              </button>
-		          </td>
-		      `;
+	                <hr>
 
-		      tbody.appendChild(tr);
-		  }
-		  
-		  		  
-		  function supprimerLigne(btn) {
+	                <h4>Appartements</h4>
 
-		      const tr = btn.closest('tr');
+	                <div class="table-responsive">
+	                    <table id="table-appartements"
+	                           class="table table-bordered align-middle">
 
-		      const statutInput = tr.querySelector('.statut-appartement');
+	                        <thead class="text-center">
+	                            <tr>
+	                                <th>
+	                                    Numéro <span class="text-danger">*</span>
+	                                </th>
+	                                <th>
+	                                    Loyer de référence (FCFA)
+	                                </th>
+	                                <th>
+	                                    Libellé <span class="text-danger">*</span>
+	                                </th>
+	                                <th>Action</th>
+	                            </tr>
+	                        </thead>
 
-		      // valeur réelle
-		      let statut = statutInput
-		          ? statutInput.value
-		          : 'LIBRE';
+	                        <tbody>
+	                            <tr th:each="app, iter : *{appartements}">
 
-		      statut = statut.trim().toUpperCase();
+	                                <td>
+	                                    <input type="hidden"
+	                                           th:field="*{appartements[__${iter.index}__].id}"/>
 
-		      console.log("STATUT =", statut);
+	                                    <input type="hidden"
+	                                           th:field="*{appartements[__${iter.index}__].version}"/>
 
-		      // 🔥 BLOQUER SI ≠ LIBRE
-		      if (statut !== 'LIBRE') {
+	                                    <input type="hidden"
+	                                           th:field="*{appartements[__${iter.index}__].statut}"
+	                                           class="statut-appartement"/>
 
-		          Swal.fire({
-		              icon: 'warning',
-		              title: 'Suppression impossible',
-		              text: 'Cet appartement ne peut pas être supprimé.'
-		          });
+	                                    <input type="text"
+	                                           th:field="*{appartements[__${iter.index}__].numAppart}"
+	                                           class="form-control"
+	                                           oninput="uppercaseWords(this)"
+	                                           required>
+	                                </td>
 
-		          return;
-		      }
+	                                <td>
+	                                    <input type="number"
+	                                           th:field="*{appartements[__${iter.index}__].loyerMensuel}"
+	                                           class="form-control loyer-reference"
+	                                           min="0"
+	                                           step="1"
+	                                           placeholder="Montant en FCFA"
+	                                           aria-label="Loyer de référence"
+	                                           title="Modifiez ici le loyer de référence de cet appartement">
 
-		      // 🔥 AUTORISÉ UNIQUEMENT SI LIBRE
-		      tr.remove();
-		  }
-		  
-		</script>
-		
-		<script>
-			//AFFICHE LA PREMIERE LETTRE EN MAJUSCULE
-			function capitalizeWords(input) {
-			    input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
-			        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-			    });
-			}
-		
-			//METTRE TOUT LE MOT EN MAJUSCULE
-			function uppercaseWords(input){
-				input.value = input.value.replace(/\b[\p{L}']+/gu, function(word) {
-					return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
-				});
-			}
-		</script>
-		
-		<script>
-		    function validateStepAndProceed(currentStepId, nextStepNumber) {
-		        const currentStep = document.getElementById(currentStepId);
-		        const requiredFields = currentStep.querySelectorAll('[required]');
-		        let allValid = true;
-	
-		        requiredFields.forEach(field => {
-		            if (!field.checkValidity()) {
-		                field.classList.add('is-invalid'); // Ajout classe Bootstrap
-		                allValid = false;
-		            } else {
-		                field.classList.remove('is-invalid');
-		            }
-		        });
-	
-		        if (allValid) {
-		            showStep(nextStepNumber); // Si tout est OK, on passe à l'étape suivante
-		        } else {
-		            // Scroll vers le premier champ invalide
-		            const firstInvalid = currentStep.querySelector('.is-invalid');
-		            if (firstInvalid) {
-		                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-		            }
-		        }
-		    }
-		</script>
-						
-		<script>
-			//NAVIGUER ENTRE PAGE
-			function showStep(stepNumber) {
-		        document.getElementById('step1').style.display = stepNumber === 1 ? 'block' : 'none';
-		        document.getElementById('step2').style.display = stepNumber === 2 ? 'block' : 'none';
-				document.getElementById('step3').style.display = stepNumber === 3 ? 'block' : 'none';
-		        window.scrollTo(0, 0); // remonte en haut
-		    }		
-		</script>
-		
-		<!-- ✅ SweetAlert2 -->
+										   <div class="form-text"
+										        th:if="${app.statut != null and app.statut.name() == 'LIBRE'}">
+										       Modifiable
+										   </div>
+
+										   <div class="form-text text-warning"
+										        th:if="${app.statut != null and app.statut.name() != 'LIBRE'}">
+										       Modifiable — sans effet sur le bail en cours
+										   </div>
+	                                </td>
+
+	                                <td>
+	                                    <input type="text"
+	                                           th:field="*{appartements[__${iter.index}__].libelle}"
+	                                           class="form-control"
+	                                           oninput="uppercaseWords(this)"
+	                                           required>
+	                                </td>
+
+	                                <td class="text-center">
+	                                    <button type="button"
+	                                            onclick="supprimerLigne(this)"
+	                                            class="btn btn-danger btn-sm">
+	                                        Supprimer
+	                                    </button>
+	                                </td>
+
+	                            </tr>
+	                        </tbody>
+	                    </table>
+	                </div>
+
+	                <div class="form-text mb-3">
+	                    Le loyer renseigné est le loyer de référence de
+	                    l'appartement. Sa modification ne change pas
+	                    automatiquement le loyer des baux existants.
+	                    Pour augmenter le loyer d'un bail existant,
+	                    utilisez la fonctionnalité « Révision du loyer ».
+	                </div>
+
+	                <div class="mt-3 row g-2">
+	                    <div class="col-12 col-md-3">
+	                        <button type="button"
+	                                class="btn btn-primary w-100"
+	                                onclick="ajouterAppartement()">
+	                            + Ajouter un appartement
+	                        </button>
+	                    </div>
+	                </div>
+
+	                <hr>
+
+	                <div class="mt-3 row g-2">
+	                    <div class="col-12 col-md-2">
+	                        <button type="submit"
+	                                class="btn btn-primary w-100">
+	                            <span th:text="${immeubForm.immeuble.id == null
+	                                ? 'Enregistrer' : 'Modifier'}">
+	                                Enregistrer
+	                            </span>
+	                        </button>
+	                    </div>
+
+	                    <div class="col-12 col-md-2">
+	                        <a th:href="@{/patrimoines}"
+	                           class="btn btn-danger w-100">
+	                            Retour à la liste
+	                        </a>
+	                    </div>
+	                </div>
+
+	            </form>
+	        </div>
+	    </div>
+
+	    <div th:if="${successMessage}"
+	         th:text="${successMessage}"
+	         id="successMessage"
+	         style="display:none;">
+	    </div>
+
 	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-		<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
-	    <!-- ⚠️ Boîte de confirmation avant envoi -->
-	    <script>
-	        document.getElementById('patrimoineForm').addEventListener('submit', function (e) {
-	            e.preventDefault(); // Bloque l’envoi automatique
-	            const form = this;
-	           // const isEdit = form.querySelector('input[name="id"]').value !== "";
-			   const idField = form.querySelector('input[name="id"]');
-   				const idValue = idField ? idField.value.trim() : "";
-   				console.log("ID trouvé :", idValue);
-   	        // ✅ Création si id vide ou null
-   		        const isEdit = idValue !== null && idValue !== "" && idValue !== "0";
-   		        console.log("isEdit =", isEdit);
-				
+	    <script th:inline="javascript">
+
+	        let compteurAppartements =
+	            document.querySelectorAll(
+	                '#table-appartements tbody tr'
+	            ).length;
+
+	        function ajouterAppartement() {
+
+	            const tbody = document.querySelector(
+	                '#table-appartements tbody'
+	            );
+
+	            const idx = compteurAppartements++;
+
+	            const tr = document.createElement('tr');
+
+	            tr.innerHTML = `
+	                <td>
+	                    <input type="hidden"
+	                           name="appartements[${idx}].id"
+	                           value="">
+
+	                    <input type="hidden"
+	                           name="appartements[${idx}].version"
+	                           value="0">
+
+	                    <input type="hidden"
+	                           name="appartements[${idx}].statut"
+	                           value="LIBRE"
+	                           class="statut-appartement">
+
+	                    <input type="text"
+	                           name="appartements[${idx}].numAppart"
+	                           class="form-control"
+	                           oninput="uppercaseWords(this)"
+	                           required>
+	                </td>
+
+	                <td>
+	                    <input type="number"
+	                           name="appartements[${idx}].loyerMensuel"
+	                           class="form-control loyer-reference"
+	                           min="0"
+	                           step="1"
+	                           placeholder="Montant en FCFA"
+	                           aria-label="Loyer de référence"
+	                           title="Loyer de référence modifiable">
+
+	                    <div class="form-text">Modifiable</div>
+	                </td>
+
+	                <td>
+	                    <input type="text"
+	                           name="appartements[${idx}].libelle"
+	                           class="form-control"
+	                           oninput="uppercaseWords(this)"
+	                           required>
+	                </td>
+
+	                <td class="text-center">
+	                    <button type="button"
+	                            onclick="supprimerLigne(this)"
+	                            class="btn btn-danger btn-sm">
+	                        Supprimer
+	                    </button>
+	                </td>
+	            `;
+
+	            tbody.appendChild(tr);
+	        }
+
+	        function supprimerLigne(btn) {
+
+	            const tr = btn.closest('tr');
+	            const statutInput = tr.querySelector(
+	                '.statut-appartement'
+	            );
+
+	            const statut = (
+	                statutInput ? statutInput.value : 'LIBRE'
+	            ).trim().toUpperCase();
+
+	            if (statut !== 'LIBRE') {
+	                Swal.fire({
+	                    icon: 'warning',
+	                    title: 'Suppression impossible',
+	                    text: 'Cet appartement ne peut pas être supprimé car il n’est pas libre.'
+	                });
+	                return;
+	            }
+
 	            Swal.fire({
-	                title: isEdit ? 'Confirmation' : 'Confirmation',
-	                text: isEdit ? 'Voulez-vous modifier ?' : 'Voulez-vous enregistrer ?',
 	                icon: 'question',
+	                title: 'Supprimer cet appartement ?',
+	                text: 'La ligne sera retirée du formulaire.',
 	                showCancelButton: true,
-	                confirmButtonText: 'Oui',
-	                cancelButtonText: 'Non',
-	                reverseButtons: true
+	                confirmButtonText: 'Oui, supprimer',
+	                cancelButtonText: 'Annuler'
 	            }).then((result) => {
 	                if (result.isConfirmed) {
-	                    form.submit(); // Si confirmé → on envoie le formulaire
+	                    tr.remove();
 	                }
 	            });
-			
-			// ==== AFFICHAGE DU MESSAGE SUCCÈS APRÈS ACTION ====
-			    const successDiv = document.getElementById('successMessage');
-			    if (successDiv && successDiv.textContent.trim() !== '') {
-			        const msg = successDiv.textContent.trim();
-			        Swal.fire({
-			            icon: 'success',
-			            title: 'Succès !',
-			            text: msg,
-			            confirmButtonText: 'OK'
-			        });
-			    }
-			});
-	    </script>		
-		
-		<!-- jQuery -->
-		<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	        }
 
-		<!-- Select2 4.1 -->
-		<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-		<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-		<!-- Theme Bootstrap 5 -->
-		<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-		
-		<script th:inline="javascript">
-		    $(document).ready(function() {
-		        // Init Select2 pour bailleur
-		        $('#bailleurSelect').select2({
-		            theme: 'bootstrap-5',
-		            placeholder: 'Rechercher un bailleur',
-		            minimumInputLength: 1,
-		            language: {
-		                inputTooShort: () => 'Veuillez saisir 1 caractère ou plus',
-		                noResults: () => 'Aucun résultat trouvé',
-		                searching: () => 'Recherche en cours…'
-		            },
-		            ajax: {
-		                url: /*[[@{/bailleurs/api/bailleurs}]]*/,
-		                dataType: 'json',
-		                delay: 250,
-		                data: params => ({ term: params.term }),
-		                processResults: data => data
-		            }
-		        });
-		    });
-		</script>
-		
-		
-	
+	        function uppercaseWords(input) {
+	            input.value = input.value.replace(
+	                /\\b[\\p{L}']+/gu,
+	                function(word) {
+	                    return word.toUpperCase();
+	                }
+	            );
+	        }
+
+	        document.getElementById('patrimoineForm')
+	            .addEventListener('submit', function(e) {
+
+	                e.preventDefault();
+
+	                const form = this;
+
+	                if (!form.checkValidity()) {
+	                    form.reportValidity();
+	                    return;
+	                }
+
+	                const idField = form.querySelector(
+	                    'input[name="immeuble.id"]'
+	                );
+
+	                const idValue = idField
+	                    ? idField.value.trim()
+	                    : '';
+
+	                const isEdit = idValue !== ''
+	                    && idValue !== '0'
+	                    && idValue !== 'null';
+
+	                Swal.fire({
+	                    title: 'Confirmation',
+	                    text: isEdit
+	                        ? 'Voulez-vous modifier ce patrimoine et les loyers de référence saisis ?'
+	                        : 'Voulez-vous enregistrer ce patrimoine et les loyers de référence saisis ?',
+	                    icon: 'question',
+	                    showCancelButton: true,
+	                    confirmButtonText: 'Oui',
+	                    cancelButtonText: 'Non',
+	                    reverseButtons: true
+	                }).then((result) => {
+
+	                    if (result.isConfirmed) {
+	                        // Envoi normal du formulaire, sans
+	                        // déclencher une nouvelle fois cet événement.
+	                        HTMLFormElement.prototype.submit.call(form);
+	                    }
+	                });
+	            });
+
+	        document.addEventListener('DOMContentLoaded', function() {
+
+	            const successDiv = document.getElementById(
+	                'successMessage'
+	            );
+
+	            if (successDiv && successDiv.textContent.trim() !== '') {
+	                Swal.fire({
+	                    icon: 'success',
+	                    title: 'Succès !',
+	                    text: successDiv.textContent.trim(),
+	                    confirmButtonText: 'OK'
+	                });
+	            }
+	        });
+
+	    </script>
+
+	    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+	    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+	          rel="stylesheet"/>
+
+	    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+	          rel="stylesheet"/>
+
+	    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+	    <script th:inline="javascript">
+
+	        $(document).ready(function() {
+
+	            $('#bailleurSelect').select2({
+	                theme: 'bootstrap-5',
+	                placeholder: 'Rechercher un bailleur',
+	                minimumInputLength: 1,
+
+	                language: {
+	                    inputTooShort: function() {
+	                        return 'Veuillez saisir 1 caractère ou plus';
+	                    },
+	                    noResults: function() {
+	                        return 'Aucun résultat trouvé';
+	                    },
+	                    searching: function() {
+	                        return 'Recherche en cours…';
+	                    }
+	                },
+
+	                ajax: {
+	                    url: /*[[@{/bailleurs/api/bailleurs}]]*/,
+	                    dataType: 'json',
+	                    delay: 250,
+
+	                    data: function(params) {
+	                        return {
+	                            term: params.term
+	                        };
+	                    },
+
+	                    processResults: function(data) {
+	                        return data;
+	                    }
+	                }
+	            });
+	        });
+
+	    </script>
+
 	</section>
 	
 </body>

@@ -1,7 +1,8 @@
 package com.app.service.recouvre;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +19,7 @@ import com.app.entities.administration.Utilisateur;
 import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Encaisse;
 import com.app.entities.recouvre.Identification;
-import com.app.entities.recouvre.Loyann;
+import com.app.exceptions.PenaliteSuperieureException;
 import com.app.form.EncaisseForm;
 import com.app.mapper.EncaisseMapper;
 import com.app.repositories.administration.UtilisateurRepository;
@@ -58,111 +59,6 @@ public class EncaisseService extends BaseService<Encaisse>{
     }
 	
 	
-	public List<Loyann> repartirLoyer(Bail bail, long montantPayé, long loyerMensuel, LocalDate dateDebut) {
-	    List<Loyann> loyers = new ArrayList<>();
-	    
-	    long reste = montantPayé;
-	    LocalDate current = dateDebut;
-
-	    while (reste > 0) {
-	        Loyann l = new Loyann();
-	        l.setBail(bail);
-	        l.setMois(current.getMonthValue());
-	        l.setAnnee(current.getYear());
-	        
-	        if (reste >= loyerMensuel) {
-	            l.setLoyer(loyerMensuel);
-	            reste -= loyerMensuel;
-	        } else {
-	            l.setLoyer(reste);
-	            reste = 0;
-	        }
-	        
-	        loyers.add(l);
-	        current = current.plusMonths(1); // passer au mois suivant
-	    }
-
-	    return loyers;
-	}	
-	
-	/*public Page<EncaisseListDto> findByUtilisateur(UserPrincipal principal, Long agentId, String keyword, 
-			 										LocalDate startDate, LocalDate endDate,Pageable pageable) {
-		
-	    boolean isDirec = principal.getAuthorities().stream()
-	        .anyMatch(auth -> "ROLE_DIREC".equals(auth.getAuthority()));	    // ROLE_RECOUV
-	    
-	    if (isDirec) {
-	    	
-	    	if (keyword != null && keyword.trim().isEmpty()) {
-	            keyword = null;
-	        }
-
-	        if (agentId != null && agentId <= 0) {
-	            agentId = null;
-	        }
-
-		    return repo.findEncaissePageByAdmin(agentId, keyword, pageable);	    	
-	    	
-	    } else {
-	    	
-	    	if (keyword != null && keyword.trim().isEmpty()) {
-	            keyword = null;
-	        }
-	    	
-	    	return repo.findEncaissePageByUtilisateur(
-	    			principal.getUsername(), 
-	    			keyword,
-	    			startDate, 
-	    			endDate,
-	    			pageable
-	    			);
-	    }
-
-	}*/
-	
-	
-	/*public Page<EncaisseListDto> findByUtilisateur(
-	        UserPrincipal principal,
-	        Long agentId,
-	        String keyword,
-	        LocalDate startDate,
-	        LocalDate endDate,
-	        Pageable pageable) {
-
-	    boolean isDirec = principal.getAuthorities().stream()
-	            .anyMatch(auth -> "ROLE_DIREC".equals(auth.getAuthority()));
-
-	    // NORMALISATION COMMUNE
-	    if (keyword != null && keyword.trim().isEmpty()) {
-	        keyword = null;
-	    }
-
-	    if (agentId != null && agentId <= 0) {
-	        agentId = null;
-	    }
-
-	    // ===================== ADMIN / DIRECTEUR =====================
-	    if (isDirec) {
-
-	        return repo.findEncaissePageByAdmin(
-	                agentId,
-	                keyword,
-	                startDate,
-	                endDate,
-	                pageable
-	        );
-	    }
-
-	    // ===================== AGENT SIMPLE =====================
-	    return repo.findEncaissePageByUtilisateur(
-	            principal.getUsername(),
-	            keyword,
-	            startDate,
-	            endDate,
-	            pageable
-	    );
-	}*/
-	
 	public Page<EncaisseListDto> findWithFilters(
 	        UserPrincipal principal,
 	        Long agentId,
@@ -191,34 +87,46 @@ public class EncaisseService extends BaseService<Encaisse>{
 
 	    boolean isNew = (form.getId() == null);
 
-	    if (isNew) {
-	        entity = new Encaisse();
-	        entity.setAgence(currentAgence);
-	    } else {
-	        entity = repo.findById(form.getId())
-	                .orElseThrow(() -> new IllegalArgumentException("Encaisse introuvable"));
 
-	        if (entity.getAgence() == null 
-	                || !entity.getAgence().getId().equals(currentAgence.getId())) {
-	            throw new SecurityException("Accès refusé");
-	        }
-	    }
+		if (isNew) {
+		    entity = new Encaisse();
+		    entity.setAgence(currentAgence);
+		    entity.setEncvalide(false);
+		} else {
+		    entity = repo.findById(form.getId())
+		            .orElseThrow(() ->
+		                    new IllegalArgumentException(
+		                            "Encaissement introuvable."));
+		
+		    checkAgence(
+		            entity.getAgence(),
+		            currentAgence.getId(),
+		            "Cet encaissement n'appartient pas à votre agence.");
+		
+		    if (entity.isEncvalide()) {
+		        throw new IllegalStateException(
+		                "Un encaissement validé ne peut pas être modifié. "
+		              + "Utilisez une procédure d'annulation tracée.");
+		    }
+		}
 
-	    // =========================
-	    // 🔗 Bail sécurisé
-	    // =========================
-	    if (form.getBailId() != null) {
 
-	        Bail bail = bailRepository.findById(form.getBailId())
-	                .orElseThrow(() -> new IllegalArgumentException("Bail introuvable"));
+		if (form.getBailId() == null) {
+		    throw new IllegalArgumentException(
+		            "Le bail est obligatoire pour un encaissement.");
+		}
+		
+		Bail bail = bailRepository.findById(form.getBailId())
+		        .orElseThrow(() ->
+		                new IllegalArgumentException("Bail introuvable."));
+		
+		checkAgence(
+		        bail.getAgence(),
+		        currentAgence.getId(),
+		        "Ce bail n'appartient pas à votre agence.");
+		
+		entity.setBail(bail);
 
-	        checkAgence(bail.getAgence(), currentAgence.getId(), "Bail d’une autre agence");
-
-	        entity.setBail(bail);
-
-	    } else {
-	        entity.setBail(null);
-	    }
 
 	    // =========================
 	    // 🔗 Identification sécurisé
@@ -265,7 +173,7 @@ public class EncaisseService extends BaseService<Encaisse>{
 	    entity.setEnctotal(defaultLong(form.getEnctotal()));
 	    entity.setEncloyer(defaultLong(form.getEncloyer()));
 
-	    entity.setEncvalide(form.isEncvalide());
+	    //entity.setEncvalide(form.isEncvalide());
 
 	    entity.setEncmois(defaultLong(form.getEncmois()));
 	    entity.setEncannee(defaultLong(form.getEncannee()));
@@ -326,43 +234,354 @@ public class EncaisseService extends BaseService<Encaisse>{
 	}
 	
 	
-	@Transactional
+	
+	/*@Transactional
 	public void validerPaiement(Integer id, Utilisateur user) {
-
 	    Encaisse encaisse = repo.findById(id)
 	            .orElseThrow(() -> new IllegalArgumentException("Encaisse introuvable"));
 
 	    // =========================
 	    // 🔐 sécurité agence SaaS
 	    // =========================
-	    if (encaisse.getAgence() == null 
+	    if (user.getAgence() == null) {
+	        throw new SecurityException("Utilisateur sans agence");
+	    }
+	    if (encaisse.getAgence() == null
 	            || !encaisse.getAgence().getId().equals(user.getAgence().getId())) {
 	        throw new SecurityException("Accès refusé");
 	    }
 
-	    Bail bail = encaisse.getBail();
+	    // =========================
+	    // ⛔ éviter une double validation
+	    // =========================
+	    if (encaisse.isEncvalide()) {
+	        throw new IllegalStateException("Ce paiement a déjà été validé");
+	    }
 
+	    Bail bail = encaisse.getBail();
 	    if (bail == null) {
 	        throw new IllegalArgumentException("Bail introuvable");
 	    }
 
-	    //long montantPaye = encaisse.getEncMontant() != null ? encaisse.getEncMontant() : 0L;
-	    
-	    long montantEncaisse = encaisse.getEncMontant() != null ? encaisse.getEncMontant() : 0L;
+	    long montantCautionHonoraire = 0L;
+	    if (bail.isPremierRecouvre()) {
+	        montantCautionHonoraire = bail.getCaution() + bail.getHonoraire();
+	    }
+
+	    long montantEncaisse = encaisse.getEncMontant() != null
+	            ? (encaisse.getEncMontant() - montantCautionHonoraire)
+	            : 0L;
+
 	    long penalite = encaisse.getEncPenalite() != null ? encaisse.getEncPenalite() : 0L;
-
 	    long montantPaye = montantEncaisse - penalite;
-	    
-	    long loyerMensuel = bail.getMontantLoyer() != null ? bail.getMontantLoyer() : 0L;
-	    LocalDate dateDebut = bail.getDateFin();
 
+	    long loyerMensuel = bail.getMontantLoyer() != null ? bail.getMontantLoyer() : 0L;
+
+	    LocalDate dateDebut = bail.getDateFin();
 	    loyannService.repartirLoyer(bail, montantPaye, loyerMensuel, dateDebut);
 
 	    encaisse.setEncvalide(true);
 	    encaisse.setStatut(2);
+	    bail.setPremierRecouvre(false);
 
 	    repo.save(encaisse);
+	}*/
+	
+	
+	
+	@Transactional
+	public void validerPaiement(Integer id, Utilisateur utilisateur) {
+
+	    if (id == null) {
+	        throw new IllegalArgumentException(
+	                "L'identifiant de l'encaissement est obligatoire.");
+	    }
+
+	    Agence agenceCourante = getCurrentAgence();
+
+	    // Verrouille l'encaissement pendant toute la validation.
+	    Encaisse encaisse = repo.trouverPourMiseAJour(id)
+	            .orElseThrow(() ->
+	                    new IllegalArgumentException("Encaissement introuvable."));
+
+	    checkAgence(
+	            encaisse.getAgence(),
+	            agenceCourante.getId(),
+	            "Cet encaissement n'appartient pas à votre agence.");
+
+	    if (encaisse.isEncvalide()) {
+	        throw new IllegalStateException(
+	                "Cet encaissement a déjà été validé.");
+	    }
+
+	    if (encaisse.getBail() == null
+	            || encaisse.getBail().getId() == null) {
+	        throw new IllegalStateException(
+	                "Aucun bail n'est associé à cet encaissement.");
+	    }
+
+	    /*
+	     * Verrouille également le bail : deux paiements simultanés
+	     * ne doivent pas affecter les mêmes échéances en parallèle.
+	     */
+	    Integer bailId = encaisse.getBail().getId();
+
+	    Bail bail = bailRepository.trouverPourMiseAJour(bailId)
+	            .orElseThrow(() ->
+	                    new IllegalArgumentException("Bail introuvable."));
+
+	    checkAgence(
+	            bail.getAgence(),
+	            agenceCourante.getId(),
+	            "Ce bail n'appartient pas à votre agence.");
+
+	    if (!bail.getAgence().getId().equals(
+	            encaisse.getAgence().getId())) {
+	        throw new SecurityException(
+	                "Le bail et l'encaissement ne relèvent pas "
+	              + "de la même agence.");
+	    }
+
+	    long montantEncaisse = encaisse.getEncMontant() == null
+	            ? 0L
+	            : encaisse.getEncMontant();
+
+	    long penalite = encaisse.getEncPenalite() == null
+	            ? 0L
+	            : encaisse.getEncPenalite();
+
+	    if (montantEncaisse <= 0) {
+	        throw new IllegalArgumentException(
+	                "Le montant encaissé doit être supérieur à zéro.");
+	    }
+
+	    if (penalite < 0) {
+	        throw new IllegalArgumentException(
+	                "La pénalité ne peut pas être négative.");
+	    }
+
+	    /*
+	     * Règle métier : au premier recouvrement, caution et honoraires
+	     * sont retranchés du montant destiné au loyer.
+	     */
+	    long caution = bail.getCaution() == null
+	            ? 0L
+	            : bail.getCaution();
+
+	    long honoraire = bail.getHonoraire() == null
+	            ? 0L
+	            : bail.getHonoraire();
+
+	    long deductionsPremierRecouvrement = 0L;
+
+	    if (bail.isPremierRecouvre()) {
+	        deductionsPremierRecouvrement = caution + honoraire;
+	    }
+
+	    if (montantEncaisse < deductionsPremierRecouvrement) {
+	        throw new IllegalArgumentException(
+	                "Le montant encaissé (" + montantEncaisse + " FCFA) est "
+	              + "inférieur aux déductions du premier recouvrement ("
+	              + deductionsPremierRecouvrement + " FCFA).");
+	    }
+
+	    long montantDestineAuLoyer =
+	            montantEncaisse - deductionsPremierRecouvrement;
+
+	    /*
+	     * La pénalité n'est pas affectée aux échéances de loyer.
+	     * Si elle dépasse le montant à ventiler, on bloque la validation
+	     * et on en informe l'utilisateur.
+	     */
+	    if (penalite > montantDestineAuLoyer) {
+	        throw new PenaliteSuperieureException(
+	                "La pénalité (" + penalite + " FCFA) est supérieure au "
+	              + "montant à ventiler (" + montantDestineAuLoyer + " FCFA). "
+	              + "Veuillez corriger la pénalité ou le montant encaissé.");
+	    }
+
+	    long montantAPayer = montantDestineAuLoyer - penalite;
+
+	    LocalDate datePaiement = encaisse.getEncDate() != null
+	            ? encaisse.getEncDate()
+	            : LocalDate.now();
+
+	    /*
+	     * La date de début de répartition est calculée à partir de
+	     * Bail.dateDebut dans LoyannService.
+	     * Bail.dateFin n'est jamais modifiée ici.
+	     */
+	    if (montantAPayer > 0) {
+	        loyannService.affecterPaiement(
+	                encaisse,
+	                bail,
+	                montantAPayer,
+	                datePaiement);
+	    }
+
+	    /*
+	     * Les indicateurs de validation ne sont mis à jour
+	     * qu'après la réussite de toutes les affectations.
+	     */
+	    encaisse.setEncvalide(true);
+	    encaisse.setStatut(2);
+
+	    if (bail.isPremierRecouvre()) {
+	        bail.setPremierRecouvre(false);
+	    }
+
+	    bail.setDerniereDatePaiement(datePaiement);
+
+	    // Le paiement solde-t-il toutes les échéances affichées ?
+	    /*
+	    long arrieres = encaisse.getEncArriere() == null ? 0L : encaisse.getEncArriere();
+
+	    if (montantAPayer >= arrieres
+	            && encaisse.getEncFin() != null && !encaisse.getEncFin().isBlank()) {
+	        YearMonth fin = YearMonth.parse(
+	                encaisse.getEncFin(),
+	                DateTimeFormatter.ofPattern("MM/yyyy"));
+	        bail.setDateFinRecouvre(fin.atEndOfMonth());
+	    }
+	    */
+
+	    bailRepository.save(bail);
+	    repo.saveAndFlush(encaisse);
 	}
+
+
+	/*@Transactional
+	public void validerPaiement(Integer id, Utilisateur utilisateur) {
+	
+	    if (id == null) {
+	        throw new IllegalArgumentException(
+	                "L'identifiant de l'encaissement est obligatoire.");
+	    }
+	
+	    Agence agenceCourante = getCurrentAgence();
+	
+	    // Verrouille l'encaissement pendant toute la validation.
+	    Encaisse encaisse = repo.trouverPourMiseAJour(id)
+	            .orElseThrow(() ->
+	                    new IllegalArgumentException(
+	                            "Encaissement introuvable."));
+	
+	    checkAgence(
+	            encaisse.getAgence(),
+	            agenceCourante.getId(),
+	            "Cet encaissement n'appartient pas à votre agence.");
+	
+	    if (encaisse.isEncvalide()) {
+	        throw new IllegalStateException(
+	                "Cet encaissement a déjà été validé.");
+	    }
+	
+	    if (encaisse.getBail() == null
+	            || encaisse.getBail().getId() == null) {
+	        throw new IllegalStateException(
+	                "Aucun bail n'est associé à cet encaissement.");
+	    }
+	
+	    
+	    Integer bailId = encaisse.getBail().getId();
+	
+	    Bail bail = bailRepository.trouverPourMiseAJour(bailId)
+	            .orElseThrow(() ->
+	                    new IllegalArgumentException("Bail introuvable."));
+	
+	    checkAgence(
+	            bail.getAgence(),
+	            agenceCourante.getId(),
+	            "Ce bail n'appartient pas à votre agence.");
+	
+	    if (!bail.getAgence().getId().equals(
+	            encaisse.getAgence().getId())) {
+	        throw new SecurityException(
+	                "Le bail et l'encaissement ne relèvent pas "
+	              + "de la même agence.");
+	    }
+	
+	    long montantEncaisse = encaisse.getEncMontant() == null
+	            ? 0L
+	            : encaisse.getEncMontant();
+	
+	    long penalite = encaisse.getEncPenalite() == null
+	            ? 0L
+	            : encaisse.getEncPenalite();
+	
+	    if (montantEncaisse <= 0) {
+	        throw new IllegalArgumentException(
+	                "Le montant encaissé doit être supérieur à zéro.");
+	    }
+	
+	    if (penalite < 0) {
+	        throw new IllegalArgumentException(
+	                "La pénalité ne peut pas être négative.");
+	    }
+	
+	    long caution = bail.getCaution() == null
+	            ? 0L
+	            : bail.getCaution();
+	
+	    long honoraire = bail.getHonoraire() == null
+	            ? 0L
+	            : bail.getHonoraire();
+	
+	    long deductionsPremierRecouvrement = 0L;
+	
+	    if (bail.isPremierRecouvre()) {
+	        deductionsPremierRecouvrement = caution + honoraire;
+	    }
+	
+	    if (montantEncaisse < deductionsPremierRecouvrement) {
+	        throw new IllegalArgumentException(
+	                "Le montant encaissé est inférieur aux déductions "
+	              + "du premier recouvrement.");
+	    }
+	
+	    long montantDestineAuLoyer =
+	            montantEncaisse - deductionsPremierRecouvrement;
+	
+	    
+	    if (penalite > montantDestineAuLoyer) {
+	        throw new IllegalArgumentException(
+	                "La pénalité dépasse le montant disponible "
+	              + "pour le loyer.");
+	    }
+	
+	    long montantAPayer = montantDestineAuLoyer - penalite;
+	
+	    
+	    if (montantAPayer > 0) {
+	        loyannService.affecterPaiement(
+	                encaisse,
+	                bail,
+	                montantAPayer,
+	                encaisse.getEncDate() != null
+	                        ? encaisse.getEncDate()
+	                        : LocalDate.now());
+	    }
+	
+	    
+	    encaisse.setEncvalide(true);
+	    encaisse.setStatut(2);
+	
+	    if (bail.isPremierRecouvre()) {
+	        bail.setPremierRecouvre(false);
+	    }
+	
+        bail.setDerniereDatePaiement(
+                encaisse.getEncDate() != null
+                        ? encaisse.getEncDate()
+                        : LocalDate.now());
+        
+     // Le paiement solde-t-il toutes les échéances affichées ?
+                
+	    bailRepository.save(bail);
+	    
+	    repo.saveAndFlush(encaisse);
+	}*/
+
 	
 	public Optional<Encaisse> findById(Integer id) {
 	    return repo.findById(id);
@@ -380,47 +599,6 @@ public class EncaisseService extends BaseService<Encaisse>{
 	public Optional<Encaisse> findByChequeAndAgence(String filename, Integer agenceId) {
 	    return repo.findByChequePathAndAgence(filename, agenceId);
 	}
-	
-	/*public Page<EncaisseDTO> searcher(String keyword, Integer agentId, Pageable pageable) {
-    	
-    	Integer agenceId = getCurrentAgenceId();
-    	
-        Page<Encaisse> page;
-
-        if (keyword == null || keyword.trim().isEmpty()) {
-            page = repo.findByAgenceId(agentId,agenceId, pageable);
-        } else {
-            page = repo.search(keyword.trim(), agentId, agenceId, pageable);
-        }
-
-        return page.map(this::toDTO);
-    }*/
-	
-	/*public Page<EncaisseDTO> search(
-	        String keyword,
-	        Integer agentId,
-	        LocalDate startDate,
-	        LocalDate endDate,
-	        Pageable pageable) {
-
-	    Integer agenceId = getCurrentAgenceId();
-
-	    String search = "";
-
-	    if (keyword != null && !keyword.isBlank()) {
-	        search = "%" + keyword.toLowerCase().trim() + "%";
-	    }
-
-	    return repo.searchEncaisse(
-	            search,
-	            agenceId,
-	            agentId,
-	            startDate,
-	            endDate,
-	            pageable
-	    );
-	}*/
-
 	
 	
 	public Page<EncaisseDTO> search(

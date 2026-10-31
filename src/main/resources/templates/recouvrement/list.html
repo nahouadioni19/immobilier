@@ -18,52 +18,7 @@
 				<hr style="border: 1px solid rgb(192, 192, 192);">
 										
 				<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
-					    
-					<!--<form id="filterForm" method="get" th:action="@{/recouvrements/a-encaisser}" class="row g-2 mb-3">
-						
-						<input type="hidden" name="page" value="0">
-						
-					    <div class="col-md-2">
-					        <select name="periodeType" class="form-select" id="periodeType">
-					            <option value="">-- Période --</option>
-					            <option value="SEMAINE" th:selected="${periodeType == 'SEMAINE'}">Semaine</option>
-					            <option value="MOIS" th:selected="${periodeType == 'MOIS'}">Mois</option>
-					        </select>
-					    </div>
-
-						<div class="col-md-2" id="semaineBlock" style="display:none;">
-							<select name="dateSemaine" class="form-select">
-							    <option value="">Sélectionner une semaine</option>
-
-							    <option th:each="s : ${semaines}"
-							            th:value="${s.dateDebut}"
-							            th:text="${s.libelle}"
-							            th:selected="${dateSemaine != null and s.dateDebut.equals(dateSemaine)}">
-							    </option>
-							</select>
-						</div>		
-						
-					    <div class="col-md-3" id="moisBlock" style="display:none;">
-					        <input type="month" name="mois" class="form-control" th:value="${mois}">
-					    </div>
-
-					    
-					    <div class="col-md-3">
-					        <input type="text"
-					               name="keyword"
-					               class="form-control"
-					               placeholder="Nom ou prénom locataire"
-					               th:value="${keyword}">
-					    </div>
-							
-					    <div class="col-md-2">
-					        <a th:href="@{/recouvrements/a-encaisser}" class="btn btn-secondary  ms-2">
-					            Réinitialiser
-					        </a>
-					    </div>
-
-					</form>-->
-					
+	
 					<form id="filterForm"
 					      method="get"
 					      th:action="@{/recouvrements/a-encaisser}"
@@ -211,6 +166,7 @@
 				            <th>Locataire</th>
 							<th>Bailleur</th>
 				            <th>Date</th>
+							<th style="text-align: center;">Pénalité</th>
 				            <th style="text-align: center;">Recouvré</th>
 							<th>Agent</th>
 							<th>Action</th>
@@ -219,8 +175,9 @@
 				        <tbody>				        
 						<tr th:each="encaisse : ${encaissesPage.content}">
 				            <td th:text="${encaisse.locataireNom +' '+ encaisse.locatairePrenom}">jule</td>
-							<td th:text="${encaisse.bailleurNom +' - ('+ encaisse.immeubleLocalisation+')'}"></td>							
+							<td th:text="${encaisse.bailleurNom  +' '+encaisse.bailleurPrenom+' - ('+ encaisse.immeubleLocalisation+')'}"></td>							
 							<td th:text="${#temporals.format(encaisse.encDate, 'dd/MM/yyyy')}"></td>
+							<td class="format-fr" th:text="${encaisse.encPenalite}" style="text-align: center;">0</td>
 							<td class="format-fr" th:text="${encaisse.encMontant}" style="text-align: center;">0</td>
 							<td th:text="${encaisse.utilisateurNom +' '+ encaisse.utilisateurPrenoms}">herve</td>
 							<td>
@@ -408,6 +365,10 @@
 		    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 			
 			<div th:if="${successMessage}" th:text="${successMessage}" id="successMessage" style="display:none;"></div>
+			
+			<div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+			<div class="alert alert-warning" th:if="${warning}" th:text="${warning}"></div>
+			<div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
 					
 			<script>
 				document.addEventListener('DOMContentLoaded', function() {

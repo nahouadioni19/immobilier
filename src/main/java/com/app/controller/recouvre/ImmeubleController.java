@@ -36,12 +36,8 @@ import com.app.entities.recouvre.Immeuble;
 import com.app.form.ImmeubForm;
 import com.app.security.UserPrincipal;
 import com.app.service.administration.UtilisateurService;
-import com.app.service.common.PaginationService;
 import com.app.service.recouvre.AppartementService;
-import com.app.service.recouvre.BailleurService;
 import com.app.service.recouvre.ImmeubleService;
-
-import jakarta.transaction.Transactional;
 
 @Controller
 @RequestMapping(Routes.ROUTE_IMMEUB)
@@ -396,11 +392,11 @@ public class ImmeubleController{
 	                Map<String, Object> m = new HashMap<>();
 	                m.put("id", a.getId());
 	                m.put("text",
-	                        a.getLibelle() + " - " +
-	                        a.getImmeuble().getNomImmeuble() + " - " +
+	                        a.getLibelle() +" "+a.getNumAppart() + " (" + a.getLoyerMensuel() + " F CFA)"+" - Désignation: (" +
+	                        a.getImmeuble().getNomImmeuble() + ") - Bailleur: (" +
 	                        a.getImmeuble().getBailleur().getNom() + " - " +
-	                        a.getImmeuble().getBailleur().getPrenom() + " - " + a.getImmeuble().getAdresse() +
-	                        " (" + a.getLoyerMensuel() + " F CFA)");
+	                        a.getImmeuble().getBailleur().getPrenom() + ") - Localisation: (" + a.getImmeuble().getAdresse()+" )"
+	                        );
 	                m.put("libelle", a.getLibelle());
 	                m.put("loyerMensuel", a.getLoyerMensuel());
 	                return m;

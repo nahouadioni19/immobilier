@@ -73,7 +73,9 @@ public interface AppartementRepository extends JpaRepository<Appartement, Intege
 	   JOIN i.bailleur b
 	   WHERE (
 	        LOWER(a.libelle) LIKE LOWER(CONCAT('%', :term, '%'))
+	        OR LOWER(a.numAppart) LIKE LOWER(CONCAT('%', :term, '%'))
 	        OR LOWER(a.immeuble.nomImmeuble) LIKE LOWER(CONCAT('%', :term, '%'))
+	        OR LOWER(a.immeuble.adresse) LIKE LOWER(CONCAT('%', :term, '%'))
 	        OR LOWER(a.immeuble.bailleur.nom) LIKE LOWER(CONCAT('%', :term, '%'))
 	        OR LOWER(a.immeuble.bailleur.prenom) LIKE LOWER(CONCAT('%', :term, '%'))
 	   )

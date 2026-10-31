@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -33,6 +36,7 @@ import com.app.dto.IdentificationProjection;
 import com.app.entities.administration.Utilisateur;
 import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Encaisse;
+import com.app.exceptions.PenaliteSuperieureException;
 import com.app.form.EncaisseForm;
 import com.app.repositories.BailSelectProjection;
 import com.app.security.UserPrincipal;
@@ -60,6 +64,9 @@ public class EncaisseController {
 	
 	@Autowired
 	private MessageSource messageSource;	
+	
+	private static final Logger log =
+	        LoggerFactory.getLogger(RecouvrementController.class);
 	
 	@GetMapping("/a-encaisser")
 	public String listEncaisses(
@@ -631,8 +638,68 @@ public class EncaisseController {
 	    return "redirect:/recouvrements/a-encaisser";
 	}
 
-		
+	
 	@PostMapping("/valider/{id}")
+	public String validerPaiement(@PathVariable Integer id,
+	                              @AuthenticationPrincipal UserPrincipal principal,
+	                              RedirectAttributes redirectAttributes) {
+	    try {
+	        service.validerPaiement(id, principal.getUtilisateur());
+	        redirectAttributes.addFlashAttribute("successMessage",
+	                "Paiement validé avec succès");
+
+	    } catch (SecurityException e) {
+	        log.warn("Validation refusée pour l'encaissement {} : {}", id, e.getMessage());
+	        redirectAttributes.addFlashAttribute("error", "Accès refusé : " + e.getMessage());
+
+	    } catch (PenaliteSuperieureException e) {
+	        // Doit être placé AVANT IllegalArgumentException (sa classe parente)
+	        log.warn("Pénalité supérieure au montant à ventiler pour l'encaissement {} : {}",
+	                id, e.getMessage());
+	        redirectAttributes.addFlashAttribute("warning", e.getMessage());
+
+	    } catch (IllegalArgumentException | IllegalStateException e) {
+	        log.warn("Validation impossible pour l'encaissement {} : {}", id, e.getMessage());
+	        redirectAttributes.addFlashAttribute("error", e.getMessage());
+
+	    } catch (Exception e) {
+	        log.error("Erreur inattendue lors de la validation de l'encaissement {}", id, e);
+	        redirectAttributes.addFlashAttribute("error",
+	                "Une erreur inattendue est survenue. "
+	              + "Veuillez réessayer ou contacter l'administrateur.");
+	    }
+	    return "redirect:/recouvrements/a-encaisser";
+	}
+	
+	
+
+	/*@PostMapping("/valider/{id}")
+	public String validerPaiement(@PathVariable Integer id,
+	                              @AuthenticationPrincipal UserPrincipal principal,
+	                              RedirectAttributes redirectAttributes) {
+	    try {
+	        service.validerPaiement(id, principal.getUtilisateur());
+	        redirectAttributes.addFlashAttribute("successMessage",
+	                "Paiement validé avec succès");
+
+	    } catch (SecurityException e) {
+	        log.warn("Validation refusée pour l'encaissement {} : {}", id, e.getMessage());
+	        redirectAttributes.addFlashAttribute("error", "Accès refusé : " + e.getMessage());
+
+	    } catch (IllegalArgumentException | IllegalStateException e) {
+	        log.warn("Validation impossible pour l'encaissement {} : {}", id, e.getMessage());
+	        redirectAttributes.addFlashAttribute("error", e.getMessage());
+
+	    } catch (Exception e) {
+	        log.error("Erreur inattendue lors de la validation de l'encaissement {}", id, e);
+	        redirectAttributes.addFlashAttribute("error",
+	                "Erreur inattendue : " + e.getClass().getSimpleName()
+	                + (e.getMessage() != null ? " - " + e.getMessage() : ""));
+	    }
+	    return "redirect:/recouvrements/a-encaisser";
+	}*/
+	
+	/*@PostMapping("/valider/{id}")
 	public String validerPaiement(@PathVariable Integer id,
 	                              @AuthenticationPrincipal UserPrincipal principal,
 	                              RedirectAttributes redirectAttributes) {
@@ -657,6 +724,6 @@ public class EncaisseController {
 
 	    //return "redirect:/recouvrements";
 	    return "redirect:/recouvrements/a-encaisser";
-	}
+	}*/
 
 }

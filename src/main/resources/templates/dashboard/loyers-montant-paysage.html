@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Tableau des loyers</title>
+    <style>
+        @page {
+            size: 297mm 210mm;   /* A4 paysage */
+            margin: 10mm 10mm 10mm 10mm;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10px;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ===== EN-TÊTE ===== */
+        table.entete {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+        }
+        table.entete td { border: none; padding: 0; vertical-align: middle; }
+        td.col-logo  { width: 22%; text-align: left; }
+        td.col-titre { width: 56%; text-align: center; }
+        td.col-vide  { width: 22%; }
+
+        td.col-logo img { height: 60px; }
+
+        .titre    { font-size: 18px; margin: 0 0 5px 0; }
+        .bailleur { font-size: 15px; margin: 0; }
+
+        /* ===== TABLEAU ===== */
+        table.loyers {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        table.loyers thead { display: table-header-group; }  /* répète l'en-tête à chaque page */
+        table.loyers tr    { page-break-inside: avoid; }
+
+        table.loyers th,
+        table.loyers td {
+            border: 1px solid #000;
+            padding: 5px 4px;
+            vertical-align: middle;
+        }
+        table.loyers th {
+            text-align: center;
+            font-weight: bold;
+        }
+        table.loyers td.locataire {
+            text-align: left;
+            width: 19%;
+            word-wrap: break-word;
+        }
+        table.loyers td.loyer { text-align: right; width: 7%; }
+        table.loyers td.num   { text-align: right; }
+        table.loyers td.total { text-align: right; font-weight: bold; width: 8%; }
+
+        table.loyers tfoot th { font-weight: bold; text-align: right; }
+        table.loyers tfoot th.lbl { text-align: center; }
+    </style>
+</head>
+<body>
+
+    <!-- EN-TÊTE : logo à gauche, titre au centre -->
+    <table class="entete">
+        <tr>
+            <td class="col-logo">
+                <img th:src="${logoBase64}" alt="Groupe Massi Ivoire Négoce" />
+            </td>
+            <td class="col-titre">
+                <p class="titre" th:text="'TABLEAU DES LOYERS - ' + ${annee}">TABLEAU DES LOYERS - 2026</p>
+                <p class="bailleur" th:if="${bailleurNom != null and bailleurNom != ''}"
+                   th:text="'Bailleur : ' + ${bailleurNom}">Bailleur : </p>
+            </td>
+            <td class="col-vide">&#160;</td>
+        </tr>
+    </table>
+
+    <!-- TABLEAU -->
+    <table class="loyers">
+        <thead>
+            <tr>
+                <th>Locataire</th>
+                <th>Loyer</th>
+                <th>Jan</th><th>Fev</th><th>Mar</th><th>Avr</th>
+                <th>Mai</th><th>Juin</th><th>Juil</th><th>Aout</th>
+                <th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr th:each="row : ${dashboard}">
+                <td class="locataire" th:text="${row.locataireCourt}">Locataire</td>
+                <td class="loyer"     th:text="${row.loyerFormatted}">0</td>
+                <td class="num" th:text="${row.janFormatted}">0</td>
+                <td class="num" th:text="${row.fevFormatted}">0</td>
+                <td class="num" th:text="${row.marFormatted}">0</td>
+                <td class="num" th:text="${row.avrFormatted}">0</td>
+                <td class="num" th:text="${row.maiFormatted}">0</td>
+                <td class="num" th:text="${row.juiFormatted}">0</td>
+                <td class="num" th:text="${row.julFormatted}">0</td>
+                <td class="num" th:text="${row.aouFormatted}">0</td>
+                <td class="num" th:text="${row.sepFormatted}">0</td>
+                <td class="num" th:text="${row.octFormatted}">0</td>
+                <td class="num" th:text="${row.novFormatted}">0</td>
+                <td class="num" th:text="${row.decFormatted}">0</td>
+                <td class="total" th:text="${row.totalFormatted}">0</td>
+            </tr>
+        </tbody>
+
+        <tfoot>
+            <tr>
+                <th class="lbl" colspan="2">TOTAL</th>
+                <th th:text="${#numbers.formatInteger(totals.m1, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m2, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m3, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m4, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m5, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m6, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m7, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m8, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m9, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m10, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m11, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.m12, 1, 'WHITESPACE')}">0</th>
+                <th th:text="${#numbers.formatInteger(totals.total, 1, 'WHITESPACE')}">0</th>
+            </tr>
+        </tfoot>
+    </table>
+
+</body>
+</html>

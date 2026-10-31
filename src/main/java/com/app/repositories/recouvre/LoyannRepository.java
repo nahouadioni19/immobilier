@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -15,6 +16,8 @@ import com.app.dto.DashboardLoyerDTO;
 import com.app.dto.DashboardLoyerMontantDTO;
 import com.app.entities.recouvre.Bail;
 import com.app.entities.recouvre.Loyann;
+
+import jakarta.persistence.LockModeType;
 
 @Repository
 public interface LoyannRepository extends JpaRepository<Loyann, Integer> {
@@ -117,15 +120,7 @@ public interface LoyannRepository extends JpaRepository<Loyann, Integer> {
 		//
 		Optional<Loyann> findByBailAndMoisAndAnnee(Bail bail, int mois, int annee);
 		
-		//
-		/*@Query("""
-				SELECT l FROM Loyann l
-				JOIN FETCH l.bail b
-				JOIN FETCH b.locataire
-				WHERE b.statut = 'ACTIF'
-			    AND l.annee = :annee
-				""")
-				List<Loyann> findAllByAnneeWithBail(@Param("annee") int annee);*/
+	
 		
 		@Query("""
 		        SELECT l FROM Loyann l
@@ -153,6 +148,26 @@ public interface LoyannRepository extends JpaRepository<Loyann, Integer> {
 			    AND l.annee = :annee
 			""")
 			List<Loyann> findAllByAnnee(@Param("annee") int annee);
+		
+		
+	    Optional<Loyann> findByBail_IdAndAnneeAndMois(
+	            Integer bailId, int annee, int mois);
+
+	 // Recherche d'une échéance précise avec verrouillage.
+	    @Lock(LockModeType.PESSIMISTIC_WRITE)
+	    @Query("""
+	        select l
+	        from Loyann l
+	        where l.bail.id = :bailId
+	          and l.annee = :annee
+	          and l.mois = :mois
+	        """)
+	    Optional<Loyann> trouverPourMiseAJour(
+	            @Param("bailId") Integer bailId,
+	            @Param("annee") int annee,
+	            @Param("mois") int mois);
+
+
 
 }
 

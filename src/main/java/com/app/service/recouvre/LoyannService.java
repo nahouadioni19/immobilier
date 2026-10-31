@@ -8,11 +8,18 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
+import com.app.entities.administration.Agence;
 import com.app.entities.recouvre.Bail;
+import com.app.entities.recouvre.Encaisse;
 import com.app.entities.recouvre.Loyann;
+import com.app.repositories.recouvre.AffectationEncaissementRepository;
 import com.app.repositories.recouvre.BailRepository;
 import com.app.repositories.recouvre.LoyannRepository;
 import com.app.service.base.BaseService;
+
+import java.util.Objects;
+
+import com.app.entities.recouvre.AffectationEncaissement;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +31,8 @@ public class LoyannService extends BaseService<Loyann>{
 
     private final LoyannRepository repo;
     private final BailRepository bailRepository;
+    private final AffectationEncaissementRepository affectationRepository;
+    private final RevisionLoyerService revisionLoyerService;    
 
     @Override
     public JpaRepository<Loyann, Integer> getRepository() {
@@ -41,7 +50,7 @@ public class LoyannService extends BaseService<Loyann>{
     /**
      * Répartir un paiement sur les mois du bail.
      */
-    public List<Loyann> repartirLoyerAncien(Bail bail, long montantPaye, long loyerMensuel, LocalDate dateDebut) {
+    /**public List<Loyann> repartirLoyerAncien(Bail bail, long montantPaye, long loyerMensuel, LocalDate dateDebut) {
         List<Loyann> loyers = new ArrayList<>();
         long reste = montantPaye;
 
@@ -119,142 +128,10 @@ public class LoyannService extends BaseService<Loyann>{
         }
 
         return loyers;
-    }
-        
-    /*public List<Loyann> repartirLoyer(Bail bail, long montantPaye, long loyerMensuel, LocalDate dateDebut) {
-
-        List<Loyann> loyers = new ArrayList<>();
-        long reste = montantPaye;
-
-        Loyann dernierExist = repo.findTopByBailOrderByAnneeDescMoisDesc(bail);
-        LocalDate current;
-
-        if (dernierExist != null) {
-
-            current = LocalDate.of(dernierExist.getAnnee(), dernierExist.getMois(), 1);
-
-            long montantDu = dernierExist.getMontantDu() != null ? dernierExist.getMontantDu() : loyerMensuel;
-            long montantPayeExistant = dernierExist.getMontantPaye() != null
-                    ? dernierExist.getMontantPaye()
-                    : dernierExist.getLoyer();
-
-            if (montantPayeExistant < montantDu) {
-
-                long manque = montantDu - montantPayeExistant;
-
-                if (reste >= manque) {
-
-                    // ✅ Compléter le mois
-                    dernierExist.setMontantDu(montantDu);
-                    dernierExist.setMontantPaye(montantDu);
-                    dernierExist.setLoyer(montantDu);
-
-                    // 🔥 STATUT
-                    dernierExist.setStatut("PAYE");
-                    dernierExist.setAgence(getCurrentAgence());
-                    repo.save(dernierExist);
-
-                    reste -= manque;
-                    loyers.add(dernierExist);
-
-                    current = current.plusMonths(1);
-
-                } else {
-
-                    // ✅ Paiement partiel
-                    long nouveauMontant = montantPayeExistant + reste;
-
-                    dernierExist.setMontantDu(montantDu);
-                    dernierExist.setMontantPaye(nouveauMontant);
-                    dernierExist.setLoyer(nouveauMontant);
-
-                    // 🔥 STATUT
-                    if (LocalDate.now().getDayOfMonth() > 10) {
-                        dernierExist.setStatut("RETARD");
-                    } else {
-                        dernierExist.setStatut("PARTIEL");
-                    }
-                    
-                    dernierExist.setAgence(getCurrentAgence());
-                    repo.save(dernierExist);
-
-                    loyers.add(dernierExist);
-
-                    LocalDate fin = current.plusMonths(1);
-                    bail.setDateFin(fin);
-                    bailRepository.save(bail);
-
-                    return loyers;
-                }
-
-            } else {
-                current = current.plusMonths(1);
-            }
-
-        } else {
-            current = dateDebut;
-        }
-
-        // =========================
-        // 🔥 NOUVEAUX MOIS
-        // =========================
-
-        while (reste > 0) {
-
-            Loyann l = new Loyann();
-            l.setBail(bail);
-            l.setMois(current.getMonthValue());
-            l.setAnnee(current.getYear());
-
-            l.setMontantDu(loyerMensuel);
-
-            if (reste >= loyerMensuel) {
-
-                l.setMontantPaye(loyerMensuel);
-                l.setLoyer(loyerMensuel);
-
-                // 🔥 STATUT
-                l.setStatut("PAYE");
-
-                reste -= loyerMensuel;
-
-            } else {
-
-                l.setMontantPaye(reste);
-                l.setLoyer(reste);
-
-                // 🔥 STATUT
-                if (LocalDate.now().getDayOfMonth() > 10) {
-                    l.setStatut("RETARD");
-                } else {
-                    l.setStatut("PARTIEL");
-                }
-
-                reste = 0;
-            }
-            
-            l.setAgence(getCurrentAgence());
-            repo.save(l);
-            loyers.add(l);
-
-            current = current.plusMonths(1);
-        }
-
-        // =========================
-        // 🔥 MAJ DATE FIN
-        // =========================
-
-        if (!loyers.isEmpty()) {
-            Loyann dernierCree = loyers.get(loyers.size() - 1);
-            LocalDate fin = LocalDate.of(dernierCree.getAnnee(), dernierCree.getMois(), 1).plusMonths(1);
-            bail.setDateFin(fin);
-            bailRepository.save(bail);
-        }
-
-        return loyers;
     }*/
+
     
-    @Transactional
+    /**@Transactional
     public List<Loyann> repartirLoyer(Bail bail, long montantPaye, long loyerMensuel, LocalDate datePaiement) {
 
         if (loyerMensuel <= 0) {
@@ -308,7 +185,12 @@ public class LoyannService extends BaseService<Loyann>{
 
                     bail.setDateFin(current.plusMonths(1));
                     bail.setDerniereDatePaiement(current.plusMonths(1));
-                   // bail.setDerPayeDate(current.plusMonths(1));
+                    
+                    bail.setDerniereDatePaiement(
+                            encaisse.getEncDate() != null
+                                    ? encaisse.getEncDate()
+                                    : LocalDate.now());
+                    
                     bailRepository.save(bail);
 
                     repo.saveAll(toSave);
@@ -363,7 +245,557 @@ public class LoyannService extends BaseService<Loyann>{
         }
 
         return loyers;
+    }*/
+    
+    
+    /**
+     * Affecte un paiement aux échéances les plus anciennes.
+     *
+     * Les échéances sont créées uniquement lorsqu'un paiement
+     * validé permet de commencer à les couvrir.
+     *
+     * Cette méthode doit être appelée dans la transaction
+     * de validation de l'encaissement.
+     */
+    /**public List<Loyann> affecterPaiement(
+            Encaisse encaisse,
+            Bail bail,
+            long montantAPayer,
+            LocalDate datePaiement) {
+
+        if (encaisse == null || bail == null) {
+            throw new IllegalArgumentException(
+                    "L'encaissement et le bail sont obligatoires.");
+        }
+
+        if (montantAPayer < 0) {
+            throw new IllegalArgumentException(
+                    "Le montant à affecter ne peut pas être négatif.");
+        }
+
+        if (montantAPayer == 0) {
+            return List.of();
+        }
+
+        if (bail.getDateDebut() == null) {
+            throw new IllegalStateException(
+                    "La date de début du bail est obligatoire.");
+        }
+
+        Agence agence = encaisse.getAgence();
+
+        if (agence == null
+                || bail.getAgence() == null
+                || !Objects.equals(
+                        agence.getId(), bail.getAgence().getId())) {
+            throw new SecurityException(
+                    "L'encaissement et le bail doivent appartenir "
+                  + "à la même agence.");
+        }
+
+        if (datePaiement == null) {
+            datePaiement = LocalDate.now();
+        }
+
+        long reste = montantAPayer;
+
+        LocalDate moisCourant = bail.getDateDebut().withDayOfMonth(1);
+
+        List<Loyann> echeancesTraitees = new ArrayList<>();
+
+        final int plafondMois = 600;
+        int compteur = 0;
+
+        while (reste > 0 && compteur < plafondMois) {
+            compteur++;
+
+            int mois = moisCourant.getMonthValue();
+            int annee = moisCourant.getYear();
+
+            Loyann echeance = repo.trouverPourMiseAJour(
+                    bail.getId(), annee, mois).orElse(null);
+
+            if (echeance == null) {
+                long montantDu = revisionLoyerService
+                        .montantApplicable(bail, moisCourant);
+
+                echeance = new Loyann();
+                echeance.setBail(bail);
+                echeance.setAgence(agence);
+                echeance.setMois(mois);
+                echeance.setAnnee(annee);
+                echeance.setLoyer(montantDu);
+                echeance.setMontantDu(montantDu);
+                echeance.setMontantPaye(0L);
+                echeance.setPenalite(0L);
+                echeance.setStatut("IMPAYE");
+            } else {
+                // Sécurité : ne jamais modifier une échéance d'une autre agence.
+                if (echeance.getAgence() == null
+                        || !Objects.equals(
+                                echeance.getAgence().getId(),
+                                agence.getId())) {
+                    throw new SecurityException(
+                            "Une échéance appartient à une autre agence.");
+                }
+            }
+
+            long montantDu = echeance.getMontantDuSafe();
+            long montantDejaPaye = echeance.getMontantPayeSafe();
+
+            if (montantDu <= 0) {
+                throw new IllegalStateException(
+                        "Le montant dû de l'échéance "
+                      + mois + "/" + annee + " est invalide.");
+            }
+
+            if (montantDejaPaye < 0 || montantDejaPaye > montantDu) {
+                throw new IllegalStateException(
+                        "Le montant payé de l'échéance "
+                      + mois + "/" + annee + " est incohérent.");
+            }
+
+            long soldeEcheance = montantDu - montantDejaPaye;
+
+            if (soldeEcheance == 0) {
+                moisCourant = moisCourant.plusMonths(1);
+                continue;
+            }
+
+            long montantAffecte = Math.min(reste, soldeEcheance);
+
+            echeance.setMontantDu(montantDu);
+            echeance.setLoyer(montantDu);
+            echeance.setMontantPaye(montantDejaPaye + montantAffecte);
+
+            if (echeance.getMontantPaye() >= montantDu) {
+                echeance.setStatut("PAYE");
+            } else if (echeance.getMontantPaye() > 0) {
+                echeance.setStatut("PARTIEL");
+            } else {
+                echeance.setStatut("IMPAYE");
+            }
+
+            echeance = repo.saveAndFlush(echeance);
+
+            AffectationEncaissement affectation =
+                    new AffectationEncaissement();
+
+            affectation.setEncaisse(encaisse);
+            affectation.setLoyann(echeance);
+            affectation.setAgence(agence);
+            affectation.setMontantAffecte(montantAffecte);
+
+            affectationRepository.save(affectation);
+
+            echeancesTraitees.add(echeance);
+
+            reste -= montantAffecte;
+
+            if (echeance.getMontantPaye() >= montantDu) {
+                moisCourant = moisCourant.plusMonths(1);
+            }
+        }
+
+        if (reste > 0) {
+            throw new IllegalStateException(
+                    "Le montant n'a pas pu être entièrement affecté. "
+                  + "La transaction doit être annulée.");
+        }
+
+        return echeancesTraitees;
+    }*/
+    
+    
+    /*public List<Loyann> affecterPaiement(
+            Encaisse encaisse,
+            Bail bail,
+            long montantAPayer,
+            LocalDate datePaiement) {
+
+        if (encaisse == null || bail == null) {
+            throw new IllegalArgumentException(
+                    "L'encaissement et le bail sont obligatoires.");
+        }
+
+        if (montantAPayer < 0) {
+            throw new IllegalArgumentException(
+                    "Le montant à affecter ne peut pas être négatif.");
+        }
+
+        if (montantAPayer == 0) {
+            return List.of();
+        }
+
+        if (bail.getDateDebut() == null) {
+            throw new IllegalStateException(
+                    "La date de début du bail est obligatoire.");
+        }
+
+        Agence agence = encaisse.getAgence();
+
+        if (agence == null
+                || bail.getAgence() == null
+                || !Objects.equals(
+                        agence.getId(), bail.getAgence().getId())) {
+            throw new SecurityException(
+                    "L'encaissement et le bail doivent appartenir "
+                  + "à la même agence.");
+        }
+
+        if (datePaiement == null) {
+            datePaiement = LocalDate.now();
+        }
+
+        long reste = montantAPayer;
+
+        
+        LocalDate moisCourant;
+
+        if (bail.getDateFinRecouvre() != null) {
+            moisCourant = bail.getDateFinRecouvre()
+                    .withDayOfMonth(1)
+                    .plusMonths(1);
+        } else {
+            moisCourant = bail.getDateDebut().withDayOfMonth(1);
+        }
+
+        LocalDate dernierMoisSolde = null;
+
+        List<Loyann> echeancesTraitees = new ArrayList<>();
+
+        final int plafondMois = 600;
+        int compteur = 0;
+
+        while (reste > 0 && compteur < plafondMois) {
+            compteur++;
+
+            int mois = moisCourant.getMonthValue();
+            int annee = moisCourant.getYear();
+
+            Loyann echeance = repo.trouverPourMiseAJour(
+                    bail.getId(), annee, mois).orElse(null);
+
+            if (echeance == null) {
+                // montantApplicable tient compte des révisions de loyer.
+                long montantDu = revisionLoyerService
+                        .montantApplicable(bail, moisCourant);
+
+                echeance = new Loyann();
+                echeance.setBail(bail);
+                echeance.setAgence(agence);
+                echeance.setMois(mois);
+                echeance.setAnnee(annee);
+                echeance.setLoyer(montantDu);
+                echeance.setMontantDu(montantDu);
+                echeance.setMontantPaye(0L);
+                echeance.setPenalite(0L);
+                echeance.setStatut("IMPAYE");
+            } else {
+                // Sécurité : ne jamais modifier une échéance d'une autre agence.
+                if (echeance.getAgence() == null
+                        || !Objects.equals(
+                                echeance.getAgence().getId(),
+                                agence.getId())) {
+                    throw new SecurityException(
+                            "Une échéance appartient à une autre agence.");
+                }
+            }
+
+            
+            long montantDu = echeance.getMontantDuSafe();
+            long montantDejaPaye = echeance.getMontantPayeSafe();
+
+            if (montantDu <= 0) {
+                throw new IllegalStateException(
+                        "Le montant dû de l'échéance "
+                      + mois + "/" + annee + " est invalide.");
+            }
+
+            if (montantDejaPaye < 0 || montantDejaPaye > montantDu) {
+                throw new IllegalStateException(
+                        "Le montant payé de l'échéance "
+                      + mois + "/" + annee + " est incohérent.");
+            }
+
+            long soldeEcheance = montantDu - montantDejaPaye;
+
+            if (soldeEcheance == 0) {
+                // Mois déjà soldé : il fait partie de la période recouvrée.
+                dernierMoisSolde = moisCourant;
+                moisCourant = moisCourant.plusMonths(1);
+                continue;
+            }
+
+            long montantAffecte = Math.min(reste, soldeEcheance);
+
+            echeance.setMontantDu(montantDu);
+            echeance.setLoyer(montantDu);
+            echeance.setMontantPaye(montantDejaPaye + montantAffecte);
+
+            if (echeance.getMontantPaye() >= montantDu) {
+                echeance.setStatut("PAYE");
+            } else if (echeance.getMontantPaye() > 0) {
+                echeance.setStatut("PARTIEL");
+            } else {
+                echeance.setStatut("IMPAYE");
+            }
+
+            echeance = repo.saveAndFlush(echeance);
+
+            AffectationEncaissement affectation =
+                    new AffectationEncaissement();
+
+            affectation.setEncaisse(encaisse);
+            affectation.setLoyann(echeance);
+            affectation.setAgence(agence);
+            affectation.setMontantAffecte(montantAffecte);
+
+            affectationRepository.save(affectation);
+
+            echeancesTraitees.add(echeance);
+
+            reste -= montantAffecte;
+
+            if (echeance.getMontantPaye() >= montantDu) {
+                dernierMoisSolde = moisCourant;
+                moisCourant = moisCourant.plusMonths(1);
+            }
+        }
+
+        if (reste > 0) {
+            throw new IllegalStateException(
+                    "Le montant n'a pas pu être entièrement affecté. "
+                  + "La transaction doit être annulée.");
+        }
+
+        if (dernierMoisSolde != null) {
+            LocalDate nouvelleFin = dernierMoisSolde
+                    .withDayOfMonth(dernierMoisSolde.lengthOfMonth());
+
+            if (bail.getDateFinRecouvre() == null
+                    || nouvelleFin.isAfter(bail.getDateFinRecouvre())) {
+                bail.setDateFinRecouvre(nouvelleFin);
+            }
+        }
+
+        return echeancesTraitees;
+    }*/
+    
+    
+    public List<Loyann> affecterPaiement(
+            Encaisse encaisse,
+            Bail bail,
+            long montantAPayer,
+            LocalDate datePaiement) {
+
+        if (encaisse == null || bail == null) {
+            throw new IllegalArgumentException(
+                    "L'encaissement et le bail sont obligatoires.");
+        }
+
+        if (montantAPayer < 0) {
+            throw new IllegalArgumentException(
+                    "Le montant à affecter ne peut pas être négatif.");
+        }
+
+        if (montantAPayer == 0) {
+            return List.of();
+        }
+
+        if (bail.getDateDebut() == null) {
+            throw new IllegalStateException(
+                    "La date de début du bail est obligatoire.");
+        }
+
+        Agence agence = encaisse.getAgence();
+
+        if (agence == null
+                || bail.getAgence() == null
+                || !Objects.equals(
+                        agence.getId(), bail.getAgence().getId())) {
+            throw new SecurityException(
+                    "L'encaissement et le bail doivent appartenir "
+                  + "à la même agence.");
+        }
+
+        if (datePaiement == null) {
+            datePaiement = LocalDate.now();
+        }
+
+        long reste = montantAPayer;
+
+        // Point de départ : le mois qui suit la période déjà recouvrée,
+        // sinon le mois de début du bail.
+        LocalDate moisCourant;
+
+        if (bail.getDateFinRecouvre() != null) {
+            moisCourant = bail.getDateFinRecouvre()
+                    .withDayOfMonth(1)
+                    .plusMonths(1);
+        } else {
+            moisCourant = bail.getDateDebut().withDayOfMonth(1);
+        }
+
+        LocalDate dernierMoisSolde = null;
+
+        List<Loyann> echeancesTraitees = new ArrayList<>();
+
+        final int plafondMois = 600;
+        int compteur = 0;
+
+        while (reste > 0 && compteur < plafondMois) {
+            compteur++;
+
+            int mois = moisCourant.getMonthValue();
+            int annee = moisCourant.getYear();
+
+            Loyann echeance = repo.trouverPourMiseAJour(
+                    bail.getId(), annee, mois).orElse(null);
+
+            if (echeance == null) {
+                long montantDuNouveau = determinerLoyerDu(bail, moisCourant);
+
+                if (montantDuNouveau <= 0) {
+                    throw new IllegalStateException(
+                            "Impossible de déterminer le loyer dû pour "
+                          + mois + "/" + annee
+                          + " (bail " + bail.getId() + ").");
+                }
+
+                echeance = new Loyann();
+                echeance.setBail(bail);
+                echeance.setAgence(agence);
+                echeance.setMois(mois);
+                echeance.setAnnee(annee);
+                echeance.setLoyer(montantDuNouveau);
+                echeance.setMontantDu(montantDuNouveau);
+                echeance.setMontantPaye(0L);
+                echeance.setPenalite(0L);
+                echeance.setStatut("IMPAYE");
+            } else {
+                if (echeance.getAgence() == null
+                        || !Objects.equals(
+                                echeance.getAgence().getId(),
+                                agence.getId())) {
+                    throw new SecurityException(
+                            "Une échéance appartient à une autre agence.");
+                }
+            }
+
+            long montantDu = echeance.getMontantDuSafe();
+            long montantDejaPaye = echeance.getMontantPayeSafe();
+
+            // Anciennes échéances (avant la révision) : montantDu non renseigné.
+            if (montantDu <= 0) {
+                long reference = 0L;
+
+                Long loyerEcheance = echeance.getLoyer();
+                if (loyerEcheance != null && loyerEcheance > 0) {
+                    reference = loyerEcheance;
+                }
+
+                if (reference <= 0) {
+                    reference = determinerLoyerDu(bail, moisCourant);
+                }
+
+                if (reference <= 0) {
+                    throw new IllegalStateException(
+                            "Impossible de déterminer le loyer dû pour "
+                          + mois + "/" + annee
+                          + " (bail " + bail.getId() + ").");
+                }
+
+                echeance.setMontantDu(reference);
+                echeance.setLoyer(reference);
+                montantDu = reference;
+            }
+
+            if (montantDejaPaye < 0) {
+                throw new IllegalStateException(
+                        "Le montant payé de l'échéance "
+                      + mois + "/" + annee + " est négatif.");
+            }
+
+            // Payé >= dû : le mois est considéré comme soldé, on ne bloque plus.
+            long soldeEcheance = Math.max(0L, montantDu - montantDejaPaye);
+
+            if (soldeEcheance == 0) {
+                dernierMoisSolde = moisCourant;
+                moisCourant = moisCourant.plusMonths(1);
+                continue;
+            }
+
+            long montantAffecte = Math.min(reste, soldeEcheance);
+
+            echeance.setMontantDu(montantDu);
+            echeance.setLoyer(montantDu);
+            echeance.setMontantPaye(montantDejaPaye + montantAffecte);
+
+            if (echeance.getMontantPaye() >= montantDu) {
+                echeance.setStatut("PAYE");
+            } else if (echeance.getMontantPaye() > 0) {
+                echeance.setStatut("PARTIEL");
+            } else {
+                echeance.setStatut("IMPAYE");
+            }
+
+            echeance = repo.saveAndFlush(echeance);
+
+            AffectationEncaissement affectation = new AffectationEncaissement();
+            affectation.setEncaisse(encaisse);
+            affectation.setLoyann(echeance);
+            affectation.setAgence(agence);
+            affectation.setMontantAffecte(montantAffecte);
+
+            affectationRepository.save(affectation);
+
+            echeancesTraitees.add(echeance);
+
+            reste -= montantAffecte;
+
+            if (echeance.getMontantPaye() >= montantDu) {
+                dernierMoisSolde = moisCourant;
+                moisCourant = moisCourant.plusMonths(1);
+            }
+        }
+
+        if (reste > 0) {
+            throw new IllegalStateException(
+                    "Le montant n'a pas pu être entièrement affecté "
+                  + "(reste " + reste + " FCFA, bail " + bail.getId()
+                  + "). La transaction est annulée.");
+        }
+
+        if (dernierMoisSolde != null) {
+            LocalDate nouvelleFin = dernierMoisSolde
+                    .withDayOfMonth(dernierMoisSolde.lengthOfMonth());
+
+            if (bail.getDateFinRecouvre() == null
+                    || nouvelleFin.isAfter(bail.getDateFinRecouvre())) {
+                bail.setDateFinRecouvre(nouvelleFin);
+            }
+        }
+
+        return echeancesTraitees;
     }
+
+    /**
+     * Loyer dû pour un mois : tient compte des révisions, et retombe
+     * sur le loyer de base du bail si aucune révision ne s'applique.
+     */
+    private long determinerLoyerDu(Bail bail, LocalDate mois) {
+        long montant = revisionLoyerService.montantApplicable(bail, mois);
+
+        if (montant <= 0) {
+            Long loyerBail = bail.getMontantLoyer();
+            if (loyerBail != null && loyerBail > 0) {
+                montant = loyerBail;
+            }
+        }
+        return montant;
+    }
+
     
 }
 

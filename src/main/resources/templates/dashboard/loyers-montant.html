@@ -6,578 +6,662 @@
     <meta charset="UTF-8">
     <title>Dashboard Loyers</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      :root {
+        --bg: #ffffff;
+        --fg: #1f2937;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --header-bg: #d4e8dc;
+        --paid-bg: #d4edda;
+        --paid-fg: #155724;
+        --notpaid-bg: #f8d7da;
+        --notpaid-fg: #721c24;
+        --hover-bg: #f1f1f1;
+        --total-bg: #e2e3e5;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #16181d;
+          --fg: #e5e7eb;
+          --muted: #9ca3af;
+          --border: #2c2f36;
+          --header-bg: #274036;
+          --paid-bg: #163d24;
+          --paid-fg: #b7e4c7;
+          --notpaid-bg: #4a1f24;
+          --notpaid-fg: #f5c6cb;
+          --hover-bg: #22252b;
+          --total-bg: #2a2d33;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #16181d;
+        --fg: #e5e7eb;
+        --muted: #9ca3af;
+        --border: #2c2f36;
+        --header-bg: #274036;
+        --paid-bg: #163d24;
+        --paid-fg: #b7e4c7;
+        --notpaid-bg: #4a1f24;
+        --notpaid-fg: #f5c6cb;
+        --hover-bg: #22252b;
+        --total-bg: #2a2d33;
+      }
 
-	<style>
-	.paid {
-	    background-color: #d4edda;
-	    color: #155724;
-	    font-weight: bold;
-	    text-align: center;
-	}
+      * { box-sizing: border-box; }
+      html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        margin: 0;
+        padding: env(safe-area-inset-top,0px) 20px env(safe-area-inset-bottom,0px);
+      }
 
-	.not-paid {
-	    background-color: #f8d7da;
-	    color: #721c24;
-	    text-align: center;
-	}
+      .table-responsive {
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
 
-	.not-paid:hover {
-	    background-color: #f5c6cb;
-	}
+      table {
+        table-layout: fixed;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+      }
 
-	th, td {
-	    text-align: center;
-	    vertical-align: middle;
-	}
+      th, td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--border);
+      }
 
-	td:first-child {
-	    text-align: left;
-	    font-weight: 500;
-	}
+      thead th {
+        background: var(--header-bg);
+        font-weight: 600;
+      }
 
-	/* ⭐ TRONCATURE */
-	td {
-	    max-width: 160px;
-	    overflow: hidden;
-	    text-overflow: ellipsis;
-	    white-space: nowrap;
-	}
+      th:first-child, td:first-child {
+        text-align: left;
+        width: 220px;
+      }
 
-	/* pagination */
-	.pagination .active .page-link {
-	    background-color: #198754;
-	    border-color: #198754;
-	}
+      tbody tr:hover { background: var(--hover-bg); }
 
-	table tbody tr:hover {
-	    background-color: #f1f1f1;
-	}
+      /* Colonne Locataire tronquée */
+      td.locataire {
+        max-width: 220px;
+        width: 220px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        padding: 0 !important;
+        font-weight: 500;
+      }
 
-	tfoot {
-	    position: sticky;
-	    bottom: 0;
-	    z-index: 2;
-	}
-	
-	td.locataire {
-	    max-width: 160px;
-	    overflow: hidden;
-	    text-overflow: ellipsis;
-	    white-space: nowrap;
-	}
-	</style>
+      td.locataire .cell-content {
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        padding: 10px 12px;
+        cursor: default;
+      }
+
+      /* Montants alignés à droite (Loyer, mois, total) */
+      td.amount { text-align: right; }
+
+      .paid { background: var(--paid-bg); color: var(--paid-fg); font-weight: bold; }
+      .not-paid { background: var(--notpaid-bg); color: var(--notpaid-fg); }
+      .not-paid:hover { filter: brightness(0.97); }
+
+      td.total-col {
+        text-align: right;
+        font-weight: bold;
+        background: var(--total-bg);
+      }
+
+      /* Bouton PDF désactivé / en cours */
+      #btnExportPdf.disabled { opacity: .5; pointer-events: none; }
+
+      /* Tooltip natif custom */
+      [data-tooltip] { position: relative; }
+      [data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 12px;
+        top: 100%;
+        margin-top: 6px;
+        background: var(--fg);
+        color: var(--bg);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        white-space: normal;
+        max-width: 320px;
+        width: max-content;
+        z-index: 10;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        pointer-events: none;
+      }
+    </style>
 </head>
 
 <body>
-	<section layout:fragment="content">
-		<div class="container mt-4">
-		
-		    <h2 class="mb-2 mb-md-0">Tableau de bord des loyers - Année <span id="anneeLabel" th:text="${annee}"></span></h2>
-			
-			<hr style="border: 1px solid rgb(192, 192, 192);">
-			
-			<fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
-				<h5>Tableau de bord</h5> <br />
-		    <!-- Filtre année -->
-		    
-			
-			<div class="row mb-3 align-items-end">
+    <section layout:fragment="content">
+        <div class="container mt-4">
 
-			    <div class="col-md-2">
-			        <input type="number" id="anneeInput" name="annee"
-			               class="form-control"
-			               th:value="${annee}">
-			    </div>
+            <h2 class="mb-2 mb-md-0">Tableau de bord des loyers - Année <span id="anneeLabel" th:text="${annee}"></span></h2>
+
+            <hr style="border: 1px solid rgb(192, 192, 192);">
+
+            <fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+                <h5>Tableau de bord</h5> <br />
+
+                <div class="row mb-3 align-items-end">
+
+                    <div class="col-md-2">
+                        <input type="number" id="anneeInput" name="annee"
+                               class="form-control"
+                               th:value="${annee}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <select id="bailleurSelect" name="bailleurId" class="form-select">
+                            <option value=""></option>
+                            <option th:each="bl : ${bailleurs}"
+                                    th:value="${bl.id}"
+                                    th:text="${bl.nom + (bl.prenom != null && !bl.prenom.trim().isEmpty()
+                                        ? ' ' + bl.prenom.trim()
+                                        : '')}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <input type="text" id="searchInput"
+                               class="form-control"
+                               placeholder="🔍 Rechercher un locataire..."
+                               th:value="${search}">
+                    </div>
+
+                    <div class="col-md-2">
+                        <a class="btn btn-danger w-100" href="#" id="btnExportPdf">
+                            📄 Exporter PDF
+                        </a>
+                    </div>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table">
+
+                        <thead class="table-success">
+                            <tr>
+                                <th>Locataire</th>
+                                <th>Loyer</th>
+                                <th>Jan</th>
+                                <th>Fév</th>
+                                <th>Mar</th>
+                                <th>Avr</th>
+                                <th>Mai</th>
+                                <th>Juin</th>
+                                <th>Juil</th>
+                                <th>Août</th>
+                                <th>Sep</th>
+                                <th>Oct</th>
+                                <th>Nov</th>
+                                <th>Déc</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="loyannTableBody">
+                            <tr th:each="row : ${dashboard}">
+                                <td class="locataire" th:title="${(row.locataire ?: '')}">
+                                    <span class="cell-content" th:text="${row.locataireCourt ?: ''}"></span>
+                                </td>
+                                <td class="amount" th:text="${row.loyerFormatted}"></td>
+                                <td class="amount" th:class="${row.janPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.janFormatted}"></td>
+                                <td class="amount" th:class="${row.fevPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.fevFormatted}"></td>
+                                <td class="amount" th:class="${row.marPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.marFormatted}"></td>
+                                <td class="amount" th:class="${row.avrPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.avrFormatted}"></td>
+                                <td class="amount" th:class="${row.maiPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.maiFormatted}"></td>
+                                <td class="amount" th:class="${row.juiPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.juiFormatted}"></td>
+                                <td class="amount" th:class="${row.julPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.julFormatted}"></td>
+                                <td class="amount" th:class="${row.aouPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.aouFormatted}"></td>
+                                <td class="amount" th:class="${row.sepPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.sepFormatted}"></td>
+                                <td class="amount" th:class="${row.octPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.octFormatted}"></td>
+                                <td class="amount" th:class="${row.novPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.novFormatted}"></td>
+                                <td class="amount" th:class="${row.decPaid} ? 'amount paid' : 'amount not-paid'" th:text="${row.decFormatted}"></td>
+                                <td class="total-col" th:text="${row.totalFormatted}"></td>
+                            </tr>
+                        </tbody>
+
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <th colspan="15" class="text-center">Chargement...</th>
+                            </tr>
+                        </tfoot>
+
+                    </table>
+
+                    <!-- Pagination simple -->
+                    <div class="d-flex justify-content-center mt-3">
+                        <ul class="pagination" id="pagination">
+
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/dashboards/loyers-montant(page=${currentPage-1}, annee=${annee})}">&laquo;</a>
+                            </li>
+
+                            <li class="page-item" th:if="${currentPage > 2}">
+                                <a class="page-link"
+                                   th:href="@{/dashboards/loyers-montant(page=0, annee=${annee})}">1</a>
+                            </li>
+
+                            <li class="page-item disabled" th:if="${currentPage > 3}">
+                                <span class="page-link">...</span>
+                            </li>
+
+                            <li class="page-item"
+                                th:each="i : ${#numbers.sequence(
+                                    T(java.lang.Math).max(0, currentPage - 2),
+                                    T(java.lang.Math).min(totalPages - 1, currentPage + 2)
+                                )}"
+                                th:classappend="${i == currentPage} ? 'active'">
+                                <a class="page-link"
+                                   th:text="${i + 1}"
+                                   th:href="@{/dashboards/loyers-montant(page=${i}, annee=${annee})}"></a>
+                            </li>
+
+                            <li class="page-item disabled" th:if="${currentPage < totalPages - 4}">
+                                <span class="page-link">...</span>
+                            </li>
+
+                            <li class="page-item" th:if="${currentPage < totalPages - 3}">
+                                <a class="page-link"
+                                   th:text="${totalPages}"
+                                   th:href="@{/dashboards/loyers-montant(page=${totalPages - 1}, annee=${annee})}"></a>
+                            </li>
+
+                            <li class="page-item"
+                                th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/dashboards/loyers-montant(page=${currentPage+1}, annee=${annee})}">&raquo;</a>
+                            </li>
+
+                        </ul>
+                    </div>
+
+                </div>
+            </fieldset>
+        </div>
+
+		<img id="logoPdf" th:src="@{/images/massi_logo.png}" alt="" style="display:none">
+		
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+        <!-- Génération PDF côté navigateur -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+        <script>
+            $(document).ready(function () {
+                $('#bailleurSelect').select2({
+                    placeholder: '-- Tous les bailleurs --',
+                    allowClear: true,
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+            });
+        </script>
+
+        <script th:inline="none">
+        	document.addEventListener("DOMContentLoaded", function () {
+
+            const searchInput   = document.getElementById("searchInput");
+            const anneeInput    = document.getElementById("anneeInput");
+            const bailleurSelect= document.getElementById("bailleurSelect");
+            const tbody         = document.getElementById("loyannTableBody");
+            const pagination    = document.getElementById("pagination");
+            const tfoot         = document.querySelector("tfoot");
+            const btnExportPdf  = document.getElementById("btnExportPdf");
+            const anneeLabel    = document.getElementById("anneeLabel");
+
+            const SEARCH_URL = "/immobilier/dashboards/loyers-montant/search";
+
+            // clé JSON + libellé de chaque mois
+            const MOIS = [
+                ["jan", "Jan"],  ["fev", "Fév"],  ["mar", "Mar"],  ["avr", "Avr"],
+                ["mai", "Mai"],  ["jui", "Juin"], ["jul", "Juil"], ["aou", "Août"],
+                ["sep", "Sep"],  ["oct", "Oct"],  ["nov", "Nov"],  ["dec", "Déc"]
+            ];
+
+            let timeout = null;
+
+            // ---------- utilitaires ----------
+            function esc(s) {
+                return String(s ?? "")
+                    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+            }
+
+            // Retire le préfixe "Locataire:" et le suffixe "- Bailleur: ..."
+            function cleanName(s) {
+                return String(s ?? "")
+                    .replace(/^\s*Locataire\s*:\s*/i, "")
+                    .replace(/\s*-\s*Bailleur\s*:.*$/i, "")
+                    .trim();
+            }
+
+            // espaces insécables fins (fr-FR) -> espace normal (sinon illisible dans jsPDF)
+            function pdfText(v) {
+                return String(v ?? "0").replace(/[\u202F\u00A0]/g, " ");
+            }
+
+            function formatNumber(value) {
+                if (value === null || value === undefined || value === "") return "0";
+                const n = Number(value.toString().replace(/\s/g, "").replace(/,/g, ""));
+                return isNaN(n) ? "0" : n.toLocaleString("fr-FR");
+            }
+
+			// Lit le logo affiché (caché) et le convertit pour jsPDF
+			function getLogo() {
+			    const img = document.getElementById("logoPdf");
+			    if (!img || !img.complete || !img.naturalWidth) return null;
+			    const canvas = document.createElement("canvas");
+			    canvas.width = img.naturalWidth;
+			    canvas.height = img.naturalHeight;
+			    canvas.getContext("2d").drawImage(img, 0, 0);
+			    return { data: canvas.toDataURL("image/png"), w: img.naturalWidth, h: img.naturalHeight };
+			}
+			
+            function buildUrl(page) {
+                return SEARCH_URL
+                    + "?annee=" + encodeURIComponent(anneeInput.value)
+                    + "&search=" + encodeURIComponent(searchInput.value || "")
+                    + "&bailleurId=" + encodeURIComponent(bailleurSelect.value || "")
+                    + "&page=" + page;
+            }
+
+            function setExportEnabled(enabled) {
+                btnExportPdf.classList.toggle("disabled", !enabled);
+                if (enabled) btnExportPdf.removeAttribute("aria-disabled");
+                else btnExportPdf.setAttribute("aria-disabled", "true");
+            }
+
+            // ---------- chargement des données ----------
+            function loadData(page = 0) {
+
+                const annee = anneeInput.value;
+                if (!annee) return;
+                if (anneeLabel) anneeLabel.textContent = annee;
+
+                fetch(buildUrl(page))
+                    .then(res => res.json())
+                    .then(data => {
+
+                        tbody.innerHTML = "";
+                        const content = data.content || [];
+
+                        if (content.length === 0) {
+                            tbody.innerHTML = `
+                                <tr>
+                                    <td colspan="15" class="text-center text-danger">
+                                        Aucun résultat trouvé
+                                    </td>
+                                </tr>`;
+                            pagination.innerHTML = "";
+                            tfoot.style.display = "none";
+                            setExportEnabled(false);
+                            return;
+                        }
+
+                        tfoot.style.display = "";
+                        setExportEnabled(true);
+
+                        content.forEach(row => {
+                            const tr = document.createElement("tr");
+                            const tip = [row.locataire, row.bailleur].filter(Boolean).join(" - ");
+
+                            let cells = `
+                                <td class="locataire" data-bs-toggle="tooltip" title="${esc(tip)}">
+                                    <span class="cell-content">${esc(row.locataireCourt)}</span>
+                                </td>
+                                <td class="amount">${esc(row.loyerFormatted ?? "0")}</td>`;
+
+                            MOIS.forEach(([k]) => {
+                                cells += `<td class="amount ${row[k + "Paid"] ? "paid" : "not-paid"}">`
+                                       + `${esc(row[k + "Formatted"] ?? "0")}</td>`;
+                            });
+
+                            cells += `<td class="total-col">${esc(row.totalFormatted ?? "0")}</td>`;
+
+                            tr.innerHTML = cells;
+                            tbody.appendChild(tr);
+                        });
+
+                        initTooltips();
+                        buildPagination(data);
+
+                        // Ligne des totaux
+                        const t = data.totals;
+                        if (t) {
+                            let foot = `<tr><th colspan="2" style="text-align:right;">Total</th>`;
+                            for (let i = 1; i <= 12; i++) foot += `<th>${formatNumber(t["m" + i])}</th>`;
+                            foot += `<th><b>${formatNumber(t.total)}</b></th></tr>`;
+                            tfoot.innerHTML = foot;
+                        }
+                    })
+                    .catch(err => console.error("Erreur:", err));
+            }
+
+            function initTooltips() {
+                if (!window.bootstrap || !bootstrap.Tooltip) return;
+                document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+                    bootstrap.Tooltip.getOrCreateInstance(el);
+                });
+            }
+
+            // ---------- filtres ----------
+            searchInput.addEventListener("input", function () {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => loadData(0), 500);
+            });
+
+            anneeInput.addEventListener("change", () => loadData(0));
+
+            $('#bailleurSelect').on('change', () => loadData(0));
+
+            // ---------- pagination ----------
+            function buildPagination(data) {
+
+                pagination.innerHTML = "";
+
+                const page = data.page ?? 0;
+                const totalPages = data.totalPages ?? 0;
+                if (totalPages <= 1) return;
+
+                const start = Math.max(0, page - 2);
+                const end = Math.min(totalPages - 1, page + 2);
+                let html = "";
+
+                html += `<li class="page-item ${page === 0 ? "disabled" : ""}">
+                            <a class="page-link" href="#" data-page="${page - 1}">&laquo;</a></li>`;
+
+                if (start > 0)
+                    html += `<li class="page-item"><a class="page-link" href="#" data-page="0">1</a></li>`;
+                if (start > 1)
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+
+                for (let i = start; i <= end; i++) {
+                    html += `<li class="page-item ${i === page ? "active" : ""}">
+                                <a class="page-link" href="#" data-page="${i}">${i + 1}</a></li>`;
+                }
+
+                if (end < totalPages - 2)
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                if (end < totalPages - 1)
+                    html += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages - 1}">${totalPages}</a></li>`;
+
+                html += `<li class="page-item ${page === totalPages - 1 ? "disabled" : ""}">
+                            <a class="page-link" href="#" data-page="${page + 1}">&raquo;</a></li>`;
+
+                pagination.innerHTML = html;
+
+                pagination.querySelectorAll("a").forEach(link => {
+                    link.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        const p = parseInt(this.dataset.page);
+                        if (!isNaN(p)) loadData(p);
+                    });
+                });
+            }
+
+            // ---------- EXPORT PDF (côté navigateur) ----------
+            async function exportPdf() {
+
+                // récupère TOUTES les pages du résultat filtré
+                let rows = [], totals = null, p = 0, totalPages = 1;
+                do {
+                    const res = await fetch(buildUrl(p));
+                    const data = await res.json();
+                    rows = rows.concat(data.content || []);
+                    totals = data.totals || totals;
+                    totalPages = data.totalPages ?? 1;
+                    p++;
+                } while (p < totalPages);
+
+                if (rows.length === 0) return;
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+                const pageW = doc.internal.pageSize.getWidth();
+
+				// Logo en haut à gauche
+				const logo = getLogo();
+				let logoBottom = 0;
+				if (logo) {
+				    const logoW = 45;                      // largeur en mm
+				    const logoH = logoW * logo.h / logo.w; // hauteur proportionnelle
+				    doc.addImage(logo.data, "PNG", 10, 8, logoW, logoH);
+				    logoBottom = 8 + logoH;
+				}
 				
-				<div class="col-md-4">
-					<select name="bailleurId" class="form-select" id="bailleurSelect">
-					    <option value="">-- Tous les bailleurs --</option>
-					    <option th:each="bl : ${bailleurs}"
-					            th:value="${bl.id}"
-					            th:selected="${bl.id == bailleurId}"
-					            th:text="${bl.nom}">
-					    </option>
-					</select>
-				</div>
-				
-			    <div class="col-md-4">
-			        <input type="text" id="searchInput"
-			               class="form-control"
-			               placeholder="🔍 Rechercher un locataire..."
-			               th:value="${search}">
-			    </div>
+                const annee = anneeInput.value;
+                const bailleurNom = bailleurSelect.value
+                    ? $("#bailleurSelect option:selected").text().trim()
+                    : "";
+                const search = (searchInput.value || "").trim();
+
+                // Titres
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(14);
+                doc.text("TABLEAU DES LOYERS - " + annee, pageW / 2, 14, { align: "center" });
+
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(11);
+                let y = 21;
+                if (bailleurNom) {
+                    doc.text("Bailleur : " + bailleurNom, pageW / 2, y, { align: "center" });
+                    y += 6;
+                }
+                if (search) {
+                    doc.setFontSize(9);
+                    doc.text("Recherche : " + search, pageW / 2, y, { align: "center" });
+                    y += 5;
+                }
+
+                // Tableau
+                const head = [["Locataire", "Loyer", ...MOIS.map(m => m[1]), "Total"]];
+
+                const body = rows.map(r => [
+                    pdfText(cleanName(r.locataire || r.locataireCourt)),
+                    pdfText(r.loyerFormatted ?? "0"),
+                    ...MOIS.map(([k]) => pdfText(r[k + "Formatted"] ?? "0")),
+                    pdfText(r.totalFormatted ?? "0")
+                ]);
+
+                const foot = totals ? [[
+                    { content: "TOTAL", colSpan: 2, styles: { halign: "right" } },
+                    ...Array.from({ length: 12 }, (_, i) => pdfText(formatNumber(totals["m" + (i + 1)]))),
+                    pdfText(formatNumber(totals.total))
+                ]] : undefined;
+
+                const columnStyles = { 0: { halign: "left", cellWidth: 50 }, 1: { cellWidth: 20 }, 14: { cellWidth: 22 } };
+                for (let i = 1; i <= 14; i++) {
+                    columnStyles[i] = Object.assign({ halign: "right" }, columnStyles[i]);
+                }
+
+                doc.autoTable({
+                    //startY: y + 2,
+					startY: Math.max(y + 2, logoBottom + 4),
+                    head: head,
+                    body: body,
+                    foot: foot,
+                    showFoot: "lastPage",
+                    theme: "grid",
+                    margin: { left: 10, right: 10, bottom: 14 },
+                    styles: { font: "helvetica", fontSize: 8, cellPadding: 2, lineColor: [150, 150, 150], lineWidth: 0.2, overflow: "ellipsize" },
+                    headStyles: { fillColor: [212, 232, 220], textColor: 20, fontStyle: "bold", halign: "center" },
+                    //footStyles: { fillColor: [226, 227, 229], textColor: 20, fontStyle: "bold" },
+					footStyles: { fillColor: [226, 227, 229], textColor: 20, fontStyle: "bold", halign: "right" },
+                    columnStyles: columnStyles,
+                    didParseCell: function (d) {
+                        // colonnes 2..13 = mois : vert si payé, rouge sinon
+                        if (d.section === "body" && d.column.index >= 2 && d.column.index <= 13) {
+                            const key = MOIS[d.column.index - 2][0];
+                            const paid = rows[d.row.index][key + "Paid"];
+                            d.cell.styles.fillColor = paid ? [212, 237, 218] : [248, 215, 218];
+                            d.cell.styles.textColor = paid ? [21, 87, 36] : [114, 28, 36];
+                        }
+                        if (d.section === "body" && d.column.index === 14) {
+                            d.cell.styles.fontStyle = "bold";
+                        }
+                        if (d.section === "head") {
+                            d.cell.styles.halign = d.column.index === 0 ? "left" : "center";
+                        }
+                    },
+                    didDrawPage: function () {
+                        doc.setFontSize(8);
+                        doc.setTextColor(100);
+                        doc.text("Page " + doc.internal.getNumberOfPages(),
+                                 pageW - 10, doc.internal.pageSize.getHeight() - 6, { align: "right" });
+                        doc.setTextColor(0);
+                    }
+                });
+
+                const nom = "loyers_" + annee + (bailleurNom ? "_" + bailleurNom.replace(/\s+/g, "_") : "") + ".pdf";
+                doc.save(nom);
+            }
+
+            btnExportPdf.addEventListener("click", async function (e) {
+                e.preventDefault();
+                if (btnExportPdf.classList.contains("disabled")) return;
+
+                setExportEnabled(false);
+                try {
+                    await exportPdf();
+                } catch (err) {
+                    console.error("Erreur export PDF :", err);
+                    alert("Erreur lors de la génération du PDF.");
+                } finally {
+                    setExportEnabled(true);
+                }
+            });
 
-			    <div class="col-md-2">
-					<a class="btn btn-danger w-100"
-					   href="#"
-					   id="btnExportPdf">
-					    📄 Exporter PDF
-					</a>
-			    </div>
+            // ---------- INIT ----------
+            loadData(0);
+        });
+        </script>
 
-			</div>
-		
-		    <div class="table-responsive">
-						
-				<table class="table">
-
-				    <thead class="table-success">
-				        <tr>
-				            <th>Locataire</th>
-				            <th>Jan</th>
-				            <th>Fév</th>
-				            <th>Mar</th>
-				            <th>Avr</th>
-				            <th>Mai</th>
-				            <th>Juin</th>
-				            <th>Juil</th>
-				            <th>Août</th>
-				            <th>Sep</th>
-				            <th>Oct</th>
-				            <th>Nov</th>
-				            <th>Déc</th>
-				            <th>Total</th>
-				        </tr>
-				    </thead>
-
-				    <!-- ✅ BODY -->
-				    <tbody id="loyannTableBody">
-				        <tr th:each="row : ${dashboard}">
-				            <!--<td th:text="${row.locataireCourt}"></td>-->
-							
-							<td data-bs-toggle="tooltip" title="${row.locataire ?? ''}">
-							    ${row.locataireCourt ?? ''}
-							</td>
-
-				            <td th:class="${row.janPaid} ? 'paid' : 'not-paid'" th:text="${row.janFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.fevPaid} ? 'paid' : 'not-paid'" th:text="${row.fevFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.marPaid} ? 'paid' : 'not-paid'" th:text="${row.marFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.avrPaid} ? 'paid' : 'not-paid'" th:text="${row.avrFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.maiPaid} ? 'paid' : 'not-paid'" th:text="${row.maiFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.juiPaid} ? 'paid' : 'not-paid'" th:text="${row.juiFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.julPaid} ? 'paid' : 'not-paid'" th:text="${row.julFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.aouPaid} ? 'paid' : 'not-paid'" th:text="${row.aouFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.sepPaid} ? 'paid' : 'not-paid'" th:text="${row.sepFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.octPaid} ? 'paid' : 'not-paid'" th:text="${row.octFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.novPaid} ? 'paid' : 'not-paid'" th:text="${row.novFormatted}" style="text-align: right;"></td>
-				            <td th:class="${row.decPaid} ? 'paid' : 'not-paid'" th:text="${row.decFormatted}" style="text-align: right;"></td>
-
-				            <td th:text="${row.totalFormatted}"
-				                style="text-align:right; font-weight:bold; background-color:#e2e3e5;">
-				            </td>
-				        </tr>
-				    </tbody>
-
-				    <!-- ✅ FOOTER (TOTALS) 
-				    <tfoot class="table-secondary">
-				        <tr>
-				            <th>Total</th>
-
-				            <th th:text="${totalJanFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalFevFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalMarFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalAvrFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalMaiFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalJuiFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalJulFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalAouFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalSepFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalOctFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalNovFormatted}" style="text-align:right"></th>
-				            <th th:text="${totalDecFormatted}" style="text-align:right"></th>
-
-				            <th th:text="${totalGlobalFormatted}"
-				                style="text-align:right; font-weight:bold; background-color:#d1d3d4;">
-				            </th>
-				        </tr>
-				    </tfoot>-->
-					<tfoot class="table-secondary">
-					    <tr>
-					        <th colspan="14" class="text-center">Chargement...</th>
-					    </tr>
-					</tfoot>
-
-				</table>
-
-				<!-- Pagination simple -->
-				<div class="d-flex justify-content-center mt-3" >
-				    <ul class="pagination" id="pagination">
-
-				        <!-- Précédent -->
-				        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-				            <a class="page-link"
-				               th:href="@{/dashboards/loyers-montant(page=${currentPage-1}, annee=${annee})}">
-				                &laquo;
-				            </a>
-				        </li>
-
-				        <!-- Première page -->
-				        <li class="page-item" th:if="${currentPage > 2}">
-				            <a class="page-link"
-				               th:href="@{/dashboards/loyers-montant(page=0, annee=${annee})}">1</a>
-				        </li>
-
-				        <!-- ... -->
-				        <li class="page-item disabled" th:if="${currentPage > 3}">
-				            <span class="page-link">...</span>
-				        </li>
-
-				        <!-- Pages autour -->
-				        <li class="page-item"
-				            th:each="i : ${#numbers.sequence(
-				                T(java.lang.Math).max(0, currentPage - 2),
-				                T(java.lang.Math).min(totalPages - 1, currentPage + 2)
-				            )}"
-				            th:classappend="${i == currentPage} ? 'active'">
-
-				            <a class="page-link"
-				               th:text="${i + 1}"
-				               th:href="@{/dashboards/loyers-montant(page=${i}, annee=${annee})}">
-				            </a>
-				        </li>
-
-				        <!-- ... -->
-				        <li class="page-item disabled"
-				            th:if="${currentPage < totalPages - 4}">
-				            <span class="page-link">...</span>
-				        </li>
-
-				        <!-- Dernière page -->
-				        <li class="page-item"
-				            th:if="${currentPage < totalPages - 3}">
-				            <a class="page-link"
-				               th:text="${totalPages}"
-				               th:href="@{/dashboards/loyers-montant(page=${totalPages - 1}, annee=${annee})}">
-				            </a>
-				        </li>
-
-				        <!-- Suivant -->
-				        <li class="page-item"
-				            th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-				            <a class="page-link"
-				               th:href="@{/dashboards/loyers-montant(page=${currentPage+1}, annee=${annee})}">
-				                &raquo;
-				            </a>
-				        </li>
-
-				    </ul>
-				</div>
-		
-		    </div>
-			</fieldset>
-		</div>
-		
-		<script th:inline="javascript">
-		console.log("SCRIPT CHARGÉ");
-
-		document.addEventListener("DOMContentLoaded", function () {
-
-		    const searchInput = document.getElementById("searchInput");
-		    const anneeInput = document.getElementById("anneeInput");
-			const bailleurSelect = document.getElementById("bailleurSelect");
-		    const tbody = document.getElementById("loyannTableBody");
-		    const pagination = document.getElementById("pagination");
-			const tfoot = document.querySelector("tfoot");
-			const btnExportPdf = document.getElementById("btnExportPdf");
-		    const anneeLabel = document.getElementById("anneeLabel");
-
-		    let timeout = null;
-		    let currentPage = 0;
-
-		    // =========================
-		    //  LOAD DATA
-		    // =========================
-		    function loadData(page = 0) {
-
-		        const search = searchInput.value || "";
-		        const annee = anneeInput.value;
-				const bailleurId = bailleurSelect.value;
-
-		        if (!annee) return;
-
-		        // update label année
-		        if (anneeLabel) {
-		            anneeLabel.textContent = annee;
-		        }
-
-		        currentPage = page;
-
-		        /*const url = "/immobilier/dashboards/loyers-montant/search"
-		            + "?annee=" + annee
-		            + "&search=" + encodeURIComponent(search)
-					+"&bailleurSelect="+bailleurSelect
-		            + "&page=" + page;*/
-					
-				const url = "/immobilier/dashboards/loyers-montant/search"
-				    + "?annee=" + annee
-				    + "&search=" + encodeURIComponent(search)
-				    + "&bailleurId=" + encodeURIComponent(bailleurId)
-				    + "&page=" + page;
-
-		        console.log("URL:", url);
-
-		        fetch(url)
-		            .then(res => res.json())
-		            .then(data => {
-
-		                tbody.innerHTML = "";
-
-		                const content = data.content || [];
-						// Réafficher le total si des données existent
-						tfoot.style.display = "";
-						
-						// Réactiver Export PDF
-						btnExportPdf.classList.remove("disabled");
-						btnExportPdf.removeAttribute("aria-disabled");
-						btnExportPdf.style.pointerEvents = "auto";
-						
-						btnExportPdf.classList.remove("disabled", "opacity-50");
-
-		                /*if (content.length === 0) {
-		                    tbody.innerHTML = `
-		                        <tr>
-		                            <td colspan="14" class="text-center text-danger">
-		                                Aucun résultat trouvé
-		                            </td>
-		                        </tr>`;
-		                    pagination.innerHTML = "";
-		                    return;
-		                }*/
-						
-						if (content.length === 0) {
-
-						    tbody.innerHTML = `
-						        <tr>
-						            <td colspan="14" class="text-center text-danger">
-						                Aucun résultat trouvé
-						            </td>
-						        </tr>`;
-
-						    pagination.innerHTML = "";
-
-						    // Masquer la ligne Total
-						    tfoot.style.display = "none";
-							
-							// Désactiver Export PDF
-							    btnExportPdf.classList.add("disabled");
-							    btnExportPdf.setAttribute("aria-disabled", "true");
-							    btnExportPdf.style.pointerEvents = "none";
-								
-								btnExportPdf.classList.add("disabled", "opacity-50");
-
-						    return;
-						}
-
-		                content.forEach(row => {
-
-		                    const tr = document.createElement("tr");
-
-		                    tr.innerHTML = `
-		                        <td class="locataire"
-		                            data-bs-toggle="tooltip"
-		                            title="${row.locataire ?? ''}">
-		                            ${row.locataireCourt ?? ''}
-		                        </td>
-
-		                        <td class="${row.janPaid ? 'paid' : 'not-paid'}">${row.janFormatted ?? '0'}</td>
-		                        <td class="${row.fevPaid ? 'paid' : 'not-paid'}">${row.fevFormatted ?? '0'}</td>
-		                        <td class="${row.marPaid ? 'paid' : 'not-paid'}">${row.marFormatted ?? '0'}</td>
-		                        <td class="${row.avrPaid ? 'paid' : 'not-paid'}">${row.avrFormatted ?? '0'}</td>
-		                        <td class="${row.maiPaid ? 'paid' : 'not-paid'}">${row.maiFormatted ?? '0'}</td>
-		                        <td class="${row.juiPaid ? 'paid' : 'not-paid'}">${row.juiFormatted ?? '0'}</td>
-		                        <td class="${row.julPaid ? 'paid' : 'not-paid'}">${row.julFormatted ?? '0'}</td>
-		                        <td class="${row.aouPaid ? 'paid' : 'not-paid'}">${row.aouFormatted ?? '0'}</td>
-		                        <td class="${row.sepPaid ? 'paid' : 'not-paid'}">${row.sepFormatted ?? '0'}</td>
-		                        <td class="${row.octPaid ? 'paid' : 'not-paid'}">${row.octFormatted ?? '0'}</td>
-		                        <td class="${row.novPaid ? 'paid' : 'not-paid'}">${row.novFormatted ?? '0'}</td>
-		                        <td class="${row.decPaid ? 'paid' : 'not-paid'}">${row.decFormatted ?? '0'}</td>
-
-		                        <td style="font-weight:bold">${row.totalFormatted ?? '0'}</td>
-		                    `;
-
-		                    tbody.appendChild(tr);
-		                });
-
-		                //  TOOLTIP REINIT APRÈS RENDER
-		                initTooltips();
-
-		                buildPagination(data);
-
-		                // FOOTER TOTALS
-		                const totals = data.totals;
-
-						if (totals) {
-
-						    const format = (value) => {
-						        if (value === null || value === undefined || value === '') return '0';
-
-						        let clean = value.toString().replace(/\s/g, '').replace(/,/g, '');
-						        let number = Number(clean);
-
-						        if (isNaN(number)) return '0';
-
-						        return number.toLocaleString('fr-FR');
-						    };
-
-						    document.querySelector("tfoot").innerHTML = `
-						        <tr>
-						            <th>Total</th>
-						            <th>${format(totals.m1)}</th>
-						            <th>${format(totals.m2)}</th>
-						            <th>${format(totals.m3)}</th>
-						            <th>${format(totals.m4)}</th>
-						            <th>${format(totals.m5)}</th>
-						            <th>${format(totals.m6)}</th>
-						            <th>${format(totals.m7)}</th>
-						            <th>${format(totals.m8)}</th>
-						            <th>${format(totals.m9)}</th>
-						            <th>${format(totals.m10)}</th>
-						            <th>${format(totals.m11)}</th>
-						            <th>${format(totals.m12)}</th>
-						            <th><b>${format(totals.total)}</b></th>
-						        </tr>
-						    `;
-						}
-		            })
-		            .catch(err => console.error("Erreur:", err));
-		    }
-
-		    // =========================
-		    //  TOOLTIP INIT (IMPORTANT)
-		    // =========================
-		    function initTooltips() {
-		        const tooltipTriggerList = [].slice.call(
-		            document.querySelectorAll('[data-bs-toggle="tooltip"]')
-		        );
-
-		        tooltipTriggerList.forEach(el => {
-		            new bootstrap.Tooltip(el);
-		        });
-		    }
-
-		    // =========================
-		    //  SEARCH
-		    // =========================
-		    searchInput.addEventListener("input", function () {
-		        clearTimeout(timeout);
-		        timeout = setTimeout(() => loadData(0), 500);
-		    });
-
-		    // =========================
-		    //  YEAR CHANGE
-		    // =========================
-		    anneeInput.addEventListener("change", function () {
-		        loadData(0);
-		    });
-
-			// =========================
-			//  BAILLEUR CHANGE
-			// =========================
-			bailleurSelect.addEventListener("change", function () {
-			    loadData(0);
-			});
-		    // =========================
-		    //  PAGINATION
-		    // =========================
-		    function buildPagination(data) {
-
-		        pagination.innerHTML = "";
-
-		        const page = data.page ?? 0;
-		        const totalPages = data.totalPages ?? 0;
-
-		        if (totalPages <= 1) return;
-
-		        pagination.innerHTML += `
-		            <li class="page-item ${page === 0 ? 'disabled' : ''}">
-		                <a class="page-link" href="#" data-page="${page - 1}">&laquo;</a>
-		            </li>`;
-
-		        const start = Math.max(0, page - 2);
-		        const end = Math.min(totalPages - 1, page + 2);
-
-		        if (start > 0) {
-		            pagination.innerHTML += `
-		                <li class="page-item">
-		                    <a class="page-link" href="#" data-page="0">1</a>
-		                </li>`;
-		        }
-
-		        if (start > 1) {
-		            pagination.innerHTML += `
-		                <li class="page-item disabled">
-		                    <span class="page-link">...</span>
-		                </li>`;
-		        }
-
-		        for (let i = start; i <= end; i++) {
-		            pagination.innerHTML += `
-		                <li class="page-item ${i === page ? 'active' : ''}">
-		                    <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
-		                </li>`;
-		        }
-
-		        if (end < totalPages - 2) {
-		            pagination.innerHTML += `
-		                <li class="page-item disabled">
-		                    <span class="page-link">...</span>
-		                </li>`;
-		        }
-
-		        if (end < totalPages - 1) {
-		            pagination.innerHTML += `
-		                <li class="page-item">
-		                    <a class="page-link" href="#" data-page="${totalPages - 1}">
-		                        ${totalPages}
-		                    </a>
-		                </li>`;
-		        }
-
-		        pagination.innerHTML += `
-		            <li class="page-item ${page === totalPages - 1 ? 'disabled' : ''}">
-		                <a class="page-link" href="#" data-page="${page + 1}">&raquo;</a>
-		            </li>`;
-
-		        pagination.querySelectorAll("a").forEach(link => {
-		            link.addEventListener("click", function (e) {
-		                e.preventDefault();
-		                const p = parseInt(this.dataset.page);
-		                if (!isNaN(p)) loadData(p);
-		            });
-		        });
-		    }
-			
-			
-			//const btnExportPdf = document.getElementById("btnExportPdf");
-
-			btnExportPdf.addEventListener("click", function (e) {
-
-			    e.preventDefault();
-
-			    const annee = anneeInput.value;
-			    const search = searchInput.value || "";
-			    const bailleurId = bailleurSelect.value || "";
-
-			    const url =
-			        "/immobilier/dashboards/loyers-montant/pdf"
-			        + "?annee=" + encodeURIComponent(annee)
-			        + "&search=" + encodeURIComponent(search)
-			        + "&bailleurId=" + encodeURIComponent(bailleurId);
-
-			    window.location.href = url;
-			});
-
-		    // =========================
-		    //  INIT
-		    // =========================
-		    loadData(0);
-
-		});
-		</script>
-
-		
-	</section>
-		
+    </section>
 </body>
 </html>

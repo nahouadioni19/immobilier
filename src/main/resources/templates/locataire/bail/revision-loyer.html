@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<body>
+
+	<section layout:fragment="content">
+	
+	    <div class="container my-4">
+	
+	        <div class="d-flex justify-content-between align-items-center mb-3">
+	            <h2>
+	                <i class="bi bi-graph-up-arrow me-2"></i>
+	                Révision du loyer
+	            </h2>
+	
+	            <a th:href="@{/bails}" class="btn btn-outline-secondary">
+	                <i class="bi bi-arrow-left me-1"></i>Retour
+	            </a>
+	        </div>
+	
+	        <!-- Message d'erreur renvoyé par le serveur (la saisie est conservée) -->
+	        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+	
+	        <div class="card shadow-sm">
+	            <div class="card-header bg-success text-white">
+	                Informations du bail
+	            </div>
+	
+	            <div class="card-body">
+	
+	                <div class="row mb-3">
+	                    <div class="col-md-6">
+	                        <label class="form-label fw-bold">Locataire</label>
+	                        <input type="text"
+	                               class="form-control"
+	                               th:value="${bail.locataire != null
+	                                   ? bail.locataire.nom : ''}"
+	                               readonly>
+	                    </div>
+	
+	                    <div class="col-md-6">
+	                        <label class="form-label fw-bold">Appartement</label>
+	                        <input type="text"
+	                               class="form-control"
+	                               th:value="${bail.appartement != null
+	                                   ? bail.appartement.libelle : ''}"
+	                               readonly>
+	                    </div>
+	                </div>
+	
+	                <!-- Le jeton CSRF est ajouté automatiquement par th:action -->
+	                <form id="revisionForm"
+	                      th:action="@{/bails/{id}/revision-loyer(id=${bail.id})}"
+	                      th:data-loyer-actuel="${bail.montantLoyer}"
+	                      method="post">
+	
+	                    <div class="row mb-3">
+	
+	                        <div class="col-md-6">
+	                            <label class="form-label fw-bold">
+	                                Loyer actuel (FCFA)
+	                            </label>
+	
+	                            <input type="text"
+	                                   class="form-control"
+	                                   th:value="${#numbers.formatDecimal(
+	                                       bail.montantLoyer, 0, 'POINT', 0, 'POINT')}"
+	                                   readonly>
+	                        </div>
+	
+	                        <div class="col-md-6">
+	                            <label for="nouveauMontantLoyer"
+	                                   class="form-label fw-bold">
+	                                Nouveau loyer (FCFA) <span class="text-danger">*</span>
+	                            </label>
+	
+	                            <input type="number"
+	                                   class="form-control"
+	                                   id="nouveauMontantLoyer"
+	                                   name="nouveauMontantLoyer"
+	                                   th:value="${nouveauMontantLoyer}"
+	                                   min="1"
+	                                   step="1"
+	                                   required>
+	                        </div>
+	
+	                    </div>
+	
+	                    <div class="mb-3">
+	                        <label for="dateEffetLoyer"
+	                               class="form-label fw-bold">
+	                            Date d'effet <span class="text-danger">*</span>
+	                        </label>
+	
+	                        <input type="date"
+	                               class="form-control"
+	                               id="dateEffetLoyer"
+	                               name="dateEffetLoyer"
+	                               th:value="${dateEffetLoyer}"
+	                               th:min="${bail.dateDebut}"
+	                               th:max="${#temporals.createToday()}"
+	                               required>
+	                        <div class="form-text">
+	                            Premier jour à partir duquel le nouveau loyer s'applique.
+	                            La date ne peut pas être dans le futur.
+	                        </div>
+	                    </div>
+	
+	                    <div class="alert alert-info">
+	                        <i class="bi bi-info-circle me-2"></i>
+	                        Vérifiez le nouveau montant et la date d'effet
+	                        avant de confirmer la révision.
+	                    </div>
+	
+	                    <div class="d-flex justify-content-end gap-2">
+	                        <a th:href="@{/bails}"
+	                           class="btn btn-secondary">
+	                            Annuler
+	                        </a>
+	
+	                        <button type="submit" id="btnRevision" class="btn btn-success">
+	                            <i class="bi bi-check-circle me-1"></i>
+	                            Enregistrer la révision
+	                        </button>
+	                    </div>
+	
+	                </form>
+	
+	            </div>
+	        </div>
+	
+	    </div>
+	
+	    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	
+	    <script>
+	        document.addEventListener("DOMContentLoaded", function () {
+	
+	            const form = document.getElementById("revisionForm");
+	            if (!form) return;
+	
+	            const bouton = document.getElementById("btnRevision");
+	            const loyerActuel = Number(form.dataset.loyerActuel || 0);
+	
+	            function formatMontant(n) {
+	                return Number(n || 0).toLocaleString("fr-FR");
+	            }
+	
+	            function formatDate(iso) {
+	                const p = String(iso || "").split("-");
+	                return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : iso;
+	            }
+	
+	            form.addEventListener("submit", function (event) {
+	                event.preventDefault();
+	
+	                if (!form.checkValidity()) {
+	                    form.reportValidity();
+	                    return;
+	                }
+	
+	                const nouveau = Number(document.getElementById("nouveauMontantLoyer").value);
+	                const dateEffet = document.getElementById("dateEffetLoyer").value;
+	
+	                if (nouveau === loyerActuel) {
+	                    Swal.fire({
+	                        icon: "warning",
+	                        title: "Montant identique",
+	                        text: "Le nouveau loyer est identique au loyer actuel."
+	                    });
+	                    return;
+	                }
+	
+	                Swal.fire({
+	                    title: "Confirmer la révision ?",
+	                    html: "Loyer : <b>" + formatMontant(loyerActuel) + "</b> → <b>"
+	                        + formatMontant(nouveau) + " FCFA</b><br>à compter du <b>"
+	                        + formatDate(dateEffet) + "</b>",
+	                    icon: "question",
+	                    showCancelButton: true,
+	                    confirmButtonText: "Oui, enregistrer",
+	                    cancelButtonText: "Non",
+	                    reverseButtons: true
+	                }).then(function (result) {
+	                    if (result.isConfirmed) {
+	                        bouton.disabled = true;   // évite le double envoi
+	                        form.submit();            // ne redéclenche pas l'événement submit
+	                    }
+	                });
+	            });
+	        });
+	    </script>
+	
+	</section>
+	
+</body>
+
+</html>
